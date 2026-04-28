@@ -1,0 +1,2715 @@
+but you understand <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AttendX PRO — Smart Attendance Platform</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDT2evTvU6_exbLTY8kIiO9n-mrF7vg4hs",
+    authDomain: "attendex-47d45.firebaseapp.com",
+    projectId: "attendex-47d45",
+    storageBucket: "attendex-47d45.firebasestorage.app",
+    messagingSenderId: "731988308422",
+    appId: "1:731988308422:web:ebc33605ab8ad24025c2c7"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // Expose to global scope for use in non-module scripts
+  window._db         = db;
+  window._fsDoc      = doc;
+  window._fsSetDoc   = setDoc;
+  window._fsGetDoc   = getDoc;
+  window._fsColl     = collection;
+  window._fsQuery    = query;
+  window._fsWhere    = where;
+  window._fsOnSnap   = onSnapshot;
+  window._fsGetDocs  = getDocs;
+  window._fsDeleteDoc= deleteDoc;
+  window._firebaseReady = true;
+  document.dispatchEvent(new Event('firebaseReady'));
+</script>
+<!-- FingerprintJS -->
+<script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@4/dist/fp.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════════════════
+   DESIGN SYSTEM — AttendX PRO
+   Merged: AttendX v2 + QR Forge Pro
+═══════════════════════════════════════════════════════ */
+:root {
+  /* backgrounds */
+  --bg:       #F0F4FF;
+  --s1:       #FFFFFF;
+  --s2:       #F5F8FF;
+  --s3:       #EBF0FF;
+  --s4:       #DDE6FF;
+
+  /* borders */
+  --line:     #D8E2F8;
+  --line2:    rgba(79,120,255,0.22);
+  --line3:    rgba(79,120,255,0.40);
+
+  /* accent palette */
+  --blue:     #3B6FE8;
+  --blue2:    #2554C7;
+  --blue3:    rgba(59,111,232,0.10);
+  --cyan:     #0EA5E9;
+  --cyan2:    rgba(14,165,233,0.10);
+  --green:    #10B981;
+  --green2:   rgba(16,185,129,0.10);
+  --gold:     #F59E0B;
+  --gold2:    rgba(245,158,11,0.10);
+  --red:      #EF4444;
+  --red2:     rgba(239,68,68,0.10);
+
+  /* text */
+  --text:     #1E2A4A;
+  --text2:    #4A5880;
+  --text3:    #8A96B8;
+
+  /* fonts */
+  --head:  'Syne', sans-serif;
+  --body:  'Figtree', sans-serif;
+  --mono:  'DM Mono', monospace;
+
+  /* radii */
+  --r1: 8px;  --r2: 12px;  --r3: 16px;  --r4: 20px;  --r5: 28px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Gradient BG ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 800px 600px at 10% 0%,   rgba(59,111,232,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 500px at 90% 100%, rgba(14,165,233,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 500px 400px at 50% 50%,  rgba(16,185,129,0.05) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Subtle dot grid ── */
+.grid-bg {
+  position: fixed; inset: 0;
+  background-image: radial-gradient(circle, rgba(59,111,232,0.08) 1px, transparent 1px);
+  background-size: 36px 36px;
+  pointer-events: none; z-index: 0;
+}
+
+body::after { content: none; }
+
+/* ── Floating school icons ── */
+.school-bg {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+.school-bg .icon {
+  position: absolute;
+  font-size: 28px;
+  opacity: 0.13;
+  animation: floatIcon linear infinite;
+  user-select: none;
+}
+@keyframes floatIcon {
+  0%   { transform: translateY(0px) rotate(0deg);   opacity: 0.10; }
+  25%  { transform: translateY(-18px) rotate(4deg);  opacity: 0.16; }
+  50%  { transform: translateY(-8px) rotate(-3deg);  opacity: 0.12; }
+  75%  { transform: translateY(-22px) rotate(5deg);  opacity: 0.17; }
+  100% { transform: translateY(0px) rotate(0deg);   opacity: 0.10; }
+}
+
+/* ════════════════════════════════
+   ANIMATIONS
+════════════════════════════════ */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+@keyframes scaleIn  { from{opacity:0;transform:scale(0.94)} to{opacity:1;transform:scale(1)} }
+@keyframes blink    { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes ping     { 0%{transform:scale(1);opacity:0.8} 100%{transform:scale(2.2);opacity:0} }
+@keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.4} }
+@keyframes spin     { to{transform:rotate(360deg)} }
+@keyframes glowPulse{ 0%,100%{box-shadow:0 0 16px rgba(79,255,160,0.2)} 50%{box-shadow:0 0 36px rgba(79,255,160,0.45)} }
+@keyframes slideIn  { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes countUp  { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+@keyframes floatY   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+@keyframes ripple   { 0%{transform:scale(0);opacity:0.5} 100%{transform:scale(3.5);opacity:0} }
+@keyframes borderGlow { 0%,100%{box-shadow:0 0 0 0 rgba(79,158,255,0)} 50%{box-shadow:0 0 0 3px rgba(79,158,255,0.25)} }
+@keyframes slideDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
+@keyframes popIn    { 0%{opacity:0;transform:scale(0.82)} 70%{transform:scale(1.05)} 100%{opacity:1;transform:scale(1)} }
+@keyframes gradShift{ 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+@keyframes typewriter{ from{width:0} to{width:100%} }
+
+.a-fadeup  { animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+.a-fadein  { animation: fadeIn 0.35s ease both; }
+.a-scalein { animation: scaleIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+.d1 { animation-delay:0.06s } .d2 { animation-delay:0.12s }
+.d3 { animation-delay:0.18s } .d4 { animation-delay:0.24s }
+.d5 { animation-delay:0.30s } .d6 { animation-delay:0.38s }
+
+/* ── Page transition ── */
+.page.active { animation: fadeUp 0.38s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ── Nav logo float ── */
+.nav-logomark { animation: floatY 3.2s ease-in-out infinite; }
+
+/* ── Feature icon float on hover ── */
+.feat:hover .feat-icon { animation: floatY 1.6s ease-in-out infinite; }
+
+/* ── Stat card glow on hover ── */
+.scard:hover { animation: borderGlow 1.4s ease-in-out infinite; }
+
+/* ── Session rows staggered slide ── */
+.srow { animation: slideIn 0.32s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ── Alert pop ── */
+.alert.show { animation: popIn 0.28s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ── Success ring pop ── */
+.success-state.show .success-ring { animation: glowPulse 2s ease infinite, popIn 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ── Geo status slide down ── */
+#stuGeoStatus, #geoStatus { animation: slideDown 0.28s ease both; }
+
+/* ── btn-gen animated gradient ── */
+.btn-gen {
+  background-size: 200% auto !important;
+  background-image: linear-gradient(135deg, var(--blue) 0%, var(--cyan) 45%, var(--blue2) 65%, var(--blue) 100%) !important;
+  animation: gradShift 3.5s ease infinite;
+}
+
+/* ── Ripple on clickable buttons ── */
+.btn, .nk, .cta-btn { position:relative; overflow:hidden; }
+.btn::after, .nk::after, .cta-btn::after {
+  content:''; position:absolute; border-radius:50%;
+  width:120px; height:120px; margin-top:-60px; margin-left:-60px;
+  background:rgba(255,255,255,0.12); transform:scale(0); pointer-events:none;
+  top:50%; left:50%;
+}
+.btn:active::after, .nk:active::after, .cta-btn:active::after {
+  animation: ripple 0.45s ease-out forwards;
+}
+
+/* ════════════════════════════════
+   TOP NAV
+════════════════════════════════ */
+.topnav {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 62px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line);
+  z-index: 1000;
+  transition: box-shadow 0.3s;
+}
+.topnav.up { box-shadow: 0 4px 32px rgba(59,111,232,0.10); }
+
+.nav-logo { display:flex; align-items:center; gap:10px; text-decoration:none; cursor:pointer; }
+.nav-logomark {
+  width:34px; height:34px;
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  border-radius: 9px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px;
+  box-shadow: 0 0 18px rgba(79,158,255,0.35);
+  transition: transform 0.3s, box-shadow 0.3s;
+  flex-shrink: 0;
+}
+.nav-logo:hover .nav-logomark { transform:rotate(8deg) scale(1.1); box-shadow:0 0 28px rgba(79,158,255,0.55); }
+.nav-wordmark { font-family:var(--head); font-size:18px; font-weight:800; letter-spacing:-0.3px; }
+.nav-wordmark span { color:var(--blue); }
+.nav-pro {
+  font-size:10px; font-weight:700; font-family:var(--mono);
+  color:var(--cyan); background:var(--cyan2);
+  border:1px solid rgba(126,220,255,0.22);
+  border-radius:100px; padding:2px 8px; letter-spacing:0.5px; margin-left:2px;
+}
+.nav-right { display:flex; align-items:center; gap:8px; }
+.nav-page-tabs { display:flex; gap:2px; margin: 0 8px; }
+.nav-ptab {
+  padding: 5px 14px;
+  border-radius: var(--r1);
+  font-family: var(--body); font-size:12px; font-weight:600;
+  cursor:pointer; border:1px solid transparent;
+  color:var(--text3); transition:all 0.2s;
+  background:transparent;
+}
+.nav-ptab:hover { color:var(--text2); background:rgba(79,158,255,0.06); }
+.nav-ptab.active { color:var(--blue); background:var(--blue3); border-color:rgba(79,158,255,0.2); }
+.nav-btn {
+  padding:6px 14px; border-radius:var(--r1);
+  font-family:var(--body); font-size:12px; font-weight:700;
+  cursor:pointer; transition:all 0.2s; border:none;
+}
+.nav-btn-ghost { background:transparent; color:var(--text3); border:1px solid var(--line); }
+.nav-btn-ghost:hover { color:var(--text); border-color:var(--line2); background:var(--blue3); }
+.nav-btn-solid { background:var(--blue); color:#fff; }
+.nav-btn-solid:hover { background:var(--blue2); box-shadow:0 4px 14px rgba(79,158,255,0.35); transform:translateY(-1px); }
+
+/* ════════════════════════════════
+   MAIN / PAGES
+════════════════════════════════ */
+.main { padding-top: 62px; min-height:100vh; position:relative; z-index:1; }
+.page { display:none; }
+.page.active { display:block; }
+
+/* ════════════════════════════════
+   LANDING PAGE
+════════════════════════════════ */
+.landing {
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  min-height:calc(100vh - 62px);
+  padding:64px 24px 80px;
+  text-align:center;
+}
+.landing-chip {
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--blue3); border:1px solid rgba(79,158,255,0.2);
+  border-radius:100px; padding:6px 16px;
+  font-size:11px; font-family:var(--mono); letter-spacing:2px;
+  color:var(--cyan); text-transform:uppercase;
+  margin-bottom:26px;
+}
+.landing-chip .dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--green); box-shadow:0 0 8px var(--green);
+  animation:blink 2s infinite; position:relative;
+}
+.landing-chip .dot::after {
+  content:''; position:absolute; inset:-3px; border-radius:50%;
+  background:var(--green); animation:ping 1.5s ease-out infinite;
+}
+.landing-h1 {
+  font-family:var(--head);
+  font-size: clamp(40px,7vw,74px);
+  font-weight:800; letter-spacing:-2px; line-height:1.0;
+  background:linear-gradient(135deg, #fff 30%, var(--cyan));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  margin-bottom:8px;
+}
+.landing-h1 em {
+  font-style:normal;
+  background:linear-gradient(90deg, var(--blue), var(--green));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.landing-sub {
+  font-size:16px; color:var(--text2); line-height:1.7;
+  max-width:480px; margin:16px auto 40px;
+}
+.landing-cta { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:72px; }
+.cta-btn {
+  padding:13px 26px; border-radius:var(--r2);
+  font-family:var(--body); font-size:14px; font-weight:700;
+  cursor:pointer; transition:all 0.25s; border:none;
+}
+.cta-primary {
+  background:linear-gradient(135deg, var(--blue), var(--blue2));
+  color:#fff; box-shadow:0 6px 28px rgba(79,158,255,0.35);
+}
+.cta-primary:hover { transform:translateY(-2px); box-shadow:0 12px 40px rgba(79,158,255,0.5); }
+.cta-outline {
+  background:transparent; color:var(--text2);
+  border:1px solid var(--line2);
+}
+.cta-outline:hover { color:var(--text); border-color:var(--line3); background:var(--blue3); transform:translateY(-1px); }
+
+/* Feature grid */
+.features-grid {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:16px; max-width:820px; width:100%;
+}
+.feat {
+  background:var(--s1); border:1px solid var(--line);
+  border-radius:var(--r4); padding:22px 20px;
+  text-align:left; transition:all 0.3s;
+  position:relative; overflow:hidden;
+}
+.feat::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(79,158,255,0.35),transparent);
+}
+.feat:hover { border-color:var(--line2); transform:translateY(-3px); box-shadow:0 12px 40px rgba(0,0,0,0.35); }
+.feat-icon {
+  width:40px; height:40px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center; font-size:18px;
+  margin-bottom:14px;
+}
+.feat-icon.b { background:var(--blue3); }
+.feat-icon.g { background:var(--green2); }
+.feat-icon.c { background:var(--cyan2); }
+.feat-icon.gold { background:var(--gold2); }
+.feat-title { font-family:var(--head); font-size:14px; font-weight:700; margin-bottom:6px; }
+.feat-desc { font-size:12px; color:var(--text3); line-height:1.65; }
+
+/* ════════════════════════════════
+   LOGIN PAGE
+════════════════════════════════ */
+.login-wrap {
+  display:flex; align-items:center; justify-content:center;
+  min-height:calc(100vh - 62px); padding:40px 24px;
+}
+.login-card {
+  width:100%; max-width:400px;
+  background:var(--s1); border:1px solid var(--line);
+  border-radius:var(--r5); padding:36px;
+  box-shadow:0 24px 80px rgba(0,0,0,0.5);
+  position:relative; overflow:hidden;
+}
+.login-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,var(--blue),var(--cyan),transparent);
+  opacity:0.7;
+}
+.login-lock {
+  width:54px; height:54px; border-radius:14px;
+  background:var(--blue3); border:1px solid rgba(79,158,255,0.2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; margin-bottom:22px;
+}
+.login-title { font-family:var(--head); font-size:24px; font-weight:800; margin-bottom:6px; letter-spacing:-0.3px; }
+.login-sub { font-size:13px; color:var(--text3); margin-bottom:28px; line-height:1.5; }
+.pin-dots { display:flex; gap:12px; justify-content:center; margin-bottom:26px; }
+.pin-dot {
+  width:14px; height:14px; border-radius:50%;
+  border:2px solid var(--line2); background:transparent; transition:all 0.2s;
+}
+.pin-dot.on { background:var(--blue); border-color:var(--blue); box-shadow:0 0 10px rgba(79,158,255,0.6); }
+.pin-dot.err { background:var(--red); border-color:var(--red); }
+.numpad { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:14px; }
+.nk {
+  padding:15px; text-align:center; font-size:18px; font-weight:700;
+  font-family:var(--body); color:var(--text);
+  background:var(--s2); border:1px solid var(--line);
+  border-radius:var(--r2); cursor:pointer; transition:all 0.15s; user-select:none;
+}
+.nk:hover { background:var(--s3); border-color:var(--line2); transform:scale(1.04); }
+.nk:active { transform:scale(0.95); background:var(--blue3); border-color:rgba(79,158,255,0.3); }
+.nk.w2 { grid-column:span 2; }
+.nk.del { font-size:13px; color:var(--text3); }
+
+/* ════════════════════════════════
+   SHARED CARD / PANEL
+════════════════════════════════ */
+.card {
+  background:var(--s1); border:1px solid var(--line);
+  border-radius:var(--r4); padding:24px 22px;
+  position:relative; overflow:hidden; transition:border-color 0.3s, box-shadow 0.3s;
+}
+.card:hover { border-color:var(--line2); box-shadow:0 0 36px rgba(79,158,255,0.06); }
+.card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(79,158,255,0.35),transparent);
+}
+.card-title {
+  font-family:var(--head); font-size:12px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase;
+  color:var(--blue); margin-bottom:20px;
+  display:flex; align-items:center; gap:8px;
+}
+
+/* ════════════════════════════════
+   FORM ELEMENTS
+════════════════════════════════ */
+.field { margin-bottom:16px; }
+.field label {
+  display:block; font-size:10px; font-weight:600;
+  letter-spacing:1.8px; text-transform:uppercase;
+  color:var(--text2); margin-bottom:6px;
+}
+.field input, .field select, .field textarea {
+  width:100%; background:var(--s2); border:1px solid var(--line);
+  border-radius:var(--r1); padding:10px 13px;
+  font-size:13px; font-family:var(--body); color:var(--text);
+  outline:none; transition:border-color 0.2s, box-shadow 0.2s; appearance:none;
+}
+.field input:focus, .field select:focus {
+  border-color:var(--blue); box-shadow:0 0 0 3px rgba(79,158,255,0.1);
+}
+.field input::placeholder { color:var(--text3); }
+.field select option { background:var(--s2); }
+.sel-wrap { position:relative; }
+.sel-wrap::after { content:'▾'; position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text3); font-size:11px; pointer-events:none; }
+.frow  { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.frow3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+.mono-f input { font-family:var(--mono); font-size:13px; letter-spacing:0.8px; }
+.hint { font-size:10px; color:var(--text3); margin-top:5px; letter-spacing:0.3px; }
+
+/* ── AUTOCOMPLETE ── */
+.ac-wrap { position:relative; }
+.ac-list {
+  position:absolute; top:calc(100% + 4px); left:0; right:0;
+  background:var(--s2); border:1px solid var(--line2);
+  border-radius:var(--r1); z-index:50; display:none; overflow:hidden;
+  box-shadow:0 10px 36px rgba(0,0,0,0.45);
+}
+.ac-list.open { display:block; animation:fadeUp 0.2s ease both; }
+.ac-item {
+  padding:9px 13px; font-size:13px; cursor:pointer;
+  transition:background 0.15s; display:flex; align-items:center; gap:8px;
+}
+.ac-item:hover { background:var(--blue3); color:var(--blue); }
+
+/* ════════════════════════════════
+   BUTTONS
+════════════════════════════════ */
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  padding:9px 16px; border-radius:var(--r1);
+  font-family:var(--body); font-size:13px; font-weight:700;
+  cursor:pointer; transition:all 0.2s; border:none;
+  letter-spacing:0.1px; white-space:nowrap;
+}
+.btn-full { width:100%; }
+.btn-lg { padding:13px 22px; font-size:14px; border-radius:var(--r2); }
+.btn-sm { padding:5px 11px; font-size:11px; }
+.btn-xs { padding:3px 9px; font-size:11px; }
+.btn-primary { background:linear-gradient(135deg,var(--blue),var(--blue2)); color:#fff; box-shadow:0 4px 20px rgba(79,158,255,0.3); }
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 8px 28px rgba(79,158,255,0.45); }
+.btn-green { background:linear-gradient(135deg,var(--green),#2ECC71); color:#06120A; box-shadow:0 3px 16px rgba(79,255,160,0.3); }
+.btn-green:hover { transform:translateY(-2px); box-shadow:0 8px 26px rgba(79,255,160,0.45); }
+.btn-ghost { background:var(--s2); border:1px solid var(--line); color:var(--text2); }
+.btn-ghost:hover { border-color:var(--line2); color:var(--text); background:var(--s3); }
+.btn-gold  { background:var(--gold2); border:1px solid rgba(226,185,106,0.22); color:var(--gold); }
+.btn-gold:hover { background:rgba(226,185,106,0.2); }
+.btn-red   { background:var(--red2); border:1px solid rgba(255,107,107,0.22); color:var(--red); }
+.btn-red:hover { background:rgba(255,107,107,0.22); }
+.btn-cyan  { background:var(--cyan2); border:1px solid rgba(126,220,255,0.22); color:var(--cyan); }
+.btn-cyan:hover { background:rgba(126,220,255,0.22); }
+
+/* ── GENERATE button (QR Forge style) ── */
+.btn-gen {
+  width:100%; background:linear-gradient(135deg,var(--blue),var(--blue2));
+  color:#fff; font-family:var(--head); font-size:15px; font-weight:700;
+  letter-spacing:2px; text-transform:uppercase; border:none;
+  border-radius:var(--r2); padding:14px; cursor:pointer;
+  transition:transform 0.15s, box-shadow 0.2s;
+  box-shadow:0 4px 24px rgba(79,158,255,0.35); margin-top:4px;
+}
+.btn-gen:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(79,158,255,0.5); }
+.btn-gen:active { transform:translateY(0); }
+
+/* ════════════════════════════════
+   ALERTS / MESSAGES
+════════════════════════════════ */
+.alert {
+  padding:10px 14px; border-radius:var(--r1); font-size:12px; font-weight:500;
+  display:none; gap:8px; margin-top:10px; line-height:1.55; white-space:pre-line;
+  animation:scaleIn 0.25s ease both;
+}
+.alert.show { display:flex; align-items:flex-start; }
+.alert.ok   { background:var(--green2); border:1px solid rgba(79,255,160,0.2); color:var(--green); }
+.alert.err  { background:var(--red2);   border:1px solid rgba(255,107,107,0.2); color:var(--red); }
+.alert.warn { background:var(--gold2);  border:1px solid rgba(226,185,106,0.2); color:var(--gold); }
+.alert.info { background:var(--blue3);  border:1px solid rgba(79,158,255,0.2); color:var(--blue); }
+
+/* ════════════════════════════════
+   DASHBOARD
+════════════════════════════════ */
+.dash-wrap { max-width:1060px; margin:0 auto; padding:32px 24px 80px; }
+.dash-top {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  gap:16px; flex-wrap:wrap; margin-bottom:28px;
+}
+.dash-title { font-family:var(--head); font-size:26px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px; }
+.dash-sub { font-size:12px; color:var(--text3); font-family:var(--mono); }
+.dash-btns { display:flex; gap:8px; flex-wrap:wrap; }
+
+/* Stat row */
+.stats-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:12px; margin-bottom:24px;
+}
+.scard {
+  background:var(--s1); border:1px solid var(--line);
+  border-radius:var(--r3); padding:18px 16px;
+  position:relative; overflow:hidden; transition:all 0.3s;
+}
+.scard:hover { border-color:var(--line2); transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,0,0,0.3); }
+.scard::after {
+  content:''; position:absolute; bottom:0; left:0; right:0;
+  height:2px; border-radius:0 0 var(--r3) var(--r3);
+}
+.scard.b::after { background:linear-gradient(90deg,var(--blue),transparent); }
+.scard.g::after { background:linear-gradient(90deg,var(--green),transparent); }
+.scard.gold::after { background:linear-gradient(90deg,var(--gold),transparent); }
+.scard.r::after { background:linear-gradient(90deg,var(--red),transparent); }
+.scard .sl { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1.5px; color:var(--text3); margin-bottom:10px; }
+.scard .sv {
+  font-family:var(--mono); font-size:30px; font-weight:500;
+  line-height:1; margin-bottom:4px; animation:countUp 0.4s ease both;
+}
+.scard.b .sv   { color:var(--blue); }
+.scard.g .sv   { color:var(--green); }
+.scard.gold .sv{ color:var(--gold); }
+.scard.r .sv   { color:var(--red); }
+.scard .sm { font-size:11px; color:var(--text3); }
+
+/* Dash grid */
+.dash-grid { display:grid; grid-template-columns:1fr 340px; gap:18px; }
+
+/* ── TABS (pill style from QR Forge) ── */
+.tabs {
+  display:flex; gap:5px; margin-bottom:20px;
+  background:var(--s2); border-radius:var(--r2); padding:4px;
+}
+.tab {
+  flex:1; padding:8px 12px; background:transparent; border:none;
+  font-family:var(--mono); font-size:11px; color:var(--text3);
+  letter-spacing:1px; text-transform:uppercase; border-radius:9px;
+  cursor:pointer; transition:all 0.2s;
+}
+.tab.active { background:var(--blue); color:#fff; box-shadow:0 2px 12px rgba(79,158,255,0.4); }
+.tab:hover:not(.active) { color:var(--text); background:var(--blue3); }
+
+/* Panel block */
+.panel-block {
+  background:var(--s1); border:1px solid var(--line);
+  border-radius:var(--r4); overflow:hidden;
+}
+.pb-head {
+  padding:16px 20px; border-bottom:1px solid var(--line);
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.pb-title {
+  font-size:13px; font-weight:700;
+  display:flex; align-items:center; gap:8px;
+}
+.pb-icon {
+  width:27px; height:27px; border-radius:7px;
+  display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0;
+}
+.pb-body { padding:18px 20px; }
+
+/* ── LINK OUTPUT ── */
+.link-out {
+  margin-top:14px; background:var(--s2); border:1px solid rgba(79,158,255,0.2);
+  border-radius:var(--r3); padding:14px; display:none; animation:fadeUp 0.3s ease both;
+}
+.link-out.show { display:block; }
+.link-lbl { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1.5px; color:var(--text3); margin-bottom:8px; }
+.link-row { display:flex; gap:7px; }
+.link-inp {
+  flex:1; background:var(--s3); border:1px solid var(--line);
+  border-radius:var(--r1); padding:8px 11px;
+  font-size:11px; font-family:var(--mono); color:var(--blue); outline:none;
+}
+.link-copy {
+  padding:0 12px; background:var(--blue3); border:1px solid rgba(79,158,255,0.2);
+  border-radius:var(--r1); color:var(--blue); font-size:12px;
+  font-family:var(--body); font-weight:700; cursor:pointer; transition:all 0.2s; white-space:nowrap;
+}
+.link-copy:hover { background:rgba(79,158,255,0.2); }
+
+/* ── QR PREVIEW INSIDE LINK OUTPUT ── */
+.qr-inline {
+  margin-top:12px; display:none;
+  flex-direction:column; align-items:center; gap:10px;
+}
+.qr-inline.show { display:flex; }
+.qr-wrap-inline {
+  background:#fff; border-radius:12px; padding:12px;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.08), 0 6px 32px rgba(0,0,0,0.35);
+  position:relative;
+}
+.qr-wrap-inline::before,.qr-wrap-inline::after,
+.qr-wrap-inline .c-bl,.qr-wrap-inline .c-tr {
+  content:''; position:absolute; width:14px; height:14px;
+  border-color:var(--blue); border-style:solid;
+}
+.qr-wrap-inline::before { top:-2px;left:-2px;border-width:2px 0 0 2px;border-radius:4px 0 0 0; }
+.qr-wrap-inline::after  { bottom:-2px;right:-2px;border-width:0 2px 2px 0;border-radius:0 0 4px 0; }
+.qr-wrap-inline .c-bl   { bottom:-2px;left:-2px;border-width:0 0 2px 2px;border-radius:0 0 0 4px; }
+.qr-wrap-inline .c-tr   { top:-2px;right:-2px;border-width:2px 2px 0 0;border-radius:0 4px 0 0; }
+
+/* Live monitor */
+.live-mon {
+  margin-top:12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; display:none;
+}
+.live-mon.show { display:grid; }
+.lchip { background:var(--s3); border:1px solid var(--line); border-radius:var(--r1); padding:9px; text-align:center; }
+.lchip .lv { font-size:19px; font-weight:800; font-family:var(--mono); color:var(--blue); }
+.lchip .ll { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+
+/* ── SESSION ROWS ── */
+.slist { display:flex; flex-direction:column; gap:7px; }
+.srow {
+  background:var(--s2); border:1px solid var(--line);
+  border-radius:var(--r2); padding:12px 14px;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  transition:all 0.25s; cursor:default;
+}
+.srow:hover { border-color:var(--line2); background:var(--s3); transform:translateX(3px); }
+.srow-left { flex:1; min-width:0; }
+.srow-name {
+  font-size:13px; font-weight:700; margin-bottom:3px;
+  display:flex; align-items:center; gap:7px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.srow-meta { font-size:10px; color:var(--text3); font-family:var(--mono); }
+.srow-acts { display:flex; gap:4px; flex-shrink:0; }
+
+/* status badges */
+.badge {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:2px 7px; border-radius:100px;
+  font-size:10px; font-weight:700; font-family:var(--mono); letter-spacing:0.3px;
+}
+.badge-live {
+  background:rgba(79,255,160,0.1); color:var(--green);
+  border:1px solid rgba(79,255,160,0.2);
+}
+.badge-live::before {
+  content:''; width:5px; height:5px; border-radius:50%;
+  background:var(--green); animation:pulse 1.5s infinite;
+}
+.badge-end { background:rgba(90,101,128,0.15); color:var(--text3); border:1px solid var(--line); }
+
+/* ── SEARCH ── */
+.search-wrap { position:relative; margin-bottom:13px; }
+.search-wrap input {
+  width:100%; background:var(--s2); border:1px solid var(--line);
+  border-radius:var(--r1); padding:8px 12px 8px 36px;
+  font-size:12px; font-family:var(--body); color:var(--text); outline:none;
+  transition:border-color 0.2s;
+}
+.search-wrap input:focus { border-color:var(--line2); }
+.search-ico { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text3); font-size:13px; pointer-events:none; }
+
+/* ── LIVE ACTIVITY PANEL ── */
+.la-item {
+  background:var(--s2); border:1px solid rgba(79,255,160,0.1);
+  border-radius:var(--r2); padding:12px 14px; margin-bottom:8px;
+}
+
+/* ════════════════════════════════
+   STUDENT PAGE
+════════════════════════════════ */
+.stu-wrap {
+  max-width:520px; margin:0 auto;
+  padding:40px 20px 80px;
+}
+.sess-banner {
+  background:var(--s1); border:1px solid var(--line);
+  border-radius:var(--r4); padding:20px 22px;
+  margin-bottom:14px; position:relative; overflow:hidden;
+  animation:fadeUp 0.5s ease both;
+}
+.sess-banner::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,var(--blue),var(--cyan));
+}
+.sb-subject { font-family:var(--head); font-size:24px; font-weight:800; letter-spacing:-0.5px; margin-bottom:6px; }
+.sb-meta { font-size:11px; font-family:var(--mono); color:var(--text3); margin-bottom:10px; }
+.sb-tags { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.sb-tag {
+  padding:3px 10px; border-radius:100px;
+  font-size:11px; font-weight:700; font-family:var(--mono);
+}
+.sb-tag.b { background:var(--blue3); color:var(--blue); border:1px solid rgba(79,158,255,0.2); }
+.sb-tag.c { background:var(--cyan2); color:var(--cyan); border:1px solid rgba(126,220,255,0.2); }
+.sb-tag.g { background:var(--gold2); color:var(--gold); border:1px solid rgba(226,185,106,0.2); }
+
+/* timer */
+.timer-block { margin-top:4px; }
+.timer-row { display:flex; justify-content:space-between; font-size:11px; font-family:var(--mono); color:var(--text3); margin-bottom:6px; }
+.timer-val { font-size:14px; font-weight:700; color:var(--gold); }
+.timer-track { height:4px; background:var(--line); border-radius:100px; overflow:hidden; }
+.timer-fill { height:100%; background:linear-gradient(90deg,var(--blue),var(--cyan)); border-radius:100px; transition:width 1s linear; }
+.timer-fill.warn { background:linear-gradient(90deg,var(--red),var(--gold)); }
+
+/* attend form */
+.attend-card { background:var(--s1); border:1px solid var(--line); border-radius:var(--r4); padding:24px; animation:fadeUp 0.45s ease 0.1s both; }
+.attend-head { font-size:15px; font-weight:700; margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+
+/* success */
+.success-state { background:var(--s1); border:1px solid rgba(79,255,160,0.14); border-radius:var(--r4); padding:44px 24px; text-align:center; display:none; animation:scaleIn 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+.success-state.show { display:block; }
+.success-ring { width:70px;height:70px; border-radius:50%; background:var(--green2); border:2px solid rgba(79,255,160,0.3); display:flex;align-items:center;justify-content:center; font-size:28px; margin:0 auto 18px; animation:glowPulse 2s ease infinite; }
+.success-name { font-family:var(--head); font-size:20px; font-weight:800; color:var(--green); margin-bottom:5px; }
+.success-detail { font-size:12px; color:var(--text2); margin-bottom:14px; }
+.success-rank { display:inline-flex; align-items:center; gap:6px; background:var(--gold2); border:1px solid rgba(226,185,106,0.2); border-radius:100px; padding:6px 16px; font-size:12px; font-weight:700; color:var(--gold); font-family:var(--mono); }
+
+/* expired */
+.expired-state { text-align:center; padding:70px 20px; display:none; }
+.expired-state.show { display:block; animation:fadeUp 0.4s ease both; }
+.expired-ring { width:90px;height:90px; border-radius:50%; background:var(--red2); border:2px solid rgba(255,107,107,0.2); display:flex;align-items:center;justify-content:center;font-size:40px; margin:0 auto 20px; }
+.expired-title { font-family:var(--head); font-size:30px; font-weight:800; color:var(--red); margin-bottom:8px; }
+.expired-body { font-size:14px; color:var(--text2); line-height:1.6; }
+
+/* ════════════════════════════════
+   QR TOOL PAGE
+════════════════════════════════ */
+.qr-wrap { max-width:940px; margin:0 auto; padding:40px 24px 80px; }
+.qr-header { text-align:center; padding-bottom:44px; }
+.qr-chip {
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--blue3); border:1px solid rgba(79,158,255,0.2);
+  border-radius:100px; padding:6px 16px;
+  font-size:11px; font-family:var(--mono); letter-spacing:2px;
+  color:var(--cyan); text-transform:uppercase; margin-bottom:18px;
+}
+.qr-chip .dot { width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2s infinite; }
+.qr-h1 {
+  font-family:var(--head); font-size:clamp(28px,5vw,50px); font-weight:800;
+  letter-spacing:-1px; line-height:1.1;
+  background:linear-gradient(135deg,#fff 30%,var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:10px;
+}
+.qr-sub { font-size:13px; color:var(--text2); max-width:400px; margin:0 auto; line-height:1.6; font-family:var(--mono); letter-spacing:0.3px; }
+.qr-main { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+
+/* QR Preview card */
+.qr-preview-card {
+  background:var(--s1); border:1px solid var(--line); border-radius:var(--r4);
+  padding:26px 24px; display:flex; flex-direction:column; align-items:center;
+  text-align:center; gap:18px; min-height:400px; justify-content:center;
+  transition:border-color 0.3s, box-shadow 0.3s;
+}
+.qr-preview-card:hover { border-color:var(--line2); box-shadow:0 0 36px rgba(79,158,255,0.06); }
+.qr-preview-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(126,220,255,0.4),transparent);
+}
+
+.qr-empty { display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--text3); }
+.qr-empty .icon {
+  width:68px;height:68px; border:2px dashed var(--line);
+  border-radius:14px; display:flex;align-items:center;justify-content:center;font-size:26px;
+}
+.qr-empty p { font-size:12px; font-family:var(--mono); letter-spacing:0.3px; line-height:1.6; max-width:180px; }
+
+.qr-result { display:none; flex-direction:column; align-items:center; gap:14px; width:100%; }
+.qr-result.show { display:flex; }
+.qr-badge-row { width:100%; }
+.qr-type-badge {
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--green2);border:1px solid rgba(79,255,160,0.2);
+  border-radius:100px;padding:4px 12px;
+  font-size:10px;letter-spacing:1.5px;color:var(--green);text-transform:uppercase;
+  margin-bottom:8px;
+}
+.qr-url-prev {
+  font-size:11px;color:var(--text3); word-break:break-all;
+  background:var(--s2);border:1px solid var(--line);
+  border-radius:var(--r1);padding:8px 11px;text-align:left;line-height:1.5;
+  font-family:var(--mono);
+}
+
+.qr-outer {
+  background:#fff;border-radius:14px;padding:16px;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.06), 0 8px 48px rgba(0,0,0,0.4);
+  position:relative;
+}
+.qr-outer::before,.qr-outer::after,.qr-outer .cbl,.qr-outer .ctr {
+  content:'';position:absolute;width:16px;height:16px;border-color:var(--blue);border-style:solid;
+}
+.qr-outer::before {top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:4px 0 0 0;}
+.qr-outer::after  {bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 4px 0;}
+.qr-outer .cbl    {bottom:-2px;left:-2px;border-width:0 0 3px 3px;border-radius:0 0 0 4px;}
+.qr-outer .ctr    {top:-2px;right:-2px;border-width:3px 3px 0 0;border-radius:0 4px 0 0;}
+#qr-output canvas,#qr-output img { display:block!important; }
+
+.dl-row { display:grid; grid-template-columns:1fr 1fr; gap:9px; width:100%; }
+.btn-dl-png { padding:10px;border-radius:var(--r1);font-family:var(--head);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;border:none;background:linear-gradient(135deg,var(--green),#2ECC71);color:#06120A;box-shadow:0 3px 14px rgba(79,255,160,0.3);}
+.btn-dl-png:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(79,255,160,0.45);}
+.btn-dl-svg{padding:10px;border-radius:var(--r1);font-family:var(--head);font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;background:transparent;border:1px solid var(--line);color:var(--text2);}
+.btn-dl-svg:hover{border-color:var(--cyan);color:var(--cyan);}
+.share-row{display:flex;gap:7px;width:100%;justify-content:center;flex-wrap:wrap;}
+.btn-share{display:flex;align-items:center;gap:5px;padding:7px 12px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);font-family:var(--mono);font-size:11px;color:var(--text2);cursor:pointer;transition:all 0.2s;}
+.btn-share:hover{border-color:var(--blue);color:var(--blue);}
+
+/* QR history */
+.qr-hist { margin-top:20px; width:100%; }
+.qr-hist-title { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--text3); margin-bottom:9px; font-family:var(--mono); }
+.qr-hist-list { display:flex; flex-direction:column; gap:6px; }
+.qr-hi {
+  display:flex; align-items:center; gap:9px;
+  background:var(--s2); border:1px solid var(--line);
+  border-radius:var(--r1); padding:8px 11px; cursor:pointer; transition:border-color 0.2s;
+}
+.qr-hi:hover { border-color:rgba(79,158,255,0.3); }
+.qr-hi .ico { font-size:15px; flex-shrink:0; }
+.qr-hi .tx { flex:1; min-width:0; }
+.qr-hi .tl { font-size:11px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.qr-hi .ts { font-size:10px; color:var(--text3); font-family:var(--mono); }
+.qr-hi .rd { background:none; border:none; color:var(--text3); cursor:pointer; font-size:13px; padding:2px 4px; border-radius:4px; transition:color 0.2s; flex-shrink:0; }
+.qr-hi .rd:hover { color:var(--red); }
+
+/* QR stats bar */
+.qr-stats-bar {
+  margin-top:22px; display:flex; gap:0;
+  background:var(--s1); border:1px solid var(--line);
+  border-radius:var(--r3); overflow:hidden; width:100%;
+}
+.qr-stat { flex:1; padding:16px 18px; text-align:center; border-right:1px solid var(--line); }
+.qr-stat:last-child { border-right:none; }
+.qr-stat .qsv { font-family:var(--head); font-size:26px; font-weight:800; color:var(--cyan); display:block; }
+.qr-stat .qsl { font-size:10px; color:var(--text3); letter-spacing:1.5px; text-transform:uppercase; margin-top:2px; font-family:var(--mono); }
+
+/* Color pickers */
+.color-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.color-swatch {
+  display:flex; align-items:center; gap:9px;
+  background:var(--s2); border:1px solid var(--line); border-radius:var(--r1);
+  padding:9px 11px; cursor:pointer; transition:border-color 0.2s;
+}
+.color-swatch:hover { border-color:var(--blue); }
+.color-swatch input[type=color] { width:26px;height:26px;border:none;border-radius:5px;cursor:pointer;background:none;padding:0; }
+.color-swatch span { font-size:11px; color:var(--text2); letter-spacing:1px; text-transform:uppercase; font-family:var(--mono); }
+.slider-row { display:flex; align-items:center; gap:11px; }
+.slider-row input[type=range] { flex:1; -webkit-appearance:none; height:4px; border-radius:4px; background:var(--line); outline:none; }
+.slider-row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:15px;height:15px;border-radius:50%;background:var(--blue);cursor:pointer;box-shadow:0 0 8px rgba(79,158,255,0.5); }
+.slider-val { font-size:12px; color:var(--blue); min-width:40px; text-align:right; font-family:var(--mono); }
+.qr-panel { display:none; } .qr-panel.active { display:block; }
+.err-msg { font-size:11px; color:var(--red); margin-top:4px; display:none; }
+.err-msg.show { display:block; }
+
+/* Howto */
+.howto { margin-top:28px; width:100%; }
+.howto-title {
+  font-family:var(--head); font-size:17px; font-weight:700;
+  color:var(--text); margin-bottom:14px;
+  display:flex; align-items:center; gap:10px;
+}
+.howto-title::after { content:''; flex:1; height:1px; background:var(--line); }
+.steps-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:13px; }
+.step-card {
+  background:var(--s1); border:1px solid var(--line);
+  border-radius:var(--r3); padding:16px 14px;
+  position:relative; overflow:hidden;
+}
+.step-card::before {
+  content:''; position:absolute; top:0; left:0; bottom:0; width:3px;
+  background:linear-gradient(180deg,var(--blue),var(--cyan));
+}
+.step-num { font-family:var(--head); font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--blue); margin-bottom:7px; }
+.step-text { font-size:12px; color:var(--text2); line-height:1.65; font-family:var(--mono); }
+.step-text strong { color:var(--text); }
+
+/* ════════════════════════════════
+   MODALS
+════════════════════════════════ */
+.overlay {
+  position:fixed; inset:0;
+  background:rgba(30,42,74,0.45); backdrop-filter:blur(8px);
+  z-index:2000; display:none; align-items:center; justify-content:center; padding:20px;
+}
+.overlay.show { display:flex; animation:fadeIn 0.2s ease both; }
+.modal {
+  background:var(--s1); border:1px solid var(--line2);
+  border-radius:var(--r5); width:100%; max-width:700px;
+  max-height:88vh; overflow-y:auto;
+  box-shadow:0 28px 90px rgba(59,111,232,0.15);
+  animation:scaleIn 0.3s cubic-bezier(0.22,1,0.36,1) both;
+  position:relative;
+}
+.modal-top {
+  position:sticky; top:0; background:var(--s1); border-bottom:1px solid var(--line);
+  padding:18px 22px; display:flex; align-items:center; justify-content:space-between; gap:14px; z-index:10;
+}
+.modal-title { font-family:var(--head); font-size:19px; font-weight:800; letter-spacing:-0.3px; }
+.modal-close {
+  width:30px;height:30px; border-radius:var(--r1);
+  background:var(--s2); border:1px solid var(--line); color:var(--text2);
+  cursor:pointer; display:flex;align-items:center;justify-content:center; font-size:15px;
+  transition:all 0.2s; flex-shrink:0;
+}
+.modal-close:hover { background:var(--red2); color:var(--red); border-color:rgba(255,107,107,0.3); }
+.modal-body { padding:22px; }
+
+/* Att table */
+.att-wrap { overflow-x:auto; border-radius:var(--r2); border:1px solid var(--line); }
+.att-table { width:100%; border-collapse:collapse; font-size:12px; }
+.att-table th { background:var(--s2); padding:9px 12px; text-align:left; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:1.2px; color:var(--text3); border-bottom:1px solid var(--line); white-space:nowrap; }
+.att-table td { padding:10px 12px; border-bottom:1px solid var(--line); color:var(--text); transition:background 0.15s; }
+.att-table tr:last-child td { border-bottom:none; }
+.att-table tr:hover td { background:rgba(79,158,255,0.04); }
+.att-table .rc { font-family:var(--mono); font-size:11px; color:var(--text3); width:30px; }
+.att-table .mc { font-family:var(--mono); font-size:11px; color:var(--blue); font-weight:600; }
+.att-table .tc { font-family:var(--mono); font-size:11px; color:var(--cyan); }
+.att-table tr.first td { color:var(--gold); }
+
+/* Settings modal */
+.set-sec { margin-bottom:22px; }
+.set-sec-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--text3); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+.pin-grid { display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+
+/* Confirm */
+.confirm-box {
+  background:var(--s1); border:1px solid var(--line2); border-radius:var(--r5);
+  padding:30px; max-width:360px; width:100%;
+  text-align:center; animation:scaleIn 0.3s ease both;
+}
+.confirm-acts { display:flex; gap:9px; }
+
+/* ════════════════════════════════
+   TOAST
+════════════════════════════════ */
+.toast-stack {
+  position:fixed; bottom:22px; right:22px;
+  z-index:9999; display:flex; flex-direction:column; gap:7px;
+}
+.toast-item {
+  background:var(--s2); border:1px solid var(--line2); border-radius:var(--r2);
+  padding:11px 15px; min-width:240px; max-width:320px;
+  font-size:12px; font-weight:500; font-family:var(--mono);
+  display:flex; align-items:center; gap:9px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.5);
+  animation:slideIn 0.3s cubic-bezier(0.22,1,0.36,1) both;
+}
+.toast-item.out { animation:fadeIn 0.3s ease reverse both; }
+.toast-item.ok   { border-color:rgba(79,255,160,0.2); }
+.toast-item.err  { border-color:rgba(255,107,107,0.2); }
+.toast-item.warn { border-color:rgba(226,185,106,0.2); }
+.toast-item.info { border-color:rgba(79,158,255,0.2); }
+
+/* ════════════════════════════════
+   FOOTER
+════════════════════════════════ */
+.site-footer {
+  padding:26px 28px; border-top:1px solid var(--line);
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:12px; font-size:11px; color:var(--text3);
+  position:relative; z-index:1;
+}
+.footer-brand { display:flex; align-items:center; gap:9px; }
+.footer-name {
+  font-family:var(--head); font-weight:800; font-size:13px;
+  background:linear-gradient(90deg,var(--blue),var(--cyan));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+}
+.footer-links { display:flex; gap:14px; }
+.footer-links a { color:var(--text3); text-decoration:none; transition:color 0.2s; font-family:var(--mono); font-size:11px; }
+.footer-links a:hover { color:var(--blue); }
+
+/* Divider */
+.divider { height:1px; background:var(--line); margin:16px 0; }
+
+/* Empty state */
+.empty-st { text-align:center; padding:36px 20px; color:var(--text3); }
+.empty-st .ei { font-size:32px; margin-bottom:9px; opacity:0.5; }
+.empty-st .et { font-size:12px; font-family:var(--mono); }
+
+/* ── Responsive ── */
+@media(max-width:900px){ .dash-grid{grid-template-columns:1fr;} .stats-grid{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:680px){ .qr-main{grid-template-columns:1fr;} .features-grid{grid-template-columns:1fr;} }
+@media(max-width:600px){ .topnav{padding:0 14px;} .frow,.frow3{grid-template-columns:1fr;} .nav-page-tabs{display:none;} .stats-grid{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:500px){ .qr-stats-bar{flex-direction:column;} .qr-stat{border-right:none;border-bottom:1px solid var(--line);} .qr-stat:last-child{border-bottom:none;} .dl-row{grid-template-columns:1fr;} }
+
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--s4);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--text3);}
+::selection{background:rgba(79,158,255,0.25);color:#fff;}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- ── Floating school icons background ── -->
+<div class="school-bg" id="schoolBg"></div>
+
+<!-- ═══════════════ TOP NAV ═══════════════ -->
+<nav class="topnav" id="topnav">
+  <div class="nav-logo" onclick="goHome()">
+    <div class="nav-logomark">✦</div>
+    <span class="nav-wordmark">Attend<span>X</span></span>
+    <span class="nav-pro">PRO</span>
+  </div>
+
+  <div class="nav-page-tabs" id="navTabs" style="display:none;">
+    <button class="nav-ptab active" id="ntDash"    onclick="navTo('dash')">Dashboard</button>
+    <button class="nav-ptab"        id="ntQR"      onclick="navTo('qr')">QR Tool</button>
+  </div>
+
+  <div class="nav-right" id="navRight">
+    <button class="nav-btn nav-btn-ghost" onclick="showLogin()">Admin Login</button>
+    <button class="nav-btn nav-btn-solid" onclick="showLogin()">Get Started →</button>
+  </div>
+</nav>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<div class="main">
+
+<!-- ─────── LANDING ─────── -->
+<div class="page active" id="pgLanding">
+  <div class="landing">
+    <div class="landing-chip a-fadeup">
+      <span class="dot"></span>
+      SMART ATTENDANCE PLATFORM
+    </div>
+    <h1 class="landing-h1 a-fadeup d1">
+      Precision<br/><em>Attendance.</em><br/>Zero Friction.
+    </h1>
+    <p class="landing-sub a-fadeup d2">
+      Create timed sessions, verify students by class, generate scannable QR codes, and export professional PDF reports — all in one platform.
+    </p>
+    <div class="landing-cta a-fadeup d3">
+      <button class="cta-btn cta-primary" onclick="showLogin()">Open Admin Panel →</button>
+      <button class="cta-btn cta-outline" onclick="showLogin()">View Demo</button>
+    </div>
+    <div class="features-grid a-fadeup d4">
+      <div class="feat">
+        <div class="feat-icon b">⏱</div>
+        <div class="feat-title">Timed Sessions</div>
+        <div class="feat-desc">Create attendance sessions with custom durations. Links expire automatically — latecomers are absent.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon g">🎓</div>
+        <div class="feat-title">Class Verification</div>
+        <div class="feat-desc">Students are cross-checked against their registered class before marking attendance is allowed.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon c">📄</div>
+        <div class="feat-title">PDF Reports</div>
+        <div class="feat-desc">Auto-generated tabular PDFs per session or full day. First attendee to last, all ranked.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon gold">▦</div>
+        <div class="feat-title">QR Code Generator</div>
+        <div class="feat-desc">Built-in QR tool — generate QR codes for session links, emails, or websites and share instantly.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon b">🔐</div>
+        <div class="feat-title">Secure Admin Panel</div>
+        <div class="feat-desc">PIN-protected dashboard with live session monitoring, search, delete, and custom PIN settings.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon g">📡</div>
+        <div class="feat-title">Live Tracking</div>
+        <div class="feat-desc">Watch attendance roll in live with real-time present count and countdown timer per session.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── LOGIN ─────── -->
+<div class="page" id="pgLogin">
+  <div class="login-wrap">
+    <div class="login-card a-scalein">
+      <div class="login-lock">🔐</div>
+      <div class="login-title">Admin Access</div>
+      <div class="login-sub">Enter your 4-digit PIN to access the dashboard.</div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div class="numpad">
+        <div class="nk" onclick="nkPress('1')">1</div>
+        <div class="nk" onclick="nkPress('2')">2</div>
+        <div class="nk" onclick="nkPress('3')">3</div>
+        <div class="nk" onclick="nkPress('4')">4</div>
+        <div class="nk" onclick="nkPress('5')">5</div>
+        <div class="nk" onclick="nkPress('6')">6</div>
+        <div class="nk" onclick="nkPress('7')">7</div>
+        <div class="nk" onclick="nkPress('8')">8</div>
+        <div class="nk" onclick="nkPress('9')">9</div>
+        <div class="nk w2" onclick="nkPress('0')">0</div>
+        <div class="nk del" onclick="nkDel()">⌫</div>
+      </div>
+      <div class="alert" id="loginAlert"></div>
+      <p style="text-align:center;font-size:11px;color:var(--text3);margin-top:14px;font-family:var(--mono);">Default PIN: 1234 &nbsp;·&nbsp; Change in Settings</p>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── DASHBOARD ─────── -->
+<div class="page" id="pgDash">
+  <div class="dash-wrap">
+
+    <div class="dash-top a-fadeup">
+      <div>
+        <div class="dash-title">Dashboard</div>
+        <div class="dash-sub" id="dashDate"></div>
+      </div>
+      <div class="dash-btns">
+        <button class="btn btn-ghost btn-sm" onclick="showSettings()">⚙ Settings</button>
+        <button class="btn btn-gold btn-sm" onclick="downloadDailyPDF()">📄 Full Day PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="adminOut()">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid a-fadeup d1">
+      <div class="scard b"><div class="sl">Today's Sessions</div><div class="sv" id="stSess">0</div><div class="sm">Created today</div></div>
+      <div class="scard g"><div class="sl">Total Present</div><div class="sv" id="stPres">0</div><div class="sm">All sessions</div></div>
+      <div class="scard gold"><div class="sl">Live Now</div><div class="sv" id="stLive">0</div><div class="sm">Active sessions</div></div>
+      <div class="scard r"><div class="sl">Ended</div><div class="sv" id="stEnd">0</div><div class="sm">Completed</div></div>
+    </div>
+
+    <div class="dash-grid">
+      <!-- LEFT -->
+      <div>
+        <div class="tabs" id="dashTabs">
+          <button class="tab active" id="dt1" onclick="dTab(1)">✦ New Session</button>
+          <button class="tab" id="dt2" onclick="dTab(2)">📋 Sessions</button>
+          <button class="tab" id="dt3" onclick="dTab(3)">📊 Reports</button>
+        </div>
+
+        <!-- Tab 1: Create -->
+        <div id="dc1">
+          <div class="card a-fadeup d2">
+            <div class="card-title">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              Create Attendance Session
+            </div>
+            <div class="frow">
+              <div class="field"><label>Subject / Course</label><input id="inSub" placeholder="e.g. Mathematics"/></div>
+              <div class="field"><label>Class / Level</label><input id="inCls" placeholder="e.g. Level 1"/></div>
+            </div>
+            <div class="field">
+              <label>Department</label>
+              <div class="sel-wrap"><select id="inDept">
+                <option value="">— Select Department —</option>
+                <option>Computer Science</option><option>Mathematics</option><option>Physics</option>
+                <option>Chemistry</option><option>Biology</option><option>Civil Engineering</option>
+                <option>Electrical Engineering</option><option>Mechanical Engineering</option>
+                <option>Economics</option><option>Management</option><option>Law</option>
+                <option>Medicine</option><option>Pharmacy</option><option>Literature</option>
+                <option>History</option><option>Geography</option><option>Other</option>
+              </select></div>
+            </div>
+            <div class="frow3">
+              <div class="field"><label>Lecturer</label><input id="inLec" placeholder="Dr. Name"/></div>
+              <div class="field"><label>Start Time</label><input id="inTime" type="time"/></div>
+              <div class="field"><label>Duration (min)</label><input id="inDur" type="number" value="30" min="1" max="360"/></div>
+            </div>
+            <div class="field"><label>Room / Location (optional)</label><input id="inRoom" placeholder="e.g. Amphi B"/></div>
+
+            <!-- Geo-fence -->
+            <div class="field">
+              <label>Geo-fence Radius (metres)</label>
+              <div class="frow" style="gap:8px;align-items:flex-end">
+                <div style="flex:1"><input id="inRadius" type="number" value="100" min="10" max="5000" placeholder="100"/><div class="hint">Students outside this radius cannot mark attendance.</div></div>
+                <button type="button" class="btn btn-cyan" style="height:38px;flex-shrink:0" onclick="captureTeacherLocation()">� Retry Location</button>t
+              </div>
+            </div>
+            <div class="alert" id="geoAlert"></div>
+            <div id="geoStatus" style="display:none;margin-bottom:12px;padding:10px 13px;background:var(--green2);border:1px solid rgba(79,255,160,0.2);border-radius:var(--r1);font-size:12px;color:var(--green);font-family:var(--mono);">
+              📍 Location captured — ready to enforce geo-fence
+            </div>
+
+            <button class="btn-gen" onclick="createSession()">⚡ Generate Attendance Link</button>
+            <div class="alert" id="createAlert"></div>
+
+            <!-- Link + QR output -->
+            <div class="link-out" id="linkOut">
+              <div class="link-lbl">Student attendance link</div>
+              <div class="link-row">
+                <input class="link-inp" id="genLink" readonly/>
+                <div class="link-copy" id="lCopyBtn" onclick="copyLink()">Copy</div>
+              </div>
+              <div class="hint" style="margin-top:5px;">→ Share via WhatsApp, Telegram, or project on screen. QR below.</div>
+              <div class="qr-inline" id="qrInline">
+                <div class="qr-wrap-inline">
+                  <div class="c-bl"></div><div class="c-tr"></div>
+                  <div id="qrInlineOut"></div>
+                </div>
+                <div class="dl-row" style="max-width:240px;">
+                  <button class="btn-dl-png" onclick="downloadSessionQR()">↓ QR PNG</button>
+                  <button class="btn-dl-svg" onclick="printSessionQR()">🖨 Print</button>
+                </div>
+              </div>
+              <div class="live-mon" id="liveMon">
+                <div class="lchip"><div class="lv" id="lvCount">0</div><div class="ll">Present</div></div>
+                <div class="lchip"><div class="lv" id="lvTime" style="font-size:13px">--:--</div><div class="ll">Remaining</div></div>
+                <div class="lchip"><div class="lv" id="lvDur" style="font-size:13px">--</div><div class="ll">Duration</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Sessions -->
+        <div id="dc2" style="display:none;">
+          <div class="panel-block a-fadeup d2">
+            <div class="pb-head">
+              <div class="pb-title"><div class="pb-icon" style="background:var(--cyan2)">📋</div>Today's Sessions</div>
+              <span id="sessCount" style="font-size:10px;color:var(--text3);font-family:var(--mono);">0 sessions</span>
+            </div>
+            <div class="pb-body">
+              <div class="search-wrap">
+                <span class="search-ico">🔍</span>
+                <input id="sessSearch" placeholder="Search subject, class, dept..." oninput="renderSessions()"/>
+              </div>
+              <div class="slist" id="sessList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Reports -->
+        <div id="dc3" style="display:none;">
+          <div class="panel-block a-fadeup d2">
+            <div class="pb-head">
+              <div class="pb-title"><div class="pb-icon" style="background:var(--gold2)">📊</div>Session Reports</div>
+            </div>
+            <div class="pb-body" id="reportsList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div>
+        <div class="panel-block a-fadeup d3" style="margin-bottom:15px;">
+          <div class="pb-head">
+            <div class="pb-title"><div class="pb-icon" style="background:var(--green2)">📡</div>Live Activity</div>
+          </div>
+          <div class="pb-body" id="livePanel">
+            <div class="empty-st"><div class="ei">📡</div><div class="et">No active sessions</div></div>
+          </div>
+        </div>
+        <div class="panel-block a-fadeup d4">
+          <div class="pb-head">
+            <div class="pb-title"><div class="pb-icon" style="background:var(--blue3)">ℹ</div>Quick Guide</div>
+          </div>
+          <div class="pb-body">
+            <div style="display:flex;flex-direction:column;gap:11px;">
+              <div style="display:flex;gap:9px;align-items:flex-start;">
+                <div style="width:21px;height:21px;border-radius:6px;background:var(--blue3);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;">1</div>
+                <div style="font-size:12px;color:var(--text2);line-height:1.5;"><strong style="color:var(--text)">Create</strong> — Fill subject, class, duration.</div>
+              </div>
+              <div style="display:flex;gap:9px;align-items:flex-start;">
+                <div style="width:21px;height:21px;border-radius:6px;background:var(--cyan2);color:var(--cyan);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;">2</div>
+                <div style="font-size:12px;color:var(--text2);line-height:1.5;"><strong style="color:var(--text)">Share</strong> — Copy link or scan/print the QR code.</div>
+              </div>
+              <div style="display:flex;gap:9px;align-items:flex-start;">
+                <div style="width:21px;height:21px;border-radius:6px;background:var(--gold2);color:var(--gold);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:1px;">3</div>
+                <div style="font-size:12px;color:var(--text2);line-height:1.5;"><strong style="color:var(--text)">Report</strong> — Download PDF when session ends.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─────── STUDENT PAGE ─────── -->
+<div class="page" id="pgStudent">
+  <div class="stu-wrap">
+
+    <div class="sess-banner" id="stuBanner">
+      <div class="sb-subject" id="sbSubj">—</div>
+      <div class="sb-meta" id="sbMeta">—</div>
+      <div class="sb-tags" id="sbTags"></div>
+      <div class="timer-block">
+        <div class="timer-row"><span>Session closes in</span><span class="timer-val" id="timerVal">--:--</span></div>
+        <div class="timer-track"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+      </div>
+    </div>
+
+    <div class="expired-state" id="expiredSt">
+      <div class="expired-ring">⏱</div>
+      <div class="expired-title">Time Elapsed</div>
+      <div class="expired-body">This session has ended.<br/>You are recorded as <strong style="color:var(--red)">absent</strong>.</div>
+    </div>
+
+    <div class="success-state" id="successSt">
+      <div class="success-ring">✓</div>
+      <div class="success-name" id="succName">—</div>
+      <div class="success-detail" id="succDetail">—</div>
+      <div class="success-rank" id="succRank">—</div>
+    </div>
+
+    <div class="attend-card" id="attendCard">
+      <div class="attend-head"><span>📝</span> Mark Your Attendance</div>
+      <div class="frow">
+        <div class="field"><label>First Name</label><input id="stuFirst" placeholder="Jean" autocomplete="given-name"/></div>
+        <div class="field"><label>Last Name / Surname</label><input id="stuLast" placeholder="Mbarga" autocomplete="family-name"/></div>
+      </div>
+      <div class="field mono-f"><label>Matriculation Number</label><input id="stuMat" placeholder="e.g. 21B0045" autocomplete="off"/></div>
+      <div class="field"><label>Your Class / Level</label><input id="stuCls" placeholder="Must match session class"/></div>
+      <div class="field ac-wrap">
+        <label>Department</label>
+        <input id="stuDept" placeholder="e.g. Computer Science" autocomplete="off" oninput="showAC()" onblur="hideAC()"/>
+        <div class="ac-list" id="acList"></div>
+      </div>
+      <div class="field"><label>Phone Number (optional)</label><input id="stuPhone" type="tel" placeholder="+237 6XX XXX XXX" autocomplete="tel"/></div>
+      <!-- Geo status shown when session has geo-fence -->
+      <div id="stuGeoStatus" style="display:none;margin-bottom:12px;padding:10px 13px;border-radius:var(--r1);font-size:12px;font-family:var(--mono);"></div>
+      <button class="btn-gen" onclick="submitAttend()" id="stuSubmitBtn">✓ Submit My Attendance</button>
+      <div class="alert" id="stuAlert"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─────── QR TOOL PAGE ─────── -->
+<div class="page" id="pgQR">
+  <div class="qr-wrap">
+    <div class="qr-header">
+      <div class="qr-chip a-fadeup"><span class="dot"></span>QR Code Generator</div>
+      <h1 class="qr-h1 a-fadeup d1">Generate &amp; Share<br/>QR Codes</h1>
+      <p class="qr-sub a-fadeup d2">Create scannable QR codes for session links, emails or websites. Download PNG/SVG — ready for print, Canva or projector.</p>
+    </div>
+
+    <div class="qr-main">
+      <!-- LEFT: Config -->
+      <div class="card">
+        <div class="card-title">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3m0 4h4v-4m-4 0h-3v4"/></svg>
+          Configuration
+        </div>
+
+        <div class="tabs" style="margin-bottom:20px;">
+          <button class="tab active" onclick="qrTab('link',this)">🔗 Session Link</button>
+          <button class="tab" onclick="qrTab('email',this)">✉ Email</button>
+          <button class="tab" onclick="qrTab('web',this)">🌐 Website</button>
+        </div>
+
+        <!-- LINK PANEL -->
+        <div class="qr-panel active" id="qrp-link">
+          <div class="field"><label>Paste Session Link</label><input id="qr-link-url" placeholder="Paste attendance link here…"/><p class="hint">Paste a session link to generate a scannable QR for students.</p></div>
+          <div class="field"><label>Label (optional)</label><input id="qr-link-label" placeholder="e.g. Mathematics Level 1"/></div>
+        </div>
+
+        <!-- EMAIL PANEL -->
+        <div class="qr-panel" id="qrp-email">
+          <div class="field"><label>Email Address *</label><input type="email" id="qr-em" placeholder="teacher@school.cm"/><div class="err-msg" id="err-em">Please enter a valid email address.</div></div>
+          <div class="field"><label>Subject (optional)</label><input id="qr-sub" placeholder="Attendance enquiry"/></div>
+          <div class="field"><label>Pre-filled Body (optional)</label><textarea id="qr-body" style="width:100%;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 13px;font-size:13px;font-family:var(--body);color:var(--text);outline:none;resize:vertical;min-height:80px;" placeholder="Hi, regarding the attendance session…"></textarea><p class="hint">Email app opens with this text pre-filled.</p></div>
+        </div>
+
+        <!-- WEB PANEL -->
+        <div class="qr-panel" id="qrp-web">
+          <div class="field"><label>Website / URL *</label><input id="qr-url" placeholder="https://yourwebsite.com"/><div class="err-msg" id="err-url">Please enter a valid URL (include https://).</div></div>
+          <div class="field"><label>Label (for history)</label><input id="qr-urlabel" placeholder="My Website"/></div>
+        </div>
+
+        <!-- SHARED OPTIONS -->
+        <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:18px;">
+          <div class="card-title" style="font-size:11px;margin-bottom:14px;">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+            Appearance
+          </div>
+          <div class="color-row">
+            <div class="color-swatch"><input type="color" id="qr-fg" value="#000000" oninput="document.getElementById('fgv').textContent=this.value"/><span id="fgv">#000000</span></div>
+            <div class="color-swatch"><input type="color" id="qr-bg" value="#FFFFFF" oninput="document.getElementById('bgv').textContent=this.value"/><span id="bgv">#FFFFFF</span></div>
+          </div>
+          <p class="hint" style="margin:6px 0 12px;">Dark (QR modules) · Light (background)</p>
+          <div class="field"><label>QR Size</label>
+            <div class="slider-row">
+              <input type="range" id="qr-size" min="128" max="512" value="256" step="32" oninput="document.getElementById('szv').textContent=this.value+'px'"/>
+              <span class="slider-val" id="szv">256px</span>
+            </div>
+          </div>
+          <div class="field"><label>Error Correction Level</label>
+            <div class="sel-wrap"><select id="qr-ecl">
+              <option value="H">H — High (30% restore) · Best for logos</option>
+              <option value="Q">Q — Quartile (25% restore)</option>
+              <option value="M" selected>M — Medium (15%) · Recommended</option>
+              <option value="L">L — Low (7%) · Smallest size</option>
+            </select></div>
+            <p class="hint">Higher = more robust, slightly denser pattern.</p>
+          </div>
+        </div>
+
+        <button class="btn-gen" onclick="generateQR()">⚡ Generate QR Code</button>
+      </div>
+
+      <!-- RIGHT: Preview -->
+      <div class="qr-preview-card" id="qrPreviewCard" style="position:relative;">
+        <div class="qr-empty" id="qrEmpty">
+          <div class="icon">▦</div>
+          <p>Configure and click Generate to create your QR code</p>
+        </div>
+        <div class="qr-result" id="qrResult">
+          <div class="qr-badge-row">
+            <div class="qr-type-badge" id="qrTypeBadge">🔗 Session QR</div>
+            <div class="qr-url-prev" id="qrUrlPrev"></div>
+          </div>
+          <div class="qr-outer" id="qrOuter">
+            <div class="cbl"></div><div class="ctr"></div>
+            <div id="qr-output"></div>
+          </div>
+          <div class="dl-row">
+            <button class="btn-dl-png" onclick="dlPNG()">↓ PNG Image</button>
+            <button class="btn-dl-svg" onclick="dlSVG()">↓ SVG Vector</button>
+          </div>
+          <div class="share-row">
+            <button class="btn-share" onclick="copyQRLink()">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              Copy Link
+            </button>
+            <button class="btn-share" onclick="printQR()">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Print
+            </button>
+          </div>
+          <!-- History -->
+          <div class="qr-hist" id="qrHist" style="display:none;">
+            <div class="qr-hist-title">Recent QR Codes</div>
+            <div class="qr-hist-list" id="qrHistList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="qr-stats-bar">
+      <div class="qr-stat"><span class="qsv" id="qs-total">0</span><div class="qsl">Generated</div></div>
+      <div class="qr-stat"><span class="qsv" id="qs-link">0</span><div class="qsl">Session QRs</div></div>
+      <div class="qr-stat"><span class="qsv" id="qs-email">0</span><div class="qsl">Email QRs</div></div>
+      <div class="qr-stat"><span class="qsv" id="qs-dl">0</span><div class="qsl">Downloads</div></div>
+    </div>
+
+    <!-- How to use -->
+    <div class="howto">
+      <div class="howto-title">How to use QR codes with attendance</div>
+      <div class="steps-grid">
+        <div class="step-card"><div class="step-num">Step 01</div><div class="step-text">Create a session on the <strong>Dashboard</strong>. Copy the generated link.</div></div>
+        <div class="step-card"><div class="step-num">Step 02</div><div class="step-text">Come to the <strong>QR Tool</strong> tab, paste the link in the Session Link panel.</div></div>
+        <div class="step-card"><div class="step-num">Step 03</div><div class="step-text">Click <strong>Generate QR Code</strong> and download as PNG or SVG.</div></div>
+        <div class="step-card"><div class="step-num">Step 04</div><div class="step-text"><strong>Project or print</strong> the QR code — students scan and fill the form.</div></div>
+        <div class="step-card"><div class="step-num">Step 05</div><div class="step-text">When time is up, attendance <strong>auto-closes</strong> and PDF is generated.</div></div>
+        <div class="step-card"><div class="step-num">Tip</div><div class="step-text">Use <strong>SVG format</strong> for large prints — stays crisp at any scale.</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ══════════ MODAL: Session Details ══════════ -->
+<div class="overlay" id="sessModal">
+  <div class="modal">
+    <div class="modal-top">
+      <div class="modal-title" id="mTitle">Session Details</div>
+      <div style="display:flex;gap:7px;align-items:center;">
+        <button class="btn btn-gold btn-sm" onclick="mDLPDF()">⬇ PDF</button>
+        <button class="btn btn-red btn-sm" onclick="mDelete()">🗑 Delete</button>
+        <div class="modal-close" onclick="closeModal()">✕</div>
+      </div>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL: Settings ══════════ -->
+<div class="overlay" id="settModal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-top">
+      <div class="modal-title">Settings</div>
+      <div class="modal-close" onclick="closeSet()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="set-sec">
+        <div class="set-sec-title">Security — Change PIN</div>
+        <div class="pin-grid">
+          <div class="field"><label>New PIN</label><input id="newPin" type="password" placeholder="4 digits" maxlength="4" inputmode="numeric"/></div>
+          <div class="field"><label>Confirm PIN</label><input id="confPin" type="password" placeholder="Repeat" maxlength="4" inputmode="numeric"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="changePin()">Update PIN</button>
+        <div class="alert" id="pinAlert"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="set-sec">
+        <div class="set-sec-title">PDF Report Theme</div>
+        <div class="field">
+          <label>Choose PDF Design</label>
+          <div class="sel-wrap">
+            <select id="pdfTheme">
+              <option value="blue">Clean Blue — Professional & Minimal</option>
+              <option value="school">School Fun — Colorful with Icons</option>
+              <option value="peach">Warm Peach — Soft & Friendly</option>
+              <option value="green">Nature Green — Fresh & Organic</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:7px;font-family:var(--mono);">This theme will be used for all PDF downloads.</div>
+      </div>
+      <div class="divider"></div>
+      <div class="set-sec">
+        <div class="set-sec-title">Data Management</div>
+        <button class="btn btn-red" onclick="clearData()">🗑 Clear All Session Data</button>
+        <div style="font-size:11px;color:var(--text3);margin-top:7px;font-family:var(--mono);">Permanently removes all session and attendance records.</div>
+      </div>
+      <div class="divider"></div>
+      <div class="set-sec" style="margin-bottom:0;">
+        <div class="set-sec-title">About</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.7;">
+          <strong style="color:var(--text)">AttendX PRO</strong> — Precision Attendance Platform<br/>
+          Designed &amp; developed by <strong style="background:linear-gradient(90deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">KЭL ♛ PHANTOM</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL: Confirm ══════════ -->
+<div class="overlay" id="confModal">
+  <div class="confirm-box">
+    <div style="font-size:38px;margin-bottom:14px;" id="confIcon">⚠️</div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:7px;" id="confTitle">Confirm</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:22px;line-height:1.55;" id="confSub">Are you sure?</div>
+    <div class="confirm-acts">
+      <button class="btn btn-ghost btn-full" onclick="closeConf()">Cancel</button>
+      <button class="btn btn-red btn-full" id="confOK">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TOAST STACK ══════════ -->
+<div class="toast-stack" id="toastStack"></div>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer class="site-footer" id="siteFooter">
+  <div class="footer-brand">
+    <div class="nav-logomark" style="width:28px;height:28px;font-size:12px;">✦</div>
+    <div>
+      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">Created by</div>
+      <div class="footer-name">KЭL ♛ PHANTOM</div>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--text3);text-align:center;font-family:var(--mono);">
+    AttendX PRO &nbsp;·&nbsp; Smart Attendance Platform<br/>
+    <span id="fyear"></span>
+  </div>
+  <div class="footer-links">
+    <a href="#" onclick="navTo('dash')">Dashboard</a>
+    <a href="#" onclick="navTo('qr')">QR Tool</a>
+    <a href="#" onclick="goHome()">Home</a>
+  </div>
+</footer>
+
+<!-- ════════════════════════════════════════════════════════
+     APPLICATION LOGIC
+════════════════════════════════════════════════════════ -->
+<script>
+/* ── STATE ── */
+const S = {
+  loggedIn:       false,
+  pinInput:       '',
+  currentSession: null,
+  activeSessionId:null,
+  timerInt:       null,
+  liveInt:        null,
+  modalSID:       null,
+  confCB:         null,
+  qrTab:          'link',
+  qrLink:         '',
+  qrStats:        {total:0,link:0,email:0,web:0,dl:0},
+  qrHistory:      [],
+  teacherLat:     null,
+  teacherLng:     null,
+  geoBlocked:     false,
+  studentDist:    null
+};
+
+const DEPTS = ['Computer Science','Mathematics','Physics','Chemistry','Biology',
+  'Civil Engineering','Electrical Engineering','Mechanical Engineering',
+  'Economics','Management','Law','Medicine','Pharmacy','Literature','History','Geography','Other'];
+
+/* ── INIT ── */
+function init() {
+  document.getElementById('fyear').textContent = new Date().getFullYear();
+  document.getElementById('dashDate').textContent =
+    new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  const p = new URLSearchParams(location.search);
+  const sid = p.get('session');
+  if (sid) {
+    loadStudentPage(sid);
+  } else {
+    showPage('landing');
+  }
+
+  window.addEventListener('scroll', () => {
+    document.getElementById('topnav').classList.toggle('up', window.scrollY > 8);
+  });
+
+  // Set current time in create form
+  const now = new Date();
+  const tf = document.getElementById('inTime');
+  if (tf) tf.value = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+}
+
+/* ── PAGE SYSTEM ── */
+function showPage(name) {
+  const map = {landing:'pgLanding',login:'pgLogin',dash:'pgDash',student:'pgStudent',qr:'pgQR'};
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el = document.getElementById(map[name]);
+  if (el) el.classList.add('active');
+
+  const navTabs = document.getElementById('navTabs');
+  const navRight = document.getElementById('navRight');
+  const ntDash = document.getElementById('ntDash');
+  const ntQR   = document.getElementById('ntQR');
+
+  if (name === 'dash' || name === 'qr') {
+    navTabs.style.display = 'flex';
+    navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showSettings()">⚙</button><button class="nav-btn nav-btn-ghost" onclick="adminOut()">Sign Out</button>`;
+    ntDash.classList.toggle('active', name==='dash');
+    ntQR.classList.toggle('active',  name==='qr');
+  } else if (name === 'student') {
+    navTabs.style.display = 'none';
+    navRight.innerHTML = '';
+  } else {
+    navTabs.style.display = 'none';
+    navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showLogin()">Admin Login</button><button class="nav-btn nav-btn-solid" onclick="showLogin()">Get Started →</button>`;
+  }
+
+  document.getElementById('siteFooter').style.display = name === 'student' ? 'none' : 'flex';
+}
+
+function goHome()      { showPage('landing'); }
+function showLogin()   { S.pinInput=''; updateDots(); showPage('login'); }
+function navTo(pg)     { showPage(pg); if(pg==='dash'){ refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); } }
+function adminOut()    { S.loggedIn=false; if(S.liveInt)clearInterval(S.liveInt); showPage('landing'); }
+
+/* ── PIN LOGIN ── */
+function nkPress(d) {
+  if (S.pinInput.length >= 4) return;
+  S.pinInput += d;
+  updateDots();
+  if (S.pinInput.length === 4) setTimeout(tryLogin, 160);
+}
+function nkDel() { S.pinInput = S.pinInput.slice(0,-1); updateDots(); }
+function updateDots() {
+  for (let i=0;i<4;i++) {
+    const d = document.getElementById('pd'+i);
+    d.classList.toggle('on', i < S.pinInput.length);
+    d.classList.remove('err');
+  }
+}
+function tryLogin() {
+  const pin = localStorage.getItem('ax_pin')||'1234';
+  if (S.pinInput === pin) {
+    S.loggedIn = true;
+    showPage('dash');
+    refreshDash();
+    startLiveLoop();
+    autoRequestTeacherGeo();
+  } else {
+    for(let i=0;i<4;i++) document.getElementById('pd'+i).classList.add('err');
+    showAlert('loginAlert','err','Incorrect PIN. Try again.');
+    setTimeout(()=>{ S.pinInput=''; updateDots(); }, 700);
+  }
+}
+document.addEventListener('keydown', e => {
+  const lp = document.getElementById('pgLogin');
+  if (lp.classList.contains('active')) {
+    if (e.key>='0'&&e.key<='9') nkPress(e.key);
+    if (e.key==='Backspace') nkDel();
+  }
+});
+
+/* ── DASH TABS ── */
+function dTab(n) {
+  [1,2,3].forEach(i=>{
+    document.getElementById('dt'+i).classList.toggle('active',i===n);
+    document.getElementById('dc'+i).style.display=i===n?'block':'none';
+  });
+  if(n===2) renderSessions();
+  if(n===3) renderReports();
+}
+
+/* ── CREATE SESSION ── */
+
+/* shared geo request — used both on auto-load and manual button */
+function _requestGeo(onSuccess, onFail) {
+  if (!navigator.geolocation) { if(onFail) onFail({code:0,message:'Not supported'}); return; }
+  navigator.geolocation.getCurrentPosition(onSuccess, onFail||function(){},
+    {enableHighAccuracy:true, timeout:12000, maximumAge:0});
+}
+
+/* called automatically when teacher logs in */
+function autoRequestTeacherGeo() {
+  if (S.teacherLat != null) return; // already have it
+  _requestGeo(pos => {
+    S.teacherLat = pos.coords.latitude;
+    S.teacherLng = pos.coords.longitude;
+    const box = document.getElementById('geoStatus');
+    if (box) { box.style.display='block'; box.textContent='📍 Location captured automatically (±'+Math.round(pos.coords.accuracy)+'m) — geo-fence ready'; }
+    showAlert('geoAlert','ok','✓ Location captured automatically. Geo-fence is active for new sessions.');
+  }); // silent fail — user can retry with button
+}
+
+/* manual retry button */
+function captureTeacherLocation() {
+  showAlert('geoAlert','info','📡 Requesting your location — please allow access when the browser prompts…');
+  _requestGeo(
+    pos => {
+      S.teacherLat = pos.coords.latitude;
+      S.teacherLng = pos.coords.longitude;
+      document.getElementById('geoStatus').style.display = 'block';
+      document.getElementById('geoStatus').textContent = '📍 Location captured (±'+Math.round(pos.coords.accuracy)+'m) — geo-fence ready';
+      showAlert('geoAlert','ok','✓ Location captured (±'+Math.round(pos.coords.accuracy)+'m accuracy)');
+    },
+    err => {
+      const msgs = {1:'Permission denied — open browser settings and allow location for this page.',2:'Position unavailable — try again.',3:'Request timed out — try again.'};
+      showAlert('geoAlert','err','❌ '+(msgs[err.code]||err.message));
+    }
+  );
+}
+
+/* Haversine distance in metres */
+function haversine(lat1,lng1,lat2,lng2) {
+  const R=6371000, toR=x=>x*Math.PI/180;
+  const dLat=toR(lat2-lat1), dLng=toR(lng2-lng1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toR(lat1))*Math.cos(toR(lat2))*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function createSession() {
+  const sub  = v('inSub'), cls = v('inCls'), dept = v('inDept');
+  const lec  = v('inLec'), time= v('inTime');
+  const dur  = parseInt(v('inDur'))||30;
+  const room = v('inRoom');
+
+  if(!sub||!cls||!time) { showAlert('createAlert','err','Subject, class and start time are required.'); return; }
+
+  const start = Date.now(), expiry = start + dur*60*1000, id = start;
+  const sess = {id,sub,cls,dept,lec,time,dur,room,start,expiry};
+  const radius = parseInt(v('inRadius'))||100;
+  if (S.teacherLat != null) {
+    sess.geoLat    = S.teacherLat;
+    sess.geoLng    = S.teacherLng;
+    sess.geoRadius = radius;
+  }
+
+  // Save to Firebase
+  saveSess(sess).then(()=>{
+    toast('Session saved to database','ok');
+  }).catch(e=>{ toast('DB error: '+e.message,'err'); });
+
+  const link = location.href.split('?')[0]+'?session='+id;
+  document.getElementById('genLink').value = link;
+
+  const lo = document.getElementById('linkOut');
+  lo.classList.add('show');
+  document.getElementById('lvDur').textContent = dur+'m';
+  S.activeSessionId = id;
+
+  // Generate inline QR
+  const qrOut = document.getElementById('qrInlineOut');
+  qrOut.innerHTML = '';
+  new QRCode(qrOut, {
+    text:link, width:160, height:160,
+    colorDark:'#000000', colorLight:'#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+  document.getElementById('qrInline').classList.add('show');
+  document.getElementById('liveMon').classList.add('show');
+
+  showAlert('createAlert','ok','✓ Session created — '+sub+' · '+cls+' · '+dur+' min');
+  toast('Session created: '+sub,'ok');
+  refreshDash();
+  startLiveMonitor(id);
+}
+
+function downloadSessionQR() {
+  const canvas = document.querySelector('#qrInlineOut canvas');
+  if(!canvas){toast('QR not ready yet','warn');return;}
+  const a=document.createElement('a');
+  a.download='session-qr.png';
+  a.href=canvas.toDataURL('image/png');
+  a.click();
+  toast('QR PNG downloaded','ok');
+}
+function printSessionQR() {
+  const canvas = document.querySelector('#qrInlineOut canvas');
+  if(!canvas)return;
+  const img = canvas.toDataURL('image/png');
+  const w=window.open('','_blank');
+  w.document.write(`<html><body style="text-align:center;background:#fff;padding:40px"><img src="${img}" style="max-width:280px"/><script>window.onload=()=>{window.print();window.close()}<\/script></body></html>`);
+}
+
+/* ── COPY LINK ── */
+function copyLink() {
+  const inp = document.getElementById('genLink');
+  inp.select(); navigator.clipboard.writeText(inp.value).catch(()=>{});
+  const b = document.getElementById('lCopyBtn');
+  b.textContent='✓ Copied!'; setTimeout(()=>b.textContent='Copy',2000);
+  toast('Link copied','info');
+}
+
+/* ── LIVE MONITOR ── */
+/* ── LIVE MONITOR (real-time via Firebase) ── */
+function startLiveMonitor(id) {
+  // Real-time listener for attendance count
+  subscribeSession(id, recs => {
+    document.getElementById('lvCount').textContent = recs.length;
+    refreshStats();
+  });
+  // Timer tick
+  if(S.liveInt) clearInterval(S.liveInt);
+  S.liveInt = setInterval(()=>{
+    getSess(id).then(sess=>{
+      if(!sess) return;
+      const rem = sess.expiry - Date.now();
+      if(rem>0){
+        document.getElementById('lvTime').textContent =
+          String(Math.floor(rem/60000)).padStart(2,'0')+':'+String(Math.floor((rem%60000)/1000)).padStart(2,'0');
+      } else {
+        document.getElementById('lvTime').textContent='Ended';
+        clearInterval(S.liveInt);
+      }
+    });
+  }, 1000);
+}
+
+function startLiveLoop() {
+  if(S.liveInt) clearInterval(S.liveInt);
+  S.liveInt = setInterval(()=>{ refreshStats(); renderLivePanel(); }, 5000);
+  renderLivePanel();
+}
+
+function renderLivePanel() {
+  todaySessions().then(sessions=>{
+    const live = sessions.filter(s=>Date.now()<s.expiry);
+    const p = document.getElementById('livePanel');
+    if(!live.length){p.innerHTML='<div class="empty-st"><div class="ei">📡</div><div class="et">No active sessions</div></div>';return;}
+    Promise.all(live.map(s=>getRec(s.id).then(r=>({s,r})))).then(items=>{
+      p.innerHTML=items.map(({s,r})=>{
+        const rem=s.expiry-Date.now();
+        const m=String(Math.floor(rem/60000)).padStart(2,'0');
+        const sc=String(Math.floor((rem%60000)/1000)).padStart(2,'0');
+        return `<div class="la-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+            <strong style="font-size:13px;">${s.sub}</strong>
+            <span class="badge badge-live">LIVE</span>
+          </div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:5px;">${s.cls} · ${r.length} present</div>
+          <div style="font-size:11px;color:var(--gold);font-family:var(--mono);">⏱ ${m}:${sc} remaining</div>
+        </div>`;
+      }).join('');
+    });
+  });
+}
+
+/* ── REFRESH DASHBOARD ── */
+function refreshDash() { refreshStats(); renderSessions(); renderReports(); renderLivePanel(); }
+function refreshStats() {
+  todaySessions().then(ss=>{
+    Promise.all(ss.map(s=>getRec(s.id))).then(allRecs=>{
+      const pres=allRecs.reduce((a,r)=>a+r.length,0);
+      const live=ss.filter(s=>Date.now()<s.expiry).length;
+      animN('stSess',ss.length); animN('stPres',pres);
+      animN('stLive',live); animN('stEnd',ss.length-live);
+    });
+  });
+}
+function animN(id,val) {
+  const el=document.getElementById(id); if(!el)return;
+  el.textContent=val; el.style.animation='none'; el.offsetHeight; el.style.animation='countUp 0.4s ease both';
+}
+
+/* ── SESSIONS LIST ── */
+function renderSessions() {
+  const q=(document.getElementById('sessSearch')?.value||'').toLowerCase();
+  todaySessions().then(ss=>{
+    if(q) ss=ss.filter(s=>s.sub.toLowerCase().includes(q)||s.cls.toLowerCase().includes(q)||(s.dept||'').toLowerCase().includes(q));
+    const cnt=document.getElementById('sessCount');
+    if(cnt) cnt.textContent=ss.length+' session'+(ss.length!==1?'s':'');
+    const list=document.getElementById('sessList');
+    if(!list)return;
+    if(!ss.length){list.innerHTML='<div class="empty-st"><div class="ei">📋</div><div class="et">'+(q?'No matching sessions.':'No sessions today.')+'</div></div>';return;}
+    Promise.all(ss.map(s=>getRec(s.id).then(r=>({s,r})))).then(items=>{
+      list.innerHTML=items.map(({s,r})=>{
+        const live=Date.now()<s.expiry;
+        return `<div class="srow" onclick="openModal('${s.id}')">
+          <div class="srow-left">
+            <div class="srow-name">${s.sub}<span class="badge ${live?'badge-live':'badge-end'}">${live?'LIVE':'ENDED'}</span></div>
+            <div class="srow-meta">${s.cls}${s.dept?' · '+s.dept:''} · ${r.length} present · ${s.time}</div>
+          </div>
+          <div class="srow-acts" onclick="event.stopPropagation()">
+            <button class="btn btn-cyan btn-xs" onclick="dlSessionPDF('${s.id}')">⬇</button>
+            <button class="btn btn-red btn-xs" onclick="confDelete('${s.id}')">🗑</button>
+          </div>
+        </div>`;
+      }).join('');
+    });
+  });
+}
+
+function renderReports() {
+  const list=document.getElementById('reportsList'); if(!list)return;
+  todaySessions().then(ss=>{
+    if(!ss.length){list.innerHTML='<div class="empty-st"><div class="ei">📊</div><div class="et">No sessions today.</div></div>';return;}
+    Promise.all(ss.map(s=>getRec(s.id).then(r=>({s,r})))).then(items=>{
+      list.innerHTML=items.map(({s,r})=>{
+        const live=Date.now()<s.expiry;
+        return `<div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:12px 14px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:13px;margin-bottom:2px;display:flex;align-items:center;gap:7px;">${s.sub}<span class="badge ${live?'badge-live':'badge-end'}">${live?'LIVE':'ENDED'}</span></div>
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">${s.cls} · ${r.length} present · ${s.time}</div>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="dlSessionPDF('${s.id}')">⬇ PDF</button>
+        </div>`;
+      }).join('');
+    });
+  });
+}
+    const live=Date.now()<s.expiry;
+    return `<div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:12px 14px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:2px;display:flex;align-items:center;gap:7px;">${s.sub}<span class="badge ${live?'badge-live':'badge-end'}">${live?'LIVE':'ENDED'}</span></div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">${s.cls} · ${r.length} present · ${s.time}</div>
+      </div>
+      <button class="btn btn-gold btn-sm" onclick="dlSessionPDF('${s.id}')">⬇ PDF</button>
+    </div>`;
+  }).join('');
+}
+
+/* ── SESSION DETAIL MODAL ── */
+function openModal(sid) {
+  S.modalSID=sid;
+  getSess(sid).then(s=>{
+    if(!s)return;
+    getRec(sid).then(recs=>{
+      document.getElementById('mTitle').textContent=s.sub+' — '+s.cls;
+      const live=Date.now()<s.expiry;
+      const closeT=new Date(s.expiry).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      let body=`
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:18px;">
+          <div class="lchip"><div class="lv">${recs.length}</div><div class="ll">Present</div></div>
+          <div class="lchip"><div class="lv" style="font-size:13px;">${s.time}</div><div class="ll">Started</div></div>
+          <div class="lchip"><div class="lv" style="font-size:13px;">${closeT}</div><div class="ll">Closes</div></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
+          ${s.dept?`<span class="sb-tag b">${s.dept}</span>`:''}
+          ${s.lec?`<span class="sb-tag c">${s.lec}</span>`:''}
+          ${s.room?`<span class="sb-tag g">${s.room}</span>`:''}
+          <span class="badge ${live?'badge-live':'badge-end'}">${live?'LIVE':'ENDED'}</span>
+        </div>`;
+      if(!recs.length){
+        body+='<div class="empty-st"><div class="ei">👤</div><div class="et">No attendance records yet.</div></div>';
+      } else {
+        body+=`<div class="att-wrap"><table class="att-table">
+          <thead><tr><th>#</th><th>First Name</th><th>Last Name</th><th>Matricule</th><th>Class</th><th>Department</th><th>Time</th></tr></thead>
+          <tbody>${recs.map((r,i)=>`<tr class="${i===0?'first':''}"><td class="rc">${i+1}</td><td>${r.fN}</td><td>${r.lN}</td><td class="mc">${r.mat}</td><td>${r.cls||'—'}</td><td>${r.dept||'—'}</td><td class="tc">${r.time}</td></tr>`).join('')}
+          </tbody></table></div>`;
+      }
+      document.getElementById('mBody').innerHTML=body;
+      document.getElementById('sessModal').classList.add('show');
+      // subscribe for live updates while modal is open
+      subscribeSession(sid, updatedRecs=>{
+        const tbody = document.querySelector('#sessModal .att-table tbody');
+        const countEl = document.querySelector('#sessModal .lchip .lv');
+        if(countEl) countEl.textContent = updatedRecs.length;
+        if(tbody){
+          tbody.innerHTML = updatedRecs.map((r,i)=>`<tr class="${i===0?'first':''}"><td class="rc">${i+1}</td><td>${r.fN}</td><td>${r.lN}</td><td class="mc">${r.mat}</td><td>${r.cls||'—'}</td><td>${r.dept||'—'}</td><td class="tc">${r.time}</td></tr>`).join('');
+        }
+      });
+    });
+  });
+}
+function closeModal(){ document.getElementById('sessModal').classList.remove('show'); S.modalSID=null; unsubscribeSession(); }
+function mDLPDF(){ dlSessionPDF(S.modalSID); }
+function mDelete(){ confDelete(S.modalSID); closeModal(); }
+
+/* ── DELETE ── */
+function confDelete(sid){
+  getSess(sid).then(s=>{
+    if(!s)return;
+    showConf('🗑','Delete Session?',`Permanently remove "${s.sub}" and all attendance records. This cannot be undone.`,()=>{
+      deleteSess(sid).then(()=>{ refreshDash(); toast('Session deleted','ok'); });
+    });
+  });
+}
+
+/* ── SETTINGS ── */
+function showSettings(){
+  document.getElementById('settModal').classList.add('show');
+  // load saved theme
+  const saved = localStorage.getItem('ax_pdf_theme') || 'blue';
+  document.getElementById('pdfTheme').value = saved;
+}
+function closeSet(){
+  // save theme on close
+  const t = document.getElementById('pdfTheme').value;
+  localStorage.setItem('ax_pdf_theme', t);
+  document.getElementById('settModal').classList.remove('show');
+}
+function changePin(){
+  const np=document.getElementById('newPin').value;
+  const cp=document.getElementById('confPin').value;
+  if(!np||np.length<4){ showAlert('pinAlert','err','PIN must be exactly 4 digits.'); return; }
+  if(!/^\d{4}$/.test(np)){ showAlert('pinAlert','err','Digits only (0-9).'); return; }
+  if(np!==cp){ showAlert('pinAlert','err','PINs do not match.'); return; }
+  localStorage.setItem('ax_pin',np);
+  showAlert('pinAlert','ok','✓ PIN updated!');
+  document.getElementById('newPin').value='';
+  document.getElementById('confPin').value='';
+  toast('PIN updated','ok');
+}
+function clearData(){
+  showConf('⚠️','Clear All Data?','Permanently delete all sessions and attendance records.',()=>{
+    clearAllData().then(()=>{
+      document.getElementById('linkOut').classList.remove('show');
+      document.getElementById('qrInline').classList.remove('show');
+      document.getElementById('liveMon').classList.remove('show');
+      document.getElementById('genLink').value = '';
+      document.getElementById('qrInlineOut').innerHTML = '';
+      S.activeSessionId = null;
+      refreshDash(); closeSet(); toast('All data cleared','warn');
+    });
+  });
+}
+
+/* ── CONFIRM DIALOG ── */
+function showConf(icon,title,sub,cb){
+  S.confCB=cb;
+  document.getElementById('confIcon').textContent=icon;
+  document.getElementById('confTitle').textContent=title;
+  document.getElementById('confSub').textContent=sub;
+  document.getElementById('confOK').onclick=()=>{closeConf();if(cb)cb();};
+  document.getElementById('confModal').classList.add('show');
+}
+function closeConf(){ document.getElementById('confModal').classList.remove('show'); }
+
+/* ── STUDENT PAGE ── */
+function loadStudentPage(sid){
+  showPage('student');
+  S.geoBlocked=false; S.studentDist=null;
+  document.getElementById('stuGeoStatus').style.display='none';
+  document.getElementById('attendCard').style.display='none';
+  document.getElementById('stuBanner').style.display='none';
+
+  // Show loading state
+  showAlert('stuAlert','info','⏳ Loading session…');
+
+  Promise.all([getSess(sid), getDeviceId()]).then(([s, deviceId])=>{
+    if(!s){
+      showAlert('stuAlert','err','This session link is invalid or has been removed.');
+      return;
+    }
+
+    // Check if this device already submitted
+    checkDeviceMark(sid, deviceId).then(alreadyDone=>{
+      if(alreadyDone){
+        document.getElementById('stuBanner').style.display='block';
+        document.getElementById('sbSubj').textContent=s.sub;
+        document.getElementById('sbMeta').textContent=(s.room?s.room+' · ':'')+(s.lec?s.lec+' · ':'')+s.time;
+        document.getElementById('sbTags').innerHTML=`<span class="sb-tag b">${s.cls}</span>`;
+        document.getElementById('attendCard').style.display='none';
+        // Show already-registered state
+        document.getElementById('successSt').classList.add('show');
+        document.getElementById('successSt').innerHTML=`
+          <div class="success-ring">✓</div>
+          <div class="success-name" style="color:var(--blue)">Already Registered</div>
+          <div class="success-detail">You have already marked your attendance for this session.<br/>Each device can only submit once.</div>
+        `;
+        document.querySelector('.alert').classList.remove('show');
+        return;
+      }
+
+      // Clear loading alert
+      document.getElementById('stuAlert').classList.remove('show');
+      document.getElementById('stuBanner').style.display='block';
+      document.getElementById('attendCard').style.display='block';
+
+      S.currentSession=s;
+      document.getElementById('sbSubj').textContent=s.sub;
+      document.getElementById('sbMeta').textContent=(s.room?s.room+' · ':'')+(s.lec?s.lec+' · ':'')+s.time;
+      const tags=document.getElementById('sbTags');
+      tags.innerHTML=[`<span class="sb-tag b">${s.cls}</span>`,
+        s.dept?`<span class="sb-tag c">${s.dept}</span>`:'',
+        s.dur?`<span class="sb-tag g">${s.dur} min</span>`:'',
+        s.geoLat!=null?`<span class="sb-tag" style="background:rgba(79,255,160,0.1);color:var(--green);border:1px solid rgba(79,255,160,0.2)">📍 Geo-fenced ±${s.geoRadius}m</span>`:''
+      ].join('');
+      if(Date.now()>s.expiry){showExpired();return;}
+      if(s.geoLat!=null) checkStudentGeo(s);
+      startTimer(s.expiry,s.start,s.expiry-s.start);
+    });
+  }).catch(e=>{
+    showAlert('stuAlert','err','Error loading session: '+e.message);
+  });
+}
+
+function startTimer(expiry,start,total){
+  tick(); S.timerInt=setInterval(tick,1000);
+  function tick(){
+    const rem=expiry-Date.now();
+    if(rem<=0){clearInterval(S.timerInt);
+      document.getElementById('timerVal').textContent='00:00';
+      document.getElementById('timerFill').style.width='0%';
+      autoGenPDF(S.currentSession);
+      showExpired(); return;
+    }
+    const m=String(Math.floor(rem/60000)).padStart(2,'0');
+    const sc=String(Math.floor((rem%60000)/1000)).padStart(2,'0');
+    document.getElementById('timerVal').textContent=m+':'+sc;
+    document.getElementById('timerFill').style.width=((rem/total)*100)+'%';
+    if(rem<120000) document.getElementById('timerFill').classList.add('warn');
+    else document.getElementById('timerFill').classList.remove('warn');
+  }
+}
+function showExpired(){
+  document.getElementById('attendCard').style.display='none';
+  document.getElementById('stuBanner').style.display='none';
+  document.getElementById('expiredSt').classList.add('show');
+}
+
+/* ── DEPT AUTOCOMPLETE ── */
+function showAC(){
+  const val=document.getElementById('stuDept').value.toLowerCase();
+  const list=document.getElementById('acList');
+  if(!val){list.classList.remove('open');return;}
+  const m=DEPTS.filter(d=>d.toLowerCase().includes(val));
+  if(!m.length){list.classList.remove('open');return;}
+  list.innerHTML=m.map(d=>`<div class="ac-item" onmousedown="pickDept('${d}')">📚 ${d}</div>`).join('');
+  list.classList.add('open');
+}
+function hideAC(){ setTimeout(()=>document.getElementById('acList').classList.remove('open'),200); }
+function pickDept(d){ document.getElementById('stuDept').value=d; document.getElementById('acList').classList.remove('open'); }
+
+/* ── SUBMIT ATTENDANCE ── */
+function checkStudentGeo(s) {
+  const box = document.getElementById('stuGeoStatus');
+  const btn = document.getElementById('stuSubmitBtn');
+
+  function setBox(bg, border, color, text) {
+    box.style.display='block'; box.style.background=bg;
+    box.style.border=border; box.style.color=color; box.textContent=text;
+  }
+  function setBtnState(waiting) {
+    if (!btn) return;
+    btn.disabled = waiting;
+    btn.style.opacity = waiting ? '0.5' : '1';
+    btn.style.cursor  = waiting ? 'not-allowed' : 'pointer';
+    btn.textContent   = waiting ? '⏳ Waiting for location…' : '✓ Submit My Attendance';
+  }
+
+  if (!navigator.geolocation) {
+    setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
+      '❌ Your browser does not support location — cannot verify presence.');
+    S.geoBlocked = true; return;
+  }
+
+  // immediately block submit and show prompt message
+  S.geoBlocked = true;
+  setBtnState(true);
+  setBox('var(--blue3)','1px solid rgba(79,158,255,0.2)','var(--blue)',
+    '📡 This session requires location verification — please allow location access when your browser asks…');
+
+  _requestGeo(
+    pos => {
+      const dist = Math.round(haversine(s.geoLat, s.geoLng, pos.coords.latitude, pos.coords.longitude));
+      S.studentDist = dist;
+      if (dist <= s.geoRadius) {
+        S.geoBlocked = false;
+        setBtnState(false);
+        setBox('var(--green2)','1px solid rgba(79,255,160,0.2)','var(--green)',
+          `✅ You are within range (${dist}m from classroom) — you may submit.`);
+      } else {
+        S.geoBlocked = true;
+        setBtnState(false); // re-enable so they can try, submitAttend will block with message
+        btn.textContent = '✓ Submit My Attendance';
+        btn.disabled = false; btn.style.opacity='1'; btn.style.cursor='pointer';
+        setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
+          `❌ You are ${dist}m away from the classroom — must be within ${s.geoRadius}m. You cannot mark attendance remotely.`);
+      }
+    },
+    err => {
+      S.geoBlocked = true;
+      setBtnState(false);
+      btn.textContent = '✓ Submit My Attendance';
+      btn.disabled = false; btn.style.opacity='1'; btn.style.cursor='pointer';
+      const msgs = {1:'Location access was denied. Please allow location in your browser settings and reload.',
+                    2:'Your position could not be determined. Try again.',
+                    3:'Location request timed out. Check your connection and try again.'};
+      setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
+        '❌ '+(msgs[err.code]||'Location error — cannot verify your presence.'));
+    }
+  );
+}
+
+function submitAttend(){
+  const s=S.currentSession; if(!s)return;
+  if(Date.now()>s.expiry){showExpired();return;}
+  if(s.geoLat!=null && S.geoBlocked){
+    const dist = S.studentDist!=null ? ` You are ${S.studentDist}m away (limit: ${s.geoRadius}m).` : '';
+    showAlert('stuAlert','err','❌ Location check failed — you must be physically present in class.'+dist);
+    return;
+  }
+  const fN=document.getElementById('stuFirst').value.trim();
+  const lN=document.getElementById('stuLast').value.trim();
+  const mat=document.getElementById('stuMat').value.trim();
+  const cls=document.getElementById('stuCls').value.trim();
+  const dept=document.getElementById('stuDept').value.trim();
+  const phone=document.getElementById('stuPhone').value.trim();
+  if(!fN||!lN||!mat||!cls||!dept){showAlert('stuAlert','err','⚠ All fields except phone are required.');return;}
+  const norm=x=>x.toLowerCase().replace(/[\s\-_.]/g,'');
+  const sc=norm(s.cls),ic=norm(cls);
+  if(sc!==ic&&!sc.includes(ic)&&!ic.includes(sc)){
+    showAlert('stuAlert','err',`❌ Wrong Class\n\nThis session is for: "${s.cls}"\nYou entered: "${cls}"\n\nYou cannot mark attendance here.`);
+    return;
+  }
+
+  // Disable button to prevent double-tap
+  const btn=document.getElementById('stuSubmitBtn');
+  btn.disabled=true; btn.textContent='⏳ Submitting…';
+
+  getDeviceId().then(deviceId=>{
+    // Double-check device hasn't submitted (race condition guard)
+    checkDeviceMark(s.id, deviceId).then(alreadyDone=>{
+      if(alreadyDone){
+        showAlert('stuAlert','err','⚠ You have already marked your attendance for this session.');
+        btn.disabled=false; btn.textContent='✓ Submit My Attendance';
+        return;
+      }
+      // Check matricule duplicate in Firebase
+      getRec(s.id).then(recs=>{
+        if(recs.find(r=>r.mat.toLowerCase()===mat.toLowerCase())){
+          showAlert('stuAlert','err','⚠ Matricule '+mat.toUpperCase()+' already recorded.');
+          btn.disabled=false; btn.textContent='✓ Submit My Attendance';
+          return;
+        }
+        const rank=recs.length+1;
+        const rec={no:rank,fN,lN,mat:mat.toUpperCase(),cls,dept,phone:phone||null,
+          time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),ts:Date.now()};
+        // Save record + device mark atomically
+        Promise.all([saveRec(s.id, rec), saveDeviceMark(s.id, deviceId)]).then(()=>{
+          document.getElementById('attendCard').style.display='none';
+          document.getElementById('successSt').classList.add('show');
+          document.getElementById('succName').textContent=fN+' '+lN;
+          document.getElementById('succDetail').textContent=mat.toUpperCase()+' · '+cls+' · '+dept;
+          const rl=rank===1?'🥇 First to attend!':rank===2?'🥈 2nd to arrive':rank===3?'🥉 3rd to arrive':'#'+rank+' on attendance list';
+          document.getElementById('succRank').textContent=rl;
+        }).catch(e=>{
+          showAlert('stuAlert','err','Submission failed: '+e.message);
+          btn.disabled=false; btn.textContent='✓ Submit My Attendance';
+        });
+      });
+    });
+  });
+}
+
+/* ── PDF GENERATION ── */
+function autoGenPDF(sess){ if(sess)setTimeout(()=>genPDF(sess.id),800); }
+function dlSessionPDF(sid){ genPDF(sid); }
+
+function genPDF(sid){
+  getSess(sid).then(s=>{
+    if(!s)return;
+    getRec(sid).then(recs=>_buildPDF(s,recs));
+  });
+}
+  
+function _buildPDF(s, recs){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,M=16;
+  const theme = localStorage.getItem('ax_pdf_theme') || 'blue';
+  const themes = {
+    blue:   {bg:[255,255,255],headerBg:[59,111,232],headerText:[255,255,255],titleText:[30,42,74],metaText:[74,88,120],tableFill:[245,248,255],tableAlt:[235,240,255],tableHead:[59,111,232],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[216,226,248],firstRow:[245,158,11]},
+    school: {bg:[230,240,255],headerBg:[100,149,237],headerText:[255,255,255],titleText:[30,42,74],metaText:[74,88,120],tableFill:[255,255,255],tableAlt:[240,248,255],tableHead:[100,149,237],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[180,200,230],firstRow:[255,140,0]},
+    peach:  {bg:[255,250,240],headerBg:[255,200,150],headerText:[80,40,20],titleText:[80,40,20],metaText:[120,80,60],tableFill:[255,245,235],tableAlt:[255,235,220],tableHead:[255,180,120],tableHeadText:[80,40,20],tableText:[80,40,20],tableBorder:[255,220,180],firstRow:[255,140,80]},
+    green:  {bg:[240,255,240],headerBg:[76,175,80],headerText:[255,255,255],titleText:[30,60,30],metaText:[80,120,80],tableFill:[250,255,250],tableAlt:[240,250,240],tableHead:[76,175,80],tableHeadText:[255,255,255],tableText:[30,60,30],tableBorder:[200,230,200],firstRow:[255,193,7]}
+  };
+  const t = themes[theme];
+  doc.setFillColor(...t.bg); doc.rect(0,0,W,297,'F');
+  doc.setFillColor(...t.headerBg); doc.rect(0,0,W,50,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...t.headerText);
+  doc.text('ATTENDANCE REGISTER — OFFICIAL DOCUMENT',M,12);
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(...t.headerText);
+  doc.text(s.sub.toUpperCase(),M,24);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...t.headerText);
+  const meta=[s.cls?'Class: '+s.cls:null,s.dept?'Dept: '+s.dept:null,s.lec?'Lecturer: '+s.lec:null,'Time: '+s.time,s.room?'Room: '+s.room:null,'Duration: '+s.dur+' min'].filter(Boolean).join('   |   ');
+  doc.text(meta,M,33);
+  doc.setFontSize(7.5); doc.setTextColor(...t.headerText);
+  doc.text('Date: '+new Date(s.start).toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),M,41);
+  doc.text('Generated: '+new Date().toLocaleString(),M,47);
+  doc.setFillColor(...t.tableFill);
+  [[String(recs.length),'PRESENT'],[new Date(s.start).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),'OPENED'],[new Date(s.expiry).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),'CLOSED'],[s.dur+'m','DURATION']].forEach((st,i)=>{
+    const x=M+i*45; doc.roundedRect(x,58,43,17,2,2,'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...t.titleText);
+    doc.text(st[0],x+21.5,65,{align:'center'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...t.metaText);
+    doc.text(st[1],x+21.5,71,{align:'center'});
+  });
+  if(!recs.length){
+    doc.setFont('helvetica','italic'); doc.setFontSize(10); doc.setTextColor(...t.metaText);
+    doc.text('No attendance records for this session.',W/2,95,{align:'center'});
+  } else {
+    doc.autoTable({startY:80,margin:{left:M,right:M},
+      head:[['#','First Name','Last Name','Matricule','Class','Department','Time']],
+      body:recs.map((r,i)=>[i+1,r.fN,r.lN,r.mat,r.cls||'—',r.dept||'—',r.time]),
+      styles:{font:'helvetica',fontSize:9,textColor:t.tableText,fillColor:t.tableFill,lineColor:t.tableBorder,lineWidth:0.25,cellPadding:3.5,valign:'middle'},
+      headStyles:{fillColor:t.tableHead,textColor:t.tableHeadText,fontStyle:'bold',fontSize:8,halign:'left'},
+      alternateRowStyles:{fillColor:t.tableAlt},
+      columnStyles:{0:{cellWidth:9,halign:'center',textColor:t.metaText},3:{fontStyle:'bold'},6:{cellWidth:22}},
+      didParseCell(d){if(d.section==='body'&&d.row.index===0)d.cell.styles.textColor=t.firstRow;}
+    });
+  }
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...t.metaText);
+  doc.text('AttendX PRO · Created by KЭL ♛ PHANTOM · '+new Date().getFullYear(),M,285);
+  doc.text('Confidential — Official Attendance Record',W-M,285,{align:'right'});
+  doc.save(s.sub.replace(/[^a-z0-9]/gi,'_')+'_'+s.cls.replace(/[^a-z0-9]/gi,'_')+'_Attendance.pdf');
+  toast('PDF saved: '+s.sub,'ok');
+}
+
+function downloadDailyPDF(){
+  todaySessions().then(ss=>{
+    if(!ss.length){toast('No sessions today','warn');return;}
+    ss.sort((a,b)=>a.start-b.start);
+    Promise.all(ss.map(s=>getRec(s.id).then(r=>({s,r})))).then(items=>{
+      const theme = localStorage.getItem('ax_pdf_theme') || 'blue';
+      const themes = {
+        blue:   {bg:[255,255,255],headerBg:[59,111,232],headerText:[255,255,255],metaText:[74,88,120],tableFill:[245,248,255],tableAlt:[235,240,255],tableHead:[59,111,232],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[216,226,248],firstRow:[245,158,11]},
+        school: {bg:[230,240,255],headerBg:[100,149,237],headerText:[255,255,255],metaText:[74,88,120],tableFill:[255,255,255],tableAlt:[240,248,255],tableHead:[100,149,237],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[180,200,230],firstRow:[255,140,0]},
+        peach:  {bg:[255,250,240],headerBg:[255,200,150],headerText:[80,40,20],metaText:[120,80,60],tableFill:[255,245,235],tableAlt:[255,235,220],tableHead:[255,180,120],tableHeadText:[80,40,20],tableText:[80,40,20],tableBorder:[255,220,180],firstRow:[255,140,80]},
+        green:  {bg:[240,255,240],headerBg:[76,175,80],headerText:[255,255,255],metaText:[80,120,80],tableFill:[250,255,250],tableAlt:[240,250,240],tableHead:[76,175,80],tableHeadText:[255,255,255],tableText:[30,60,30],tableBorder:[200,230,200],firstRow:[255,193,7]}
+      };
+      const t = themes[theme];
+      const {jsPDF}=window.jspdf;
+      const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      const W=210,M=16;
+      const tp=items.reduce((a,{r})=>a+r.length,0);
+      // Cover
+      doc.setFillColor(...t.bg);doc.rect(0,0,W,297,'F');
+      doc.setFillColor(...t.headerBg);doc.rect(0,0,W,2,'F');doc.rect(0,295,W,2,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(34);doc.setTextColor(...t.headerBg);
+      doc.text('FULL DAY',W/2,108,{align:'center'});doc.text('ATTENDANCE REPORT',W/2,125,{align:'center'});
+      doc.setFont('helvetica','normal');doc.setFontSize(12);doc.setTextColor(...t.metaText);
+      doc.text(new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),W/2,141,{align:'center'});
+      doc.setFontSize(10);
+      doc.text('Total Sessions: '+ss.length,W/2,157,{align:'center'});
+      doc.text('Total Attendances: '+tp,W/2,167,{align:'center'});
+      doc.text('Generated: '+new Date().toLocaleString(),W/2,177,{align:'center'});
+      doc.setFontSize(8);doc.setTextColor(...t.metaText);
+      doc.text('AttendX PRO · Created by KЭL ♛ PHANTOM',W/2,285,{align:'center'});
+      items.forEach(({s,r:recs},idx)=>{
+        doc.addPage();
+        doc.setFillColor(...t.bg);doc.rect(0,0,W,297,'F');
+        doc.setFillColor(...t.headerBg);doc.rect(0,0,W,48,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...t.headerText);
+        doc.text('SESSION '+(idx+1)+' OF '+ss.length,M,11);
+        doc.setFontSize(17);doc.text(s.sub.toUpperCase(),M,22);
+        doc.setFont('helvetica','normal');doc.setFontSize(8.5);
+        doc.text([s.cls?'Class: '+s.cls:null,s.dept?s.dept:null,s.lec?s.lec:null,'Time: '+s.time].filter(Boolean).join('   |   '),M,31);
+        doc.setFontSize(7.5);doc.text('Present: '+recs.length+'   |   Duration: '+s.dur+' min',M,39);
+        if(!recs.length){doc.setFont('helvetica','italic');doc.setFontSize(10);doc.setTextColor(...t.metaText);doc.text('No records.',W/2,62,{align:'center'});}
+        else {
+          doc.autoTable({startY:53,margin:{left:M,right:M},
+            head:[['#','First Name','Last Name','Matricule','Class','Department','Time']],
+            body:recs.map((r,i)=>[i+1,r.fN,r.lN,r.mat,r.cls||'—',r.dept||'—',r.time]),
+            styles:{font:'helvetica',fontSize:9,textColor:t.tableText,fillColor:t.tableFill,lineColor:t.tableBorder,lineWidth:0.25,cellPadding:3.5},
+            headStyles:{fillColor:t.tableHead,textColor:t.tableHeadText,fontStyle:'bold',fontSize:8},
+            alternateRowStyles:{fillColor:t.tableAlt},
+            columnStyles:{0:{cellWidth:9,halign:'center',textColor:t.metaText},3:{fontStyle:'bold'},6:{cellWidth:22}},
+            didParseCell(d){if(d.section==='body'&&d.row.index===0)d.cell.styles.textColor=t.firstRow;}
+          });
+        }
+        doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...t.metaText);
+        doc.text('AttendX PRO · KЭL ♛ PHANTOM',M,285);
+        doc.text('Page '+(idx+2),W-M,285,{align:'right'});
+      });
+      doc.save('AttendX_FullDay_'+new Date().toLocaleDateString('en-GB').replace(/\//g,'-')+'.pdf');
+      toast('Full Day PDF saved','ok');
+    });
+  });
+}
+
+/* ── QR TOOL ── */
+let qrCurrentTab='link';
+function qrTab(t,btn){
+  qrCurrentTab=t;
+  document.querySelectorAll('.qr-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('qrp-'+t).classList.add('active');
+  document.querySelectorAll('#pgQR .tabs .tab').forEach(tb=>tb.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.err-msg').forEach(e=>e.classList.remove('show'));
+}
+
+function generateQR(){
+  let link='';
+  if(qrCurrentTab==='link'){
+    link=document.getElementById('qr-link-url').value.trim();
+    if(!link){toast('Please paste a session link first','warn');return;}
+  } else if(qrCurrentTab==='email'){
+    const em=document.getElementById('qr-em').value.trim();
+    const el=document.getElementById('err-em');
+    if(!em||!/^[^@]+@[^@]+\.[^@]+$/.test(em)){el.classList.add('show');return;}
+    el.classList.remove('show');
+    let l='mailto:'+em; const prms=[];
+    const sub=document.getElementById('qr-sub').value.trim();
+    const body=document.getElementById('qr-body').value.trim();
+    if(sub)prms.push('subject='+encodeURIComponent(sub));
+    if(body)prms.push('body='+encodeURIComponent(body));
+    if(prms.length)l+='?'+prms.join('&');
+    link=l;
+  } else {
+    const url=document.getElementById('qr-url').value.trim();
+    const el=document.getElementById('err-url');
+    if(!url||!/^https?:\/\/.+/.test(url)){el.classList.add('show');return;}
+    el.classList.remove('show');
+    link=url;
+  }
+  S.qrLink=link;
+  const size=parseInt(document.getElementById('qr-size').value);
+  const fg=document.getElementById('qr-fg').value;
+  const bg=document.getElementById('qr-bg').value;
+  const ecl=document.getElementById('qr-ecl').value;
+  const out=document.getElementById('qr-output');
+  out.innerHTML='';
+  new QRCode(out,{text:link,width:size,height:size,colorDark:fg,colorLight:bg,correctLevel:QRCode.CorrectLevel[ecl]});
+  const badges={'link':'🔗 Session QR','email':'✉ Email QR','web':'🌐 Website QR'};
+  document.getElementById('qrTypeBadge').textContent=badges[qrCurrentTab];
+  document.getElementById('qrUrlPrev').textContent=link.length>64?link.substring(0,64)+'…':link;
+  document.getElementById('qrEmpty').style.display='none';
+  document.getElementById('qrResult').classList.add('show');
+  // stats
+  S.qrStats.total++;
+  if(qrCurrentTab==='link')S.qrStats.link++;
+  else if(qrCurrentTab==='email')S.qrStats.email++;
+  updQRStats();
+  // history
+  const lbl=qrCurrentTab==='link'?(document.getElementById('qr-link-label').value.trim()||link)
+    :qrCurrentTab==='email'?document.getElementById('qr-em').value.trim()
+    :(document.getElementById('qr-urlabel').value.trim()||link);
+  addQRHistory(lbl,qrCurrentTab,link);
+  toast('QR code generated!','ok');
+}
+
+function dlPNG(){
+  const c=document.querySelector('#qr-output canvas');
+  if(!c){toast('Generate a QR first','warn');return;}
+  const a=document.createElement('a'); a.download='qr-code.png'; a.href=c.toDataURL('image/png'); a.click();
+  S.qrStats.dl++; updQRStats(); toast('PNG downloaded','ok');
+}
+function dlSVG(){
+  const c=document.querySelector('#qr-output canvas');
+  if(!c){toast('Generate a QR first','warn');return;}
+  const size=parseInt(document.getElementById('qr-size').value);
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><image href="${c.toDataURL('image/png')}" width="${size}" height="${size}"/></svg>`;
+  const blob=new Blob([svg],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.download='qr-code.svg'; a.href=url; a.click();
+  URL.revokeObjectURL(url);
+  S.qrStats.dl++; updQRStats(); toast('SVG downloaded','ok');
+}
+function copyQRLink(){
+  if(!S.qrLink){toast('Generate a QR first','warn');return;}
+  navigator.clipboard.writeText(S.qrLink).then(()=>toast('Link copied!','info'));
+}
+function printQR(){
+  const c=document.querySelector('#qr-output canvas'); if(!c)return;
+  const img=c.toDataURL('image/png');
+  const w=window.open('','_blank');
+  w.document.write(`<html><body style="text-align:center;background:#fff;padding:40px"><img src="${img}" style="max-width:300px"/><br/><p style="font-family:monospace;font-size:11px;margin-top:12px">${S.qrLink}</p><script>window.onload=()=>{window.print();window.close()}<\/script></body></html>`);
+}
+function updQRStats(){
+  document.getElementById('qs-total').textContent=S.qrStats.total;
+  document.getElementById('qs-link').textContent=S.qrStats.link;
+  document.getElementById('qs-email').textContent=S.qrStats.email;
+  document.getElementById('qs-dl').textContent=S.qrStats.dl;
+}
+function addQRHistory(label,type,link){
+  S.qrHistory.unshift({label,type,link,time:new Date().toLocaleTimeString()});
+  if(S.qrHistory.length>5)S.qrHistory.pop();
+  renderQRHistory();
+}
+function renderQRHistory(){
+  const sec=document.getElementById('qrHist');
+  const list=document.getElementById('qrHistList');
+  if(!S.qrHistory.length){sec.style.display='none';return;}
+  sec.style.display='block';
+  list.innerHTML='';
+  S.qrHistory.forEach((item,i)=>{
+    const el=document.createElement('div'); el.className='qr-hi';
+    const ico={'link':'🔗','email':'✉','web':'🌐'}[item.type]||'🔗';
+    el.innerHTML=`<span class="ico">${ico}</span><div class="tx"><div class="tl">${item.label}</div><div class="ts">${item.time}</div></div><button class="rd" onclick="reloadQRHist(${i});event.stopPropagation()" title="Reload">↺</button>`;
+    el.addEventListener('click',()=>reloadQRHist(i));
+    list.appendChild(el);
+  });
+}
+function reloadQRHist(i){
+  const item=S.qrHistory[i]; S.qrLink=item.link;
+  const out=document.getElementById('qr-output'); out.innerHTML='';
+  const size=parseInt(document.getElementById('qr-size').value);
+  new QRCode(out,{text:item.link,width:size,height:size,colorDark:document.getElementById('qr-fg').value,colorLight:document.getElementById('qr-bg').value,correctLevel:QRCode.CorrectLevel.M});
+  document.getElementById('qrTypeBadge').textContent={'link':'🔗 Session QR','email':'✉ Email QR','web':'🌐 Website QR'}[item.type]||'🔗 QR';
+  document.getElementById('qrUrlPrev').textContent=item.link.length>64?item.link.substring(0,64)+'…':item.link;
+  document.getElementById('qrEmpty').style.display='none';
+  document.getElementById('qrResult').classList.add('show');
+  toast('QR reloaded!','info');
+}
+
+/* ── HELPERS ── */
+function v(id){return (document.getElementById(id)?.value||'').trim();}
+
+/* ── DEVICE FINGERPRINT ── */
+async function getDeviceId(){
+  if(window._deviceId) return window._deviceId;
+  try {
+    const fp = await FingerprintJS.load();
+    const result = await fp.get();
+    window._deviceId = result.visitorId;
+  } catch(e){
+    // fallback: combine available browser signals
+    const raw = [
+      navigator.userAgent, navigator.language, screen.width, screen.height,
+      screen.colorDepth, navigator.hardwareConcurrency, navigator.deviceMemory,
+      Intl.DateTimeFormat().resolvedOptions().timeZone
+    ].join('|');
+    let hash = 0;
+    for(let i=0;i<raw.length;i++) hash = ((hash<<5)-hash)+raw.charCodeAt(i);
+    window._deviceId = 'fp_'+(hash>>>0).toString(16);
+  }
+  return window._deviceId;
+}
+
+/* ── WAIT FOR FIREBASE ── */
+function waitForFirebase(){
+  return new Promise(resolve=>{
+    if(window._firebaseReady) return resolve();
+    document.addEventListener('firebaseReady', resolve, {once:true});
+  });
+}
+
+/* ── FIREBASE DATA FUNCTIONS ── */
+async function saveSess(sess){
+  await waitForFirebase();
+  await window._fsSetDoc(window._fsDoc(window._db,'sessions',String(sess.id)), sess);
+}
+
+async function getSess(id){
+  await waitForFirebase();
+  const snap = await window._fsGetDoc(window._fsDoc(window._db,'sessions',String(id)));
+  return snap.exists() ? snap.data() : null;
+}
+
+async function getRec(sid){
+  await waitForFirebase();
+  const snap = await window._fsGetDocs(window._fsColl(window._db,'sessions',String(sid),'records'));
+  return snap.docs.map(d=>d.data());
+}
+
+async function saveRec(sid, rec){
+  await waitForFirebase();
+  await window._fsSetDoc(window._fsDoc(window._db,'sessions',String(sid),'records',rec.mat.toUpperCase()), rec);
+}
+
+async function saveDeviceMark(sid, deviceId){
+  await waitForFirebase();
+  await window._fsSetDoc(window._fsDoc(window._db,'sessions',String(sid),'devices',deviceId), {ts:Date.now()});
+}
+
+async function checkDeviceMark(sid, deviceId){
+  await waitForFirebase();
+  const snap = await window._fsGetDoc(window._fsDoc(window._db,'sessions',String(sid),'devices',deviceId));
+  return snap.exists();
+}
+
+async function todaySessions(){
+  await waitForFirebase();
+  const today = new Date().toDateString();
+  const snap  = await window._fsGetDocs(window._fsColl(window._db,'sessions'));
+  return snap.docs.map(d=>d.data())
+    .filter(s=>new Date(s.start).toDateString()===today)
+    .sort((a,b)=>b.start-a.start);
+}
+
+async function deleteSess(sid){
+  await waitForFirebase();
+  // delete all records subcollection
+  const rSnap = await window._fsGetDocs(window._fsColl(window._db,'sessions',String(sid),'records'));
+  for(const d of rSnap.docs) await window._fsDeleteDoc(d.ref);
+  const dSnap = await window._fsGetDocs(window._fsColl(window._db,'sessions',String(sid),'devices'));
+  for(const d of dSnap.docs) await window._fsDeleteDoc(d.ref);
+  await window._fsDeleteDoc(window._fsDoc(window._db,'sessions',String(sid)));
+}
+
+async function clearAllData(){
+  await waitForFirebase();
+  const snap = await window._fsGetDocs(window._fsColl(window._db,'sessions'));
+  for(const d of snap.docs) await deleteSess(d.id);
+}
+
+/* ── REALTIME LISTENER ── */
+let _liveUnsub = null;
+function subscribeSession(sid, onChange){
+  waitForFirebase().then(()=>{
+    if(_liveUnsub) _liveUnsub();
+    _liveUnsub = window._fsOnSnap(
+      window._fsColl(window._db,'sessions',String(sid),'records'),
+      snap => onChange(snap.docs.map(d=>d.data()))
+    );
+  });
+}
+function unsubscribeSession(){ if(_liveUnsub){ _liveUnsub(); _liveUnsub=null; } }
+function showAlert(id,type,msg){
+  const el=document.getElementById(id); if(!el)return;
+  const ico={ok:'✓',err:'✕',warn:'⚠',info:'ℹ'};
+  el.className='alert '+type+' show';
+  el.innerHTML=`<span style="flex-shrink:0;margin-top:1px;">${ico[type]||'ℹ'}</span><span>${msg}</span>`;
+  if(type==='ok')setTimeout(()=>el.classList.remove('show'),5000);
+}
+function toast(msg,type='info'){
+  const c=document.getElementById('toastStack');
+  const ico={ok:'✓',err:'✕',warn:'⚠',info:'ℹ'};
+  const t=document.createElement('div');
+  t.className='toast-item '+type;
+  t.innerHTML=`<span>${ico[type]||'ℹ'}</span>${msg}`;
+  c.appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),400);},3200);
+}
+
+/* ── CLOSE MODALS ON BACKDROP ── */
+['sessModal','settModal','confModal'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('click',e=>{
+    if(e.target===document.getElementById(id)){
+      if(id==='sessModal')closeModal();
+      if(id==='settModal')closeSet();
+      if(id==='confModal')closeConf();
+    }
+  });
+});
+
+/* ── FLOATING SCHOOL ICONS ── */
+(function spawnIcons(){
+  const icons = ['📚','📖','✏️','📝','🎓','📐','📏','🔬','📓','🖊️','📌','🏫'];
+  const bg = document.getElementById('schoolBg');
+  const count = 18;
+  for(let i = 0; i < count; i++){
+    const el = document.createElement('div');
+    el.className = 'icon';
+    el.textContent = icons[i % icons.length];
+    const left = Math.random() * 96;
+    const top  = Math.random() * 96;
+    const dur  = 4 + Math.random() * 6;   // 4s – 10s
+    const delay= Math.random() * -10;      // stagger start
+    const size = 22 + Math.random() * 20;  // 22px – 42px
+    el.style.cssText = `left:${left}%;top:${top}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;`;
+    bg.appendChild(el);
+  }
+})();
+
+/* ── BOOT ── */
+init();
+</script>
+</body>
+</html>
