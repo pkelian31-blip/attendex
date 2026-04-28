@@ -1736,38 +1736,77 @@ function dTab(n) {
 
 /* ── CREATE SESSION ── */
 
-/* shared geo request — used both on auto-load and manual button */
+/* shared geo request — waits for best accuracy reading */
 function _requestGeo(onSuccess, onFail) {
   if (!navigator.geolocation) { if(onFail) onFail({code:0,message:'Not supported'}); return; }
-  navigator.geolocation.getCurrentPosition(onSuccess, onFail||function(){},
-    {enableHighAccuracy:true, timeout:12000, maximumAge:0});
+
+  let bestPos = null;
+  let watchId = null;
+  let settled = false;
+
+  // Timeout after 20 seconds, use best reading we have
+  const timeout = setTimeout(()=>{
+    if(watchId != null) navigator.geolocation.clearWatch(watchId);
+    if(bestPos) onSuccess(bestPos);
+    else if(onFail) onFail({code:3, message:'Timed out'});
+    settled = true;
+  }, 20000);
+
+  watchId = navigator.geolocation.watchPosition(
+    pos => {
+      if(settled) return;
+      bestPos = pos;
+      // Accept if accuracy is 50m or better, otherwise keep watching
+      if(pos.coords.accuracy <= 50) {
+        settled = true;
+        clearTimeout(timeout);
+        navigator.geolocation.clearWatch(watchId);
+        onSuccess(pos);
+      }
+    },
+    err => {
+      if(settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      if(watchId != null) navigator.geolocation.clearWatch(watchId);
+      if(onFail) onFail(err);
+    },
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+  );
 }
 
 /* called automatically when teacher logs in */
 function autoRequestTeacherGeo() {
-  if (S.teacherLat != null) return; // already have it
+  if (S.teacherLat != null) return;
   _requestGeo(pos => {
     S.teacherLat = pos.coords.latitude;
     S.teacherLng = pos.coords.longitude;
+    const acc = Math.round(pos.coords.accuracy);
     const box = document.getElementById('geoStatus');
-    if (box) { box.style.display='block'; box.textContent='📍 Location captured automatically (±'+Math.round(pos.coords.accuracy)+'m) — geo-fence ready'; }
-    showAlert('geoAlert','ok','✓ Location captured automatically. Geo-fence is active for new sessions.');
-  }); // silent fail — user can retry with button
+    if (box) {
+      box.style.display='block';
+      box.textContent=`📍 Location captured (±${acc}m accuracy) — Lat: ${S.teacherLat.toFixed(5)}, Lng: ${S.teacherLng.toFixed(5)}`;
+    }
+    showAlert('geoAlert','ok',`✓ Location captured (±${acc}m). Geo-fence ready.`);
+  });
 }
 
 /* manual retry button */
 function captureTeacherLocation() {
-  showAlert('geoAlert','info','📡 Requesting your location — please allow access when the browser prompts…');
+  S.teacherLat = null; S.teacherLng = null; // reset so fresh capture
+  showAlert('geoAlert','info','📡 Getting your precise location — this may take up to 20 seconds…');
   _requestGeo(
     pos => {
       S.teacherLat = pos.coords.latitude;
       S.teacherLng = pos.coords.longitude;
+      const acc = Math.round(pos.coords.accuracy);
       document.getElementById('geoStatus').style.display = 'block';
-      document.getElementById('geoStatus').textContent = '📍 Location captured (±'+Math.round(pos.coords.accuracy)+'m) — geo-fence ready';
-      showAlert('geoAlert','ok','✓ Location captured (±'+Math.round(pos.coords.accuracy)+'m accuracy)');
+      document.getElementById('geoStatus').textContent =
+        `📍 Location captured (±${acc}m) — Lat: ${S.teacherLat.toFixed(5)}, Lng: ${S.teacherLng.toFixed(5)}`;
+      showAlert('geoAlert','ok',`✓ Location captured (±${acc}m accuracy)`);
     },
     err => {
-      const msgs = {1:'Permission denied — open browser settings and allow location for this page.',2:'Position unavailable — try again.',3:'Request timed out — try again.'};
+      const msgs = {1:'Permission denied — allow location in browser settings.',2:'Position unavailable — try again.',3:'Timed out — move to open area and retry.'};
       showAlert('geoAlert','err','❌ '+(msgs[err.code]||err.message));
     }
   );
@@ -2189,7 +2228,7 @@ function checkStudentGeo(s) {
     btn.disabled = waiting;
     btn.style.opacity = waiting ? '0.5' : '1';
     btn.style.cursor  = waiting ? 'not-allowed' : 'pointer';
-    btn.textContent   = waiting ? '⏳ Waiting for location…' : '✓ Submit My Attendance';
+    btn.textContent   = waiting ? '⏳ Getting your location…' : '✓ Submit My Attendance';
   }
 
   if (!navigator.geolocation) {
@@ -2198,28 +2237,34 @@ function checkStudentGeo(s) {
     S.geoBlocked = true; return;
   }
 
-  // immediately block submit and show prompt message
   S.geoBlocked = true;
   setBtnState(true);
   setBox('var(--blue3)','1px solid rgba(79,158,255,0.2)','var(--blue)',
-    '📡 This session requires location verification — please allow location access when your browser asks…');
+    '📡 Getting your precise location — please allow access and wait up to 20 seconds…');
 
   _requestGeo(
     pos => {
-      const dist = Math.round(haversine(s.geoLat, s.geoLng, pos.coords.latitude, pos.coords.longitude));
+      const stuLat = pos.coords.latitude;
+      const stuLng = pos.coords.longitude;
+      const acc    = Math.round(pos.coords.accuracy);
+      const dist   = Math.round(haversine(s.geoLat, s.geoLng, stuLat, stuLng));
       S.studentDist = dist;
+
+      // Show real coordinates for transparency
+      const coordInfo = `Your location: ${stuLat.toFixed(5)}, ${stuLng.toFixed(5)} (±${acc}m accuracy) — Distance: ${dist}m`;
+
       if (dist <= s.geoRadius) {
         S.geoBlocked = false;
         setBtnState(false);
         setBox('var(--green2)','1px solid rgba(79,255,160,0.2)','var(--green)',
-          `✅ You are within range (${dist}m from classroom) — you may submit.`);
+          `✅ Within range (${dist}m from classroom, limit: ${s.geoRadius}m). ${coordInfo}`);
       } else {
         S.geoBlocked = true;
-        setBtnState(false); // re-enable so they can try, submitAttend will block with message
+        setBtnState(false);
         btn.textContent = '✓ Submit My Attendance';
         btn.disabled = false; btn.style.opacity='1'; btn.style.cursor='pointer';
         setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
-          `❌ You are ${dist}m away from the classroom — must be within ${s.geoRadius}m. You cannot mark attendance remotely.`);
+          `❌ Too far (${dist}m away, limit: ${s.geoRadius}m). ${coordInfo}`);
       }
     },
     err => {
@@ -2227,11 +2272,13 @@ function checkStudentGeo(s) {
       setBtnState(false);
       btn.textContent = '✓ Submit My Attendance';
       btn.disabled = false; btn.style.opacity='1'; btn.style.cursor='pointer';
-      const msgs = {1:'Location access was denied. Please allow location in your browser settings and reload.',
-                    2:'Your position could not be determined. Try again.',
-                    3:'Location request timed out. Check your connection and try again.'};
+      const msgs = {
+        1:'Location access denied. Go to browser settings → allow location for this site → reload.',
+        2:'Could not get your position. Move to open area and try again.',
+        3:'Location timed out. Move to open area, check GPS is on, and reload.'
+      };
       setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
-        '❌ '+(msgs[err.code]||'Location error — cannot verify your presence.'));
+        '❌ '+(msgs[err.code]||'Location error.'));
     }
   );
 }
