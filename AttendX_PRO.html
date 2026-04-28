@@ -7,6 +7,39 @@ but you understand <!DOCTYPE html>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDT2evTvU6_exbLTY8kIiO9n-mrF7vg4hs",
+    authDomain: "attendex-47d45.firebaseapp.com",
+    projectId: "attendex-47d45",
+    storageBucket: "attendex-47d45.firebasestorage.app",
+    messagingSenderId: "731988308422",
+    appId: "1:731988308422:web:ebc33605ab8ad24025c2c7"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+
+  // Expose to global scope for use in non-module scripts
+  window._db         = db;
+  window._fsDoc      = doc;
+  window._fsSetDoc   = setDoc;
+  window._fsGetDoc   = getDoc;
+  window._fsColl     = collection;
+  window._fsQuery    = query;
+  window._fsWhere    = where;
+  window._fsOnSnap   = onSnapshot;
+  window._fsGetDocs  = getDocs;
+  window._fsDeleteDoc= deleteDoc;
+  window._firebaseReady = true;
+  document.dispatchEvent(new Event('firebaseReady'));
+</script>
+<!-- FingerprintJS -->
+<script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@4/dist/fp.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 /* ═══════════════════════════════════════════════════════
@@ -15,34 +48,34 @@ but you understand <!DOCTYPE html>
 ═══════════════════════════════════════════════════════ */
 :root {
   /* backgrounds */
-  --bg:       #080B12;
-  --s1:       #0E1320;
-  --s2:       #141926;
-  --s3:       #1A2035;
-  --s4:       #1E2740;
+  --bg:       #F0F4FF;
+  --s1:       #FFFFFF;
+  --s2:       #F5F8FF;
+  --s3:       #EBF0FF;
+  --s4:       #DDE6FF;
 
   /* borders */
-  --line:     #1E2740;
-  --line2:    rgba(99,179,237,0.18);
-  --line3:    rgba(99,179,237,0.35);
+  --line:     #D8E2F8;
+  --line2:    rgba(79,120,255,0.22);
+  --line3:    rgba(79,120,255,0.40);
 
   /* accent palette */
-  --blue:     #4F9EFF;
-  --blue2:    #2B7FEF;
-  --blue3:    rgba(79,158,255,0.12);
-  --cyan:     #7EDCFF;
-  --cyan2:    rgba(126,220,255,0.12);
-  --green:    #4FFFA0;
-  --green2:   rgba(79,255,160,0.12);
-  --gold:     #E2B96A;
-  --gold2:    rgba(226,185,106,0.12);
-  --red:      #FF6B6B;
-  --red2:     rgba(255,107,107,0.12);
+  --blue:     #3B6FE8;
+  --blue2:    #2554C7;
+  --blue3:    rgba(59,111,232,0.10);
+  --cyan:     #0EA5E9;
+  --cyan2:    rgba(14,165,233,0.10);
+  --green:    #10B981;
+  --green2:   rgba(16,185,129,0.10);
+  --gold:     #F59E0B;
+  --gold2:    rgba(245,158,11,0.10);
+  --red:      #EF4444;
+  --red2:     rgba(239,68,68,0.10);
 
   /* text */
-  --text:     #EEF2FF;
-  --text2:    #8A99B8;
-  --text3:    #5A6580;
+  --text:     #1E2A4A;
+  --text2:    #4A5880;
+  --text3:    #8A96B8;
 
   /* fonts */
   --head:  'Syne', sans-serif;
@@ -65,33 +98,46 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Atmospheric BG ── */
+/* ── Gradient BG ── */
 body::before {
   content: '';
   position: fixed; inset: 0;
   background:
-    radial-gradient(ellipse 900px 500px at 15% -5%,  rgba(79,158,255,0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 600px 400px at 88% 92%, rgba(126,220,255,0.05) 0%, transparent 55%),
-    radial-gradient(ellipse 400px 300px at 50% 50%, rgba(79,255,160,0.02) 0%, transparent 60%);
+    radial-gradient(ellipse 800px 600px at 10% 0%,   rgba(59,111,232,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 500px at 90% 100%, rgba(14,165,233,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 500px 400px at 50% 50%,  rgba(16,185,129,0.05) 0%, transparent 60%);
   pointer-events: none; z-index: 0;
 }
 
-/* ── Grid BG ── */
+/* ── Subtle dot grid ── */
 .grid-bg {
   position: fixed; inset: 0;
-  background-image:
-    linear-gradient(rgba(79,158,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(79,158,255,0.03) 1px, transparent 1px);
-  background-size: 44px 44px;
+  background-image: radial-gradient(circle, rgba(59,111,232,0.08) 1px, transparent 1px);
+  background-size: 36px 36px;
   pointer-events: none; z-index: 0;
 }
 
-/* ── Noise ── */
-body::after {
-  content: '';
+body::after { content: none; }
+
+/* ── Floating school icons ── */
+.school-bg {
   position: fixed; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-  pointer-events: none; z-index: 0; opacity: 0.25;
+  pointer-events: none; z-index: 0;
+  overflow: hidden;
+}
+.school-bg .icon {
+  position: absolute;
+  font-size: 28px;
+  opacity: 0.13;
+  animation: floatIcon linear infinite;
+  user-select: none;
+}
+@keyframes floatIcon {
+  0%   { transform: translateY(0px) rotate(0deg);   opacity: 0.10; }
+  25%  { transform: translateY(-18px) rotate(4deg);  opacity: 0.16; }
+  50%  { transform: translateY(-8px) rotate(-3deg);  opacity: 0.12; }
+  75%  { transform: translateY(-22px) rotate(5deg);  opacity: 0.17; }
+  100% { transform: translateY(0px) rotate(0deg);   opacity: 0.10; }
 }
 
 /* ════════════════════════════════
@@ -173,14 +219,14 @@ body::after {
   height: 62px;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 28px;
-  background: rgba(8,11,18,0.88);
+  background: rgba(255,255,255,0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--line);
   z-index: 1000;
   transition: box-shadow 0.3s;
 }
-.topnav.up { box-shadow: 0 4px 32px rgba(0,0,0,0.5); }
+.topnav.up { box-shadow: 0 4px 32px rgba(59,111,232,0.10); }
 
 .nav-logo { display:flex; align-items:center; gap:10px; text-decoration:none; cursor:pointer; }
 .nav-logomark {
@@ -871,7 +917,7 @@ body::after {
 ════════════════════════════════ */
 .overlay {
   position:fixed; inset:0;
-  background:rgba(0,0,0,0.78); backdrop-filter:blur(8px);
+  background:rgba(30,42,74,0.45); backdrop-filter:blur(8px);
   z-index:2000; display:none; align-items:center; justify-content:center; padding:20px;
 }
 .overlay.show { display:flex; animation:fadeIn 0.2s ease both; }
@@ -879,7 +925,7 @@ body::after {
   background:var(--s1); border:1px solid var(--line2);
   border-radius:var(--r5); width:100%; max-width:700px;
   max-height:88vh; overflow-y:auto;
-  box-shadow:0 28px 90px rgba(0,0,0,0.7);
+  box-shadow:0 28px 90px rgba(59,111,232,0.15);
   animation:scaleIn 0.3s cubic-bezier(0.22,1,0.36,1) both;
   position:relative;
 }
@@ -921,15 +967,6 @@ body::after {
   text-align:center; animation:scaleIn 0.3s ease both;
 }
 .confirm-acts { display:flex; gap:9px; }
-
-/* PDF Theme Picker */
-.pdf-theme-opt {
-  border-radius:8px; overflow:hidden; cursor:pointer;
-  transition:transform 0.15s, box-shadow 0.15s;
-  box-shadow:0 2px 8px rgba(0,0,0,0.08);
-}
-.pdf-theme-opt:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.15); }
-.pdf-theme-opt.selected { outline:3px solid var(--blue); outline-offset:2px; }
 
 /* ════════════════════════════════
    TOAST
@@ -995,6 +1032,9 @@ body::after {
 <body>
 
 <div class="grid-bg"></div>
+
+<!-- ── Floating school icons background ── -->
+<div class="school-bg" id="schoolBg"></div>
 
 <!-- ═══════════════ TOP NAV ═══════════════ -->
 <nav class="topnav" id="topnav">
@@ -1484,6 +1524,17 @@ body::after {
     </div>
     <div class="modal-body">
       <div class="set-sec">
+        <div class="set-sec-title">School Information</div>
+        <div class="field">
+          <label>School Name</label>
+          <input id="schoolName" placeholder="e.g. University of Yaoundé I" />
+          <div class="hint">This name appears in the footer of all PDF reports.</div>
+        </div>
+        <button class="btn btn-primary" onclick="saveSchoolName()">Save School Name</button>
+        <div class="alert" id="schoolNameAlert"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="set-sec">
         <div class="set-sec-title">Security — Change PIN</div>
         <div class="pin-grid">
           <div class="field"><label>New PIN</label><input id="newPin" type="password" placeholder="4 digits" maxlength="4" inputmode="numeric"/></div>
@@ -1491,6 +1542,22 @@ body::after {
         </div>
         <button class="btn btn-primary" onclick="changePin()">Update PIN</button>
         <div class="alert" id="pinAlert"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="set-sec">
+        <div class="set-sec-title">PDF Report Theme</div>
+        <div class="field">
+          <label>Choose PDF Design</label>
+          <div class="sel-wrap">
+            <select id="pdfTheme">
+              <option value="blue">Clean Blue — Professional & Minimal</option>
+              <option value="school">School Fun — Colorful with Icons</option>
+              <option value="peach">Warm Peach — Soft & Friendly</option>
+              <option value="green">Nature Green — Fresh & Organic</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:7px;font-family:var(--mono);">This theme will be used for all PDF downloads.</div>
       </div>
       <div class="divider"></div>
       <div class="set-sec">
@@ -1525,49 +1592,6 @@ body::after {
 
 <!-- ══════════ TOAST STACK ══════════ -->
 <div class="toast-stack" id="toastStack"></div>
-
-<!-- ══════════ MODAL: PDF Theme Picker ══════════ -->
-<div class="overlay" id="pdfThemeModal">
-  <div class="confirm-box" style="max-width:420px;text-align:left;">
-    <div style="font-size:28px;text-align:center;margin-bottom:12px;">📄</div>
-    <div style="font-family:var(--head);font-size:18px;font-weight:800;margin-bottom:6px;text-align:center;">Choose PDF Theme</div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:18px;text-align:center;">Select a design for your attendance report</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-      <div class="pdf-theme-opt" data-theme="blue" onclick="selectPdfTheme('blue')">
-        <div style="height:36px;background:linear-gradient(135deg,#3B6FE8,#0EA5E9);border-radius:6px 6px 0 0;"></div>
-        <div style="padding:8px 10px;background:#fff;border-radius:0 0 6px 6px;border:2px solid #3B6FE8;">
-          <div style="font-size:11px;font-weight:700;color:#1E2A4A;">Clean Blue</div>
-          <div style="font-size:10px;color:#8A96B8;">Professional & Minimal</div>
-        </div>
-      </div>
-      <div class="pdf-theme-opt" data-theme="school" onclick="selectPdfTheme('school')">
-        <div style="height:36px;background:linear-gradient(135deg,#6495ED,#87CEEB);border-radius:6px 6px 0 0;"></div>
-        <div style="padding:8px 10px;background:#E6F0FF;border-radius:0 0 6px 6px;border:2px solid #6495ED;">
-          <div style="font-size:11px;font-weight:700;color:#1E2A4A;">School Fun</div>
-          <div style="font-size:10px;color:#8A96B8;">Colorful & Friendly</div>
-        </div>
-      </div>
-      <div class="pdf-theme-opt" data-theme="peach" onclick="selectPdfTheme('peach')">
-        <div style="height:36px;background:linear-gradient(135deg,#FFC896,#FFB347);border-radius:6px 6px 0 0;"></div>
-        <div style="padding:8px 10px;background:#FFF5EB;border-radius:0 0 6px 6px;border:2px solid #FFC896;">
-          <div style="font-size:11px;font-weight:700;color:#502814;">Warm Peach</div>
-          <div style="font-size:10px;color:#8A96B8;">Soft & Warm</div>
-        </div>
-      </div>
-      <div class="pdf-theme-opt" data-theme="green" onclick="selectPdfTheme('green')">
-        <div style="height:36px;background:linear-gradient(135deg,#4CAF50,#81C784);border-radius:6px 6px 0 0;"></div>
-        <div style="padding:8px 10px;background:#F0FFF0;border-radius:0 0 6px 6px;border:2px solid #4CAF50;">
-          <div style="font-size:11px;font-weight:700;color:#1E3C1E;">Nature Green</div>
-          <div style="font-size:10px;color:#8A96B8;">Fresh & Organic</div>
-        </div>
-      </div>
-    </div>
-    <div class="confirm-acts">
-      <button class="btn btn-ghost btn-full" onclick="closePdfThemeModal()">Cancel</button>
-      <button class="btn btn-primary btn-full" id="pdfThemeConfirmBtn" onclick="confirmPdfTheme()">Download PDF</button>
-    </div>
-  </div>
-</div>
 
 <!-- ══════════ FOOTER ══════════ -->
 <footer class="site-footer" id="siteFooter">
@@ -1723,38 +1747,77 @@ function dTab(n) {
 
 /* ── CREATE SESSION ── */
 
-/* shared geo request — used both on auto-load and manual button */
+/* shared geo request — waits for best accuracy reading */
 function _requestGeo(onSuccess, onFail) {
   if (!navigator.geolocation) { if(onFail) onFail({code:0,message:'Not supported'}); return; }
-  navigator.geolocation.getCurrentPosition(onSuccess, onFail||function(){},
-    {enableHighAccuracy:true, timeout:12000, maximumAge:0});
+
+  let bestPos = null;
+  let watchId = null;
+  let settled = false;
+
+  // Timeout after 20 seconds, use best reading we have
+  const timeout = setTimeout(()=>{
+    if(watchId != null) navigator.geolocation.clearWatch(watchId);
+    if(bestPos) onSuccess(bestPos);
+    else if(onFail) onFail({code:3, message:'Timed out'});
+    settled = true;
+  }, 20000);
+
+  watchId = navigator.geolocation.watchPosition(
+    pos => {
+      if(settled) return;
+      bestPos = pos;
+      // Accept if accuracy is 50m or better, otherwise keep watching
+      if(pos.coords.accuracy <= 50) {
+        settled = true;
+        clearTimeout(timeout);
+        navigator.geolocation.clearWatch(watchId);
+        onSuccess(pos);
+      }
+    },
+    err => {
+      if(settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      if(watchId != null) navigator.geolocation.clearWatch(watchId);
+      if(onFail) onFail(err);
+    },
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+  );
 }
 
 /* called automatically when teacher logs in */
 function autoRequestTeacherGeo() {
-  if (S.teacherLat != null) return; // already have it
+  if (S.teacherLat != null) return;
   _requestGeo(pos => {
     S.teacherLat = pos.coords.latitude;
     S.teacherLng = pos.coords.longitude;
+    const acc = Math.round(pos.coords.accuracy);
     const box = document.getElementById('geoStatus');
-    if (box) { box.style.display='block'; box.textContent='📍 Location captured automatically (±'+Math.round(pos.coords.accuracy)+'m) — geo-fence ready'; }
-    showAlert('geoAlert','ok','✓ Location captured automatically. Geo-fence is active for new sessions.');
-  }); // silent fail — user can retry with button
+    if (box) {
+      box.style.display='block';
+      box.textContent=`📍 Location captured (±${acc}m accuracy) — Lat: ${S.teacherLat.toFixed(5)}, Lng: ${S.teacherLng.toFixed(5)}`;
+    }
+    showAlert('geoAlert','ok',`✓ Location captured (±${acc}m). Geo-fence ready.`);
+  });
 }
 
 /* manual retry button */
 function captureTeacherLocation() {
-  showAlert('geoAlert','info','📡 Requesting your location — please allow access when the browser prompts…');
+  S.teacherLat = null; S.teacherLng = null; // reset so fresh capture
+  showAlert('geoAlert','info','📡 Getting your precise location — this may take up to 20 seconds…');
   _requestGeo(
     pos => {
       S.teacherLat = pos.coords.latitude;
       S.teacherLng = pos.coords.longitude;
+      const acc = Math.round(pos.coords.accuracy);
       document.getElementById('geoStatus').style.display = 'block';
-      document.getElementById('geoStatus').textContent = '📍 Location captured (±'+Math.round(pos.coords.accuracy)+'m) — geo-fence ready';
-      showAlert('geoAlert','ok','✓ Location captured (±'+Math.round(pos.coords.accuracy)+'m accuracy)');
+      document.getElementById('geoStatus').textContent =
+        `📍 Location captured (±${acc}m) — Lat: ${S.teacherLat.toFixed(5)}, Lng: ${S.teacherLng.toFixed(5)}`;
+      showAlert('geoAlert','ok',`✓ Location captured (±${acc}m accuracy)`);
     },
     err => {
-      const msgs = {1:'Permission denied — open browser settings and allow location for this page.',2:'Position unavailable — try again.',3:'Request timed out — try again.'};
+      const msgs = {1:'Permission denied — allow location in browser settings.',2:'Position unavailable — try again.',3:'Timed out — move to open area and retry.'};
       showAlert('geoAlert','err','❌ '+(msgs[err.code]||err.message));
     }
   );
@@ -1778,14 +1841,17 @@ function createSession() {
 
   const start = Date.now(), expiry = start + dur*60*1000, id = start;
   const sess = {id,sub,cls,dept,lec,time,dur,room,start,expiry};
-  // attach geo-fence if teacher captured location
   const radius = parseInt(v('inRadius'))||100;
   if (S.teacherLat != null) {
     sess.geoLat    = S.teacherLat;
     sess.geoLng    = S.teacherLng;
     sess.geoRadius = radius;
   }
-  localStorage.setItem('ax_s_'+id, JSON.stringify(sess));
+
+  // Save to Firebase
+  saveSess(sess).then(()=>{
+    toast('Session saved to database','ok');
+  }).catch(e=>{ toast('DB error: '+e.message,'err'); });
 
   const link = location.href.split('?')[0]+'?session='+id;
   document.getElementById('genLink').value = link;
@@ -1839,24 +1905,28 @@ function copyLink() {
 }
 
 /* ── LIVE MONITOR ── */
+/* ── LIVE MONITOR (real-time via Firebase) ── */
 function startLiveMonitor(id) {
-  if(S.liveInt) clearInterval(S.liveInt);
-  tick(); S.liveInt = setInterval(tick, 3000);
-  function tick() {
-    const rec = getRec(id);
-    document.getElementById('lvCount').textContent = rec.length;
-    const sess = getSess(id);
-    if(!sess)return;
-    const rem = sess.expiry - Date.now();
-    if(rem>0){
-      document.getElementById('lvTime').textContent =
-        String(Math.floor(rem/60000)).padStart(2,'0')+':'+String(Math.floor((rem%60000)/1000)).padStart(2,'0');
-    } else {
-      document.getElementById('lvTime').textContent='Ended';
-      clearInterval(S.liveInt);
-    }
+  // Real-time listener for attendance count
+  subscribeSession(id, recs => {
+    document.getElementById('lvCount').textContent = recs.length;
     refreshStats();
-  }
+  });
+  // Timer tick
+  if(S.liveInt) clearInterval(S.liveInt);
+  S.liveInt = setInterval(()=>{
+    getSess(id).then(sess=>{
+      if(!sess) return;
+      const rem = sess.expiry - Date.now();
+      if(rem>0){
+        document.getElementById('lvTime').textContent =
+          String(Math.floor(rem/60000)).padStart(2,'0')+':'+String(Math.floor((rem%60000)/1000)).padStart(2,'0');
+      } else {
+        document.getElementById('lvTime').textContent='Ended';
+        clearInterval(S.liveInt);
+      }
+    });
+  }, 1000);
 }
 
 function startLiveLoop() {
@@ -1866,33 +1936,39 @@ function startLiveLoop() {
 }
 
 function renderLivePanel() {
-  const live = todaySessions().filter(s=>Date.now()<s.expiry);
-  const p = document.getElementById('livePanel');
-  if(!live.length){p.innerHTML='<div class="empty-st"><div class="ei">📡</div><div class="et">No active sessions</div></div>';return;}
-  p.innerHTML=live.map(s=>{
-    const r=getRec(s.id);
-    const rem=s.expiry-Date.now();
-    const m=String(Math.floor(rem/60000)).padStart(2,'0');
-    const sc=String(Math.floor((rem%60000)/1000)).padStart(2,'0');
-    return `<div class="la-item">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
-        <strong style="font-size:13px;">${s.sub}</strong>
-        <span class="badge badge-live">LIVE</span>
-      </div>
-      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:5px;">${s.cls} · ${r.length} present</div>
-      <div style="font-size:11px;color:var(--gold);font-family:var(--mono);">⏱ ${m}:${sc} remaining</div>
-    </div>`;
-  }).join('');
+  todaySessions().then(sessions=>{
+    const live = sessions.filter(s=>Date.now()<s.expiry);
+    const p = document.getElementById('livePanel');
+    if(!live.length){p.innerHTML='<div class="empty-st"><div class="ei">📡</div><div class="et">No active sessions</div></div>';return;}
+    Promise.all(live.map(s=>getRec(s.id).then(r=>({s,r})))).then(items=>{
+      p.innerHTML=items.map(({s,r})=>{
+        const rem=s.expiry-Date.now();
+        const m=String(Math.floor(rem/60000)).padStart(2,'0');
+        const sc=String(Math.floor((rem%60000)/1000)).padStart(2,'0');
+        return `<div class="la-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+            <strong style="font-size:13px;">${s.sub}</strong>
+            <span class="badge badge-live">LIVE</span>
+          </div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:5px;">${s.cls} · ${r.length} present</div>
+          <div style="font-size:11px;color:var(--gold);font-family:var(--mono);">⏱ ${m}:${sc} remaining</div>
+        </div>`;
+      }).join('');
+    });
+  });
 }
 
 /* ── REFRESH DASHBOARD ── */
 function refreshDash() { refreshStats(); renderSessions(); renderReports(); renderLivePanel(); }
 function refreshStats() {
-  const ss=todaySessions();
-  const pres=ss.reduce((a,s)=>a+getRec(s.id).length,0);
-  const live=ss.filter(s=>Date.now()<s.expiry).length;
-  animN('stSess',ss.length); animN('stPres',pres);
-  animN('stLive',live); animN('stEnd',ss.length-live);
+  todaySessions().then(ss=>{
+    Promise.all(ss.map(s=>getRec(s.id))).then(allRecs=>{
+      const pres=allRecs.reduce((a,r)=>a+r.length,0);
+      const live=ss.filter(s=>Date.now()<s.expiry).length;
+      animN('stSess',ss.length); animN('stPres',pres);
+      animN('stLive',live); animN('stEnd',ss.length-live);
+    });
+  });
 }
 function animN(id,val) {
   const el=document.getElementById(id); if(!el)return;
@@ -1902,94 +1978,120 @@ function animN(id,val) {
 /* ── SESSIONS LIST ── */
 function renderSessions() {
   const q=(document.getElementById('sessSearch')?.value||'').toLowerCase();
-  let ss=todaySessions();
-  if(q) ss=ss.filter(s=>s.sub.toLowerCase().includes(q)||s.cls.toLowerCase().includes(q)||(s.dept||'').toLowerCase().includes(q));
-  const cnt=document.getElementById('sessCount');
-  if(cnt) cnt.textContent=ss.length+' session'+(ss.length!==1?'s':'');
-  const list=document.getElementById('sessList');
-  if(!list)return;
-  if(!ss.length){list.innerHTML='<div class="empty-st"><div class="ei">📋</div><div class="et">'+(q?'No matching sessions.':'No sessions today.')+'</div></div>';return;}
-  list.innerHTML=ss.map(s=>{
-    const r=getRec(s.id);
-    const live=Date.now()<s.expiry;
-    return `<div class="srow" onclick="openModal('${s.id}')">
-      <div class="srow-left">
-        <div class="srow-name">${s.sub}<span class="badge ${live?'badge-live':'badge-end'}">${live?'LIVE':'ENDED'}</span></div>
-        <div class="srow-meta">${s.cls}${s.dept?' · '+s.dept:''} · ${r.length} present · ${s.time}</div>
-      </div>
-      <div class="srow-acts" onclick="event.stopPropagation()">
-        <button class="btn btn-cyan btn-xs" onclick="dlSessionPDF('${s.id}')">⬇</button>
-        <button class="btn btn-red btn-xs" onclick="confDelete('${s.id}')">🗑</button>
-      </div>
-    </div>`;
-  }).join('');
+  todaySessions().then(ss=>{
+    if(q) ss=ss.filter(s=>s.sub.toLowerCase().includes(q)||s.cls.toLowerCase().includes(q)||(s.dept||'').toLowerCase().includes(q));
+    const cnt=document.getElementById('sessCount');
+    if(cnt) cnt.textContent=ss.length+' session'+(ss.length!==1?'s':'');
+    const list=document.getElementById('sessList');
+    if(!list)return;
+    if(!ss.length){list.innerHTML='<div class="empty-st"><div class="ei">📋</div><div class="et">'+(q?'No matching sessions.':'No sessions today.')+'</div></div>';return;}
+    Promise.all(ss.map(s=>getRec(s.id).then(r=>({s,r})))).then(items=>{
+      list.innerHTML=items.map(({s,r})=>{
+        const live=Date.now()<s.expiry;
+        return `<div class="srow" onclick="openModal('${s.id}')">
+          <div class="srow-left">
+            <div class="srow-name">${s.sub}<span class="badge ${live?'badge-live':'badge-end'}">${live?'LIVE':'ENDED'}</span></div>
+            <div class="srow-meta">${s.cls}${s.dept?' · '+s.dept:''} · ${r.length} present · ${s.time}</div>
+          </div>
+          <div class="srow-acts" onclick="event.stopPropagation()">
+            <button class="btn btn-cyan btn-xs" onclick="dlSessionPDF('${s.id}')">⬇</button>
+            <button class="btn btn-red btn-xs" onclick="confDelete('${s.id}')">🗑</button>
+          </div>
+        </div>`;
+      }).join('');
+    });
+  });
 }
 
 function renderReports() {
-  const ss=todaySessions();
   const list=document.getElementById('reportsList'); if(!list)return;
-  if(!ss.length){list.innerHTML='<div class="empty-st"><div class="ei">📊</div><div class="et">No sessions today.</div></div>';return;}
-  list.innerHTML=ss.map(s=>{
-    const r=getRec(s.id);
-    const live=Date.now()<s.expiry;
-    return `<div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:12px 14px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:700;font-size:13px;margin-bottom:2px;display:flex;align-items:center;gap:7px;">${s.sub}<span class="badge ${live?'badge-live':'badge-end'}">${live?'LIVE':'ENDED'}</span></div>
-        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">${s.cls} · ${r.length} present · ${s.time}</div>
-      </div>
-      <button class="btn btn-gold btn-sm" onclick="dlSessionPDF('${s.id}')">⬇ PDF</button>
-    </div>`;
-  }).join('');
+  todaySessions().then(ss=>{
+    if(!ss.length){list.innerHTML='<div class="empty-st"><div class="ei">📊</div><div class="et">No sessions today.</div></div>';return;}
+    Promise.all(ss.map(s=>getRec(s.id).then(r=>({s,r})))).then(items=>{
+      list.innerHTML=items.map(({s,r})=>{
+        const live=Date.now()<s.expiry;
+        return `<div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:12px 14px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:13px;margin-bottom:2px;display:flex;align-items:center;gap:7px;">${s.sub}<span class="badge ${live?'badge-live':'badge-end'}">${live?'LIVE':'ENDED'}</span></div>
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">${s.cls} · ${r.length} present · ${s.time}</div>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="dlSessionPDF('${s.id}')">⬇ PDF</button>
+        </div>`;
+      }).join('');
+    });
+  });
 }
 
 /* ── SESSION DETAIL MODAL ── */
 function openModal(sid) {
-  const s=getSess(sid); if(!s)return;
-  const recs=getRec(sid);
   S.modalSID=sid;
-  document.getElementById('mTitle').textContent=s.sub+' — '+s.cls;
-  const live=Date.now()<s.expiry;
-  const closeT=new Date(s.expiry).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-  let body=`
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:18px;">
-      <div class="lchip"><div class="lv">${recs.length}</div><div class="ll">Present</div></div>
-      <div class="lchip"><div class="lv" style="font-size:13px;">${s.time}</div><div class="ll">Started</div></div>
-      <div class="lchip"><div class="lv" style="font-size:13px;">${closeT}</div><div class="ll">Closes</div></div>
-    </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
-      ${s.dept?`<span class="sb-tag b">${s.dept}</span>`:''}
-      ${s.lec?`<span class="sb-tag c">${s.lec}</span>`:''}
-      ${s.room?`<span class="sb-tag g">${s.room}</span>`:''}
-      <span class="badge ${live?'badge-live':'badge-end'}">${live?'LIVE':'ENDED'}</span>
-    </div>`;
-  if(!recs.length){
-    body+='<div class="empty-st"><div class="ei">👤</div><div class="et">No attendance records yet.</div></div>';
-  } else {
-    body+=`<div class="att-wrap"><table class="att-table">
-      <thead><tr><th>#</th><th>First Name</th><th>Last Name</th><th>Matricule</th><th>Class</th><th>Department</th><th>Time</th></tr></thead>
-      <tbody>${recs.map((r,i)=>`<tr class="${i===0?'first':''}"><td class="rc">${i+1}</td><td>${r.fN}</td><td>${r.lN}</td><td class="mc">${r.mat}</td><td>${r.cls||'—'}</td><td>${r.dept||'—'}</td><td class="tc">${r.time}</td></tr>`).join('')}
-      </tbody></table></div>`;
-  }
-  document.getElementById('mBody').innerHTML=body;
-  document.getElementById('sessModal').classList.add('show');
+  getSess(sid).then(s=>{
+    if(!s)return;
+    getRec(sid).then(recs=>{
+      document.getElementById('mTitle').textContent=s.sub+' — '+s.cls;
+      const live=Date.now()<s.expiry;
+      const closeT=new Date(s.expiry).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+      let body=`
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:18px;">
+          <div class="lchip"><div class="lv">${recs.length}</div><div class="ll">Present</div></div>
+          <div class="lchip"><div class="lv" style="font-size:13px;">${s.time}</div><div class="ll">Started</div></div>
+          <div class="lchip"><div class="lv" style="font-size:13px;">${closeT}</div><div class="ll">Closes</div></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
+          ${s.dept?`<span class="sb-tag b">${s.dept}</span>`:''}
+          ${s.lec?`<span class="sb-tag c">${s.lec}</span>`:''}
+          ${s.room?`<span class="sb-tag g">${s.room}</span>`:''}
+          <span class="badge ${live?'badge-live':'badge-end'}">${live?'LIVE':'ENDED'}</span>
+        </div>`;
+      if(!recs.length){
+        body+='<div class="empty-st"><div class="ei">👤</div><div class="et">No attendance records yet.</div></div>';
+      } else {
+        body+=`<div class="att-wrap"><table class="att-table">
+          <thead><tr><th>#</th><th>First Name</th><th>Last Name</th><th>Matricule</th><th>Class</th><th>Department</th><th>Time</th></tr></thead>
+          <tbody>${recs.map((r,i)=>`<tr class="${i===0?'first':''}"><td class="rc">${i+1}</td><td>${r.fN}</td><td>${r.lN}</td><td class="mc">${r.mat}</td><td>${r.cls||'—'}</td><td>${r.dept||'—'}</td><td class="tc">${r.time}</td></tr>`).join('')}
+          </tbody></table></div>`;
+      }
+      document.getElementById('mBody').innerHTML=body;
+      document.getElementById('sessModal').classList.add('show');
+      // subscribe for live updates while modal is open
+      subscribeSession(sid, updatedRecs=>{
+        const tbody = document.querySelector('#sessModal .att-table tbody');
+        const countEl = document.querySelector('#sessModal .lchip .lv');
+        if(countEl) countEl.textContent = updatedRecs.length;
+        if(tbody){
+          tbody.innerHTML = updatedRecs.map((r,i)=>`<tr class="${i===0?'first':''}"><td class="rc">${i+1}</td><td>${r.fN}</td><td>${r.lN}</td><td class="mc">${r.mat}</td><td>${r.cls||'—'}</td><td>${r.dept||'—'}</td><td class="tc">${r.time}</td></tr>`).join('');
+        }
+      });
+    });
+  });
 }
-function closeModal(){ document.getElementById('sessModal').classList.remove('show'); S.modalSID=null; }
+function closeModal(){ document.getElementById('sessModal').classList.remove('show'); S.modalSID=null; unsubscribeSession(); }
+function mDLPDF(){ dlSessionPDF(S.modalSID); }
 function mDelete(){ confDelete(S.modalSID); closeModal(); }
 
 /* ── DELETE ── */
 function confDelete(sid){
-  const s=getSess(sid); if(!s)return;
-  showConf('🗑','Delete Session?',`Permanently remove "${s.sub}" and all attendance records. This cannot be undone.`,()=>{
-    localStorage.removeItem('ax_s_'+sid);
-    localStorage.removeItem('ax_r_'+sid);
-    refreshDash();
-    toast('Session deleted','ok');
+  getSess(sid).then(s=>{
+    if(!s)return;
+    showConf('🗑','Delete Session?',`Permanently remove "${s.sub}" and all attendance records. This cannot be undone.`,()=>{
+      deleteSess(sid).then(()=>{ refreshDash(); toast('Session deleted','ok'); });
+    });
   });
 }
 
 /* ── SETTINGS ── */
-function showSettings(){ document.getElementById('settModal').classList.add('show'); }
-function closeSet(){ document.getElementById('settModal').classList.remove('show'); }
+function showSettings(){
+  document.getElementById('settModal').classList.add('show');
+  // load saved theme
+  const saved = localStorage.getItem('ax_pdf_theme') || 'blue';
+  document.getElementById('pdfTheme').value = saved;
+}
+function closeSet(){
+  // save theme on close
+  const t = document.getElementById('pdfTheme').value;
+  localStorage.setItem('ax_pdf_theme', t);
+  document.getElementById('settModal').classList.remove('show');
+}
 function changePin(){
   const np=document.getElementById('newPin').value;
   const cp=document.getElementById('confPin').value;
@@ -2003,9 +2105,16 @@ function changePin(){
   toast('PIN updated','ok');
 }
 function clearData(){
-  showConf('⚠️','Clear All Data?','Permanently delete all sessions and attendance records from this device.',()=>{
-    Object.keys(localStorage).filter(k=>k.startsWith('ax_s_')||k.startsWith('ax_r_')).forEach(k=>localStorage.removeItem(k));
-    refreshDash(); closeSet(); toast('All data cleared','warn');
+  showConf('⚠️','Clear All Data?','Permanently delete all sessions and attendance records.',()=>{
+    clearAllData().then(()=>{
+      document.getElementById('linkOut').classList.remove('show');
+      document.getElementById('qrInline').classList.remove('show');
+      document.getElementById('liveMon').classList.remove('show');
+      document.getElementById('genLink').value = '';
+      document.getElementById('qrInlineOut').innerHTML = '';
+      S.activeSessionId = null;
+      refreshDash(); closeSet(); toast('All data cleared','warn');
+    });
   });
 }
 
@@ -2025,26 +2134,58 @@ function loadStudentPage(sid){
   showPage('student');
   S.geoBlocked=false; S.studentDist=null;
   document.getElementById('stuGeoStatus').style.display='none';
-  const s=getSess(sid);
-  if(!s){
-    document.getElementById('stuBanner').style.display='none';
-    document.getElementById('attendCard').style.display='none';
-    showAlert('stuAlert','err','This session link is invalid or has been removed.');
-    return;
-  }
-  S.currentSession=s;
-  document.getElementById('sbSubj').textContent=s.sub;
-  document.getElementById('sbMeta').textContent=(s.room?s.room+' · ':'')+(s.lec?s.lec+' · ':'')+s.time;
-  const tags=document.getElementById('sbTags');
-  tags.innerHTML=[`<span class="sb-tag b">${s.cls}</span>`,
-    s.dept?`<span class="sb-tag c">${s.dept}</span>`:'',
-    s.dur?`<span class="sb-tag g">${s.dur} min</span>`:'',
-    s.geoLat!=null?`<span class="sb-tag" style="background:rgba(79,255,160,0.1);color:var(--green);border:1px solid rgba(79,255,160,0.2)">📍 Geo-fenced ±${s.geoRadius}m</span>`:''
-  ].join('');
-  if(Date.now()>s.expiry){showExpired();return;}
-  // if session has geo-fence, start checking student location immediately
-  if(s.geoLat!=null) checkStudentGeo(s);
-  startTimer(s.expiry,s.start,s.expiry-s.start);
+  document.getElementById('attendCard').style.display='none';
+  document.getElementById('stuBanner').style.display='none';
+
+  // Show loading state
+  showAlert('stuAlert','info','⏳ Loading session…');
+
+  Promise.all([getSess(sid), getDeviceId()]).then(([s, deviceId])=>{
+    if(!s){
+      showAlert('stuAlert','err','This session link is invalid or has been removed.');
+      return;
+    }
+
+    // Check if this device already submitted
+    checkDeviceMark(sid, deviceId).then(alreadyDone=>{
+      if(alreadyDone){
+        document.getElementById('stuBanner').style.display='block';
+        document.getElementById('sbSubj').textContent=s.sub;
+        document.getElementById('sbMeta').textContent=(s.room?s.room+' · ':'')+(s.lec?s.lec+' · ':'')+s.time;
+        document.getElementById('sbTags').innerHTML=`<span class="sb-tag b">${s.cls}</span>`;
+        document.getElementById('attendCard').style.display='none';
+        // Show already-registered state
+        document.getElementById('successSt').classList.add('show');
+        document.getElementById('successSt').innerHTML=`
+          <div class="success-ring">✓</div>
+          <div class="success-name" style="color:var(--blue)">Already Registered</div>
+          <div class="success-detail">You have already marked your attendance for this session.<br/>Each device can only submit once.</div>
+        `;
+        document.querySelector('.alert').classList.remove('show');
+        return;
+      }
+
+      // Clear loading alert
+      document.getElementById('stuAlert').classList.remove('show');
+      document.getElementById('stuBanner').style.display='block';
+      document.getElementById('attendCard').style.display='block';
+
+      S.currentSession=s;
+      document.getElementById('sbSubj').textContent=s.sub;
+      document.getElementById('sbMeta').textContent=(s.room?s.room+' · ':'')+(s.lec?s.lec+' · ':'')+s.time;
+      const tags=document.getElementById('sbTags');
+      tags.innerHTML=[`<span class="sb-tag b">${s.cls}</span>`,
+        s.dept?`<span class="sb-tag c">${s.dept}</span>`:'',
+        s.dur?`<span class="sb-tag g">${s.dur} min</span>`:'',
+        s.geoLat!=null?`<span class="sb-tag" style="background:rgba(79,255,160,0.1);color:var(--green);border:1px solid rgba(79,255,160,0.2)">📍 Geo-fenced ±${s.geoRadius}m</span>`:''
+      ].join('');
+      if(Date.now()>s.expiry){showExpired();return;}
+      if(s.geoLat!=null) checkStudentGeo(s);
+      startTimer(s.expiry,s.start,s.expiry-s.start);
+    });
+  }).catch(e=>{
+    showAlert('stuAlert','err','Error loading session: '+e.message);
+  });
 }
 
 function startTimer(expiry,start,total){
@@ -2098,7 +2239,7 @@ function checkStudentGeo(s) {
     btn.disabled = waiting;
     btn.style.opacity = waiting ? '0.5' : '1';
     btn.style.cursor  = waiting ? 'not-allowed' : 'pointer';
-    btn.textContent   = waiting ? '⏳ Waiting for location…' : '✓ Submit My Attendance';
+    btn.textContent   = waiting ? '⏳ Getting your location…' : '✓ Submit My Attendance';
   }
 
   if (!navigator.geolocation) {
@@ -2107,28 +2248,34 @@ function checkStudentGeo(s) {
     S.geoBlocked = true; return;
   }
 
-  // immediately block submit and show prompt message
   S.geoBlocked = true;
   setBtnState(true);
   setBox('var(--blue3)','1px solid rgba(79,158,255,0.2)','var(--blue)',
-    '📡 This session requires location verification — please allow location access when your browser asks…');
+    '📡 Getting your precise location — please allow access and wait up to 20 seconds…');
 
   _requestGeo(
     pos => {
-      const dist = Math.round(haversine(s.geoLat, s.geoLng, pos.coords.latitude, pos.coords.longitude));
+      const stuLat = pos.coords.latitude;
+      const stuLng = pos.coords.longitude;
+      const acc    = Math.round(pos.coords.accuracy);
+      const dist   = Math.round(haversine(s.geoLat, s.geoLng, stuLat, stuLng));
       S.studentDist = dist;
+
+      // Show real coordinates for transparency
+      const coordInfo = `Your location: ${stuLat.toFixed(5)}, ${stuLng.toFixed(5)} (±${acc}m accuracy) — Distance: ${dist}m`;
+
       if (dist <= s.geoRadius) {
         S.geoBlocked = false;
         setBtnState(false);
         setBox('var(--green2)','1px solid rgba(79,255,160,0.2)','var(--green)',
-          `✅ You are within range (${dist}m from classroom) — you may submit.`);
+          `✅ Within range (${dist}m from classroom, limit: ${s.geoRadius}m). ${coordInfo}`);
       } else {
         S.geoBlocked = true;
-        setBtnState(false); // re-enable so they can try, submitAttend will block with message
+        setBtnState(false);
         btn.textContent = '✓ Submit My Attendance';
         btn.disabled = false; btn.style.opacity='1'; btn.style.cursor='pointer';
         setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
-          `❌ You are ${dist}m away from the classroom — must be within ${s.geoRadius}m. You cannot mark attendance remotely.`);
+          `❌ Too far (${dist}m away, limit: ${s.geoRadius}m). ${coordInfo}`);
       }
     },
     err => {
@@ -2136,11 +2283,13 @@ function checkStudentGeo(s) {
       setBtnState(false);
       btn.textContent = '✓ Submit My Attendance';
       btn.disabled = false; btn.style.opacity='1'; btn.style.cursor='pointer';
-      const msgs = {1:'Location access was denied. Please allow location in your browser settings and reload.',
-                    2:'Your position could not be determined. Try again.',
-                    3:'Location request timed out. Check your connection and try again.'};
+      const msgs = {
+        1:'Location access denied. Go to browser settings → allow location for this site → reload.',
+        2:'Could not get your position. Move to open area and try again.',
+        3:'Location timed out. Move to open area, check GPS is on, and reload.'
+      };
       setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
-        '❌ '+(msgs[err.code]||'Location error — cannot verify your presence.'));
+        '❌ '+(msgs[err.code]||'Location error.'));
     }
   );
 }
@@ -2148,10 +2297,9 @@ function checkStudentGeo(s) {
 function submitAttend(){
   const s=S.currentSession; if(!s)return;
   if(Date.now()>s.expiry){showExpired();return;}
-  // enforce geo-fence
   if(s.geoLat!=null && S.geoBlocked){
     const dist = S.studentDist!=null ? ` You are ${S.studentDist}m away (limit: ${s.geoRadius}m).` : '';
-    showAlert('stuAlert','err','❌ Location check failed — you must be physically present in class to mark attendance.'+dist);
+    showAlert('stuAlert','err','❌ Location check failed — you must be physically present in class.'+dist);
     return;
   }
   const fN=document.getElementById('stuFirst').value.trim();
@@ -2167,184 +2315,170 @@ function submitAttend(){
     showAlert('stuAlert','err',`❌ Wrong Class\n\nThis session is for: "${s.cls}"\nYou entered: "${cls}"\n\nYou cannot mark attendance here.`);
     return;
   }
-  const key='ax_r_'+s.id;
-  const recs=JSON.parse(localStorage.getItem(key)||'[]');
-  if(recs.find(r=>r.mat.toLowerCase()===mat.toLowerCase())){showAlert('stuAlert','err','⚠ Matricule '+mat.toUpperCase()+' already recorded.');return;}
-  const rank=recs.length+1;
-  recs.push({no:rank,fN,lN,mat:mat.toUpperCase(),cls,dept,phone:phone||null,
-    time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),ts:Date.now()});
-  localStorage.setItem(key,JSON.stringify(recs));
-  document.getElementById('attendCard').style.display='none';
-  document.getElementById('successSt').classList.add('show');
-  document.getElementById('succName').textContent=fN+' '+lN;
-  document.getElementById('succDetail').textContent=mat.toUpperCase()+' · '+cls+' · '+dept;
-  const rl=rank===1?'🥇 First to attend!':rank===2?'🥈 2nd to arrive':rank===3?'🥉 3rd to arrive':'#'+rank+' on attendance list';
-  document.getElementById('succRank').textContent=rl;
+
+  // Disable button to prevent double-tap
+  const btn=document.getElementById('stuSubmitBtn');
+  btn.disabled=true; btn.textContent='⏳ Submitting…';
+
+  getDeviceId().then(deviceId=>{
+    // Double-check device hasn't submitted (race condition guard)
+    checkDeviceMark(s.id, deviceId).then(alreadyDone=>{
+      if(alreadyDone){
+        showAlert('stuAlert','err','⚠ You have already marked your attendance for this session.');
+        btn.disabled=false; btn.textContent='✓ Submit My Attendance';
+        return;
+      }
+      // Check matricule duplicate in Firebase
+      getRec(s.id).then(recs=>{
+        if(recs.find(r=>r.mat.toLowerCase()===mat.toLowerCase())){
+          showAlert('stuAlert','err','⚠ Matricule '+mat.toUpperCase()+' already recorded.');
+          btn.disabled=false; btn.textContent='✓ Submit My Attendance';
+          return;
+        }
+        const rank=recs.length+1;
+        const rec={no:rank,fN,lN,mat:mat.toUpperCase(),cls,dept,phone:phone||null,
+          time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),ts:Date.now()};
+        // Save record + device mark atomically
+        Promise.all([saveRec(s.id, rec), saveDeviceMark(s.id, deviceId)]).then(()=>{
+          document.getElementById('attendCard').style.display='none';
+          document.getElementById('successSt').classList.add('show');
+          document.getElementById('succName').textContent=fN+' '+lN;
+          document.getElementById('succDetail').textContent=mat.toUpperCase()+' · '+cls+' · '+dept;
+          const rl=rank===1?'🥇 First to attend!':rank===2?'🥈 2nd to arrive':rank===3?'🥉 3rd to arrive':'#'+rank+' on attendance list';
+          document.getElementById('succRank').textContent=rl;
+        }).catch(e=>{
+          showAlert('stuAlert','err','Submission failed: '+e.message);
+          btn.disabled=false; btn.textContent='✓ Submit My Attendance';
+        });
+      });
+    });
+  });
 }
 
 /* ── PDF GENERATION ── */
 function autoGenPDF(sess){ if(sess)setTimeout(()=>genPDF(sess.id),800); }
-
-// Theme picker state
-let _pdfPendingSid  = null;
-let _pdfPendingType = null; // 'session' or 'daily'
-let _pdfSelectedTheme = localStorage.getItem('ax_pdf_theme') || 'blue';
-
-function dlSessionPDF(sid){
-  _pdfPendingSid  = sid;
-  _pdfPendingType = 'session';
-  openPdfThemeModal();
-}
-function mDLPDF(){ dlSessionPDF(S.modalSID); }
-
-function downloadDailyPDF(){
-  _pdfPendingSid  = null;
-  _pdfPendingType = 'daily';
-  openPdfThemeModal();
-}
-
-function openPdfThemeModal(){
-  // pre-select last used theme
-  _pdfSelectedTheme = localStorage.getItem('ax_pdf_theme') || 'blue';
-  document.querySelectorAll('.pdf-theme-opt').forEach(el=>{
-    el.classList.toggle('selected', el.dataset.theme === _pdfSelectedTheme);
-  });
-  document.getElementById('pdfThemeModal').classList.add('show');
-}
-
-function closePdfThemeModal(){
-  document.getElementById('pdfThemeModal').classList.remove('show');
-}
-
-function selectPdfTheme(theme){
-  _pdfSelectedTheme = theme;
-  localStorage.setItem('ax_pdf_theme', theme);
-  document.querySelectorAll('.pdf-theme-opt').forEach(el=>{
-    el.classList.toggle('selected', el.dataset.theme === theme);
-  });
-}
-
-function confirmPdfTheme(){
-  closePdfThemeModal();
-  if(_pdfPendingType === 'session' && _pdfPendingSid) genPDF(_pdfPendingSid);
-  else if(_pdfPendingType === 'daily') _genDailyPDF();
-}
+function dlSessionPDF(sid){ genPDF(sid); }
 
 function genPDF(sid){
-  const s=getSess(sid); if(!s)return;
+  getSess(sid).then(s=>{
+    if(!s)return;
+    getRec(sid).then(recs=>_buildPDF(s,recs));
+  });
+}
+  
+function _buildPDF(s, recs){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const recs=getRec(sid);
   const W=210,M=16;
-  // BG
-  doc.setFillColor(8,11,18); doc.rect(0,0,W,297,'F');
-  doc.setFillColor(79,158,255); doc.rect(0,0,W,1.8,'F');
-  doc.setFillColor(14,19,32); doc.rect(0,1.8,W,52,'F');
-  // Header
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(74,88,120);
+  const theme = localStorage.getItem('ax_pdf_theme') || 'blue';
+  const themes = {
+    blue:   {bg:[255,255,255],headerBg:[59,111,232],headerText:[255,255,255],titleText:[30,42,74],metaText:[74,88,120],tableFill:[245,248,255],tableAlt:[235,240,255],tableHead:[59,111,232],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[216,226,248],firstRow:[245,158,11]},
+    school: {bg:[230,240,255],headerBg:[100,149,237],headerText:[255,255,255],titleText:[30,42,74],metaText:[74,88,120],tableFill:[255,255,255],tableAlt:[240,248,255],tableHead:[100,149,237],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[180,200,230],firstRow:[255,140,0]},
+    peach:  {bg:[255,250,240],headerBg:[255,200,150],headerText:[80,40,20],titleText:[80,40,20],metaText:[120,80,60],tableFill:[255,245,235],tableAlt:[255,235,220],tableHead:[255,180,120],tableHeadText:[80,40,20],tableText:[80,40,20],tableBorder:[255,220,180],firstRow:[255,140,80]},
+    green:  {bg:[240,255,240],headerBg:[76,175,80],headerText:[255,255,255],titleText:[30,60,30],metaText:[80,120,80],tableFill:[250,255,250],tableAlt:[240,250,240],tableHead:[76,175,80],tableHeadText:[255,255,255],tableText:[30,60,30],tableBorder:[200,230,200],firstRow:[255,193,7]}
+  };
+  const t = themes[theme];
+  doc.setFillColor(...t.bg); doc.rect(0,0,W,297,'F');
+  doc.setFillColor(...t.headerBg); doc.rect(0,0,W,50,'F');
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...t.headerText);
   doc.text('ATTENDANCE REGISTER — OFFICIAL DOCUMENT',M,12);
-  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(79,158,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(...t.headerText);
   doc.text(s.sub.toUpperCase(),M,24);
-  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(107,122,148);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...t.headerText);
   const meta=[s.cls?'Class: '+s.cls:null,s.dept?'Dept: '+s.dept:null,s.lec?'Lecturer: '+s.lec:null,'Time: '+s.time,s.room?'Room: '+s.room:null,'Duration: '+s.dur+' min'].filter(Boolean).join('   |   ');
   doc.text(meta,M,33);
-  doc.setFontSize(7.5); doc.setTextColor(74,88,120);
+  doc.setFontSize(7.5); doc.setTextColor(...t.headerText);
   doc.text('Date: '+new Date(s.start).toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),M,41);
   doc.text('Generated: '+new Date().toLocaleString(),M,47);
-  // Separator
-  doc.setDrawColor(79,158,255); doc.setLineWidth(0.2); doc.line(M,55,W-M,55);
-  // Stats pills
-  doc.setFillColor(20,25,38);
+  doc.setFillColor(...t.tableFill);
   [[String(recs.length),'PRESENT'],[new Date(s.start).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),'OPENED'],[new Date(s.expiry).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),'CLOSED'],[s.dur+'m','DURATION']].forEach((st,i)=>{
     const x=M+i*45; doc.roundedRect(x,58,43,17,2,2,'F');
-    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(79,158,255);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...t.titleText);
     doc.text(st[0],x+21.5,65,{align:'center'});
-    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(74,88,120);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...t.metaText);
     doc.text(st[1],x+21.5,71,{align:'center'});
   });
-  // Table
   if(!recs.length){
-    doc.setFont('helvetica','italic'); doc.setFontSize(10); doc.setTextColor(74,88,120);
+    doc.setFont('helvetica','italic'); doc.setFontSize(10); doc.setTextColor(...t.metaText);
     doc.text('No attendance records for this session.',W/2,95,{align:'center'});
   } else {
-    doc.autoTable({
-      startY:80,margin:{left:M,right:M},
+    doc.autoTable({startY:80,margin:{left:M,right:M},
       head:[['#','First Name','Last Name','Matricule','Class','Department','Time']],
       body:recs.map((r,i)=>[i+1,r.fN,r.lN,r.mat,r.cls||'—',r.dept||'—',r.time]),
-      styles:{font:'helvetica',fontSize:9,textColor:[180,190,210],fillColor:[11,15,26],lineColor:[24,31,52],lineWidth:0.25,cellPadding:3.5,valign:'middle'},
-      headStyles:{fillColor:[17,22,36],textColor:[79,158,255],fontStyle:'bold',fontSize:8,halign:'left'},
-      alternateRowStyles:{fillColor:[14,18,32]},
-      columnStyles:{0:{cellWidth:9,halign:'center',textColor:[74,88,120]},3:{fontStyle:'bold',textColor:[126,220,255]},6:{cellWidth:22,textColor:[226,185,106]}},
-      didParseCell(d){if(d.section==='body'&&d.row.index===0)d.cell.styles.textColor=[226,185,106];}
+      styles:{font:'helvetica',fontSize:9,textColor:t.tableText,fillColor:t.tableFill,lineColor:t.tableBorder,lineWidth:0.25,cellPadding:3.5,valign:'middle'},
+      headStyles:{fillColor:t.tableHead,textColor:t.tableHeadText,fontStyle:'bold',fontSize:8,halign:'left'},
+      alternateRowStyles:{fillColor:t.tableAlt},
+      columnStyles:{0:{cellWidth:9,halign:'center',textColor:t.metaText},3:{fontStyle:'bold'},6:{cellWidth:22}},
+      didParseCell(d){if(d.section==='body'&&d.row.index===0)d.cell.styles.textColor=t.firstRow;}
     });
   }
-  // Footer
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(50,60,80);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...t.metaText);
   doc.text('AttendX PRO · Created by KЭL ♛ PHANTOM · '+new Date().getFullYear(),M,285);
   doc.text('Confidential — Official Attendance Record',W-M,285,{align:'right'});
   doc.save(s.sub.replace(/[^a-z0-9]/gi,'_')+'_'+s.cls.replace(/[^a-z0-9]/gi,'_')+'_Attendance.pdf');
   toast('PDF saved: '+s.sub,'ok');
 }
 
-function _genDailyPDF(){
-  const ss=todaySessions(); if(!ss.length){toast('No sessions today','warn');return;}
-  ss.sort((a,b)=>a.start-b.start);
-  const theme = localStorage.getItem('ax_pdf_theme') || 'blue';
-  const themes = {
-    blue:   {bg:[255,255,255],headerBg:[59,111,232],headerText:[255,255,255],metaText:[74,88,120],tableFill:[245,248,255],tableAlt:[235,240,255],tableHead:[59,111,232],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[216,226,248],firstRow:[245,158,11]},
-    school: {bg:[230,240,255],headerBg:[100,149,237],headerText:[255,255,255],metaText:[74,88,120],tableFill:[255,255,255],tableAlt:[240,248,255],tableHead:[100,149,237],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[180,200,230],firstRow:[255,140,0]},
-    peach:  {bg:[255,250,240],headerBg:[255,200,150],headerText:[80,40,20],metaText:[120,80,60],tableFill:[255,245,235],tableAlt:[255,235,220],tableHead:[255,180,120],tableHeadText:[80,40,20],tableText:[80,40,20],tableBorder:[255,220,180],firstRow:[255,140,80]},
-    green:  {bg:[240,255,240],headerBg:[76,175,80],headerText:[255,255,255],metaText:[80,120,80],tableFill:[250,255,250],tableAlt:[240,250,240],tableHead:[76,175,80],tableHeadText:[255,255,255],tableText:[30,60,30],tableBorder:[200,230,200],firstRow:[255,193,7]}
-  };
-  const t = themes[theme];
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  const W=210,M=16;
-  const tp=ss.reduce((a,s)=>a+getRec(s.id).length,0);
-  // Cover
-  doc.setFillColor(...t.bg);doc.rect(0,0,W,297,'F');
-  doc.setFillColor(...t.headerBg);doc.rect(0,0,W,2,'F');doc.rect(0,295,W,2,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(34);doc.setTextColor(...t.headerBg);
-  doc.text('FULL DAY',W/2,108,{align:'center'});
-  doc.text('ATTENDANCE REPORT',W/2,125,{align:'center'});
-  doc.setFont('helvetica','normal');doc.setFontSize(12);doc.setTextColor(...t.metaText);
-  doc.text(new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),W/2,141,{align:'center'});
-  doc.setFontSize(10);
-  doc.text('Total Sessions: '+ss.length,W/2,157,{align:'center'});
-  doc.text('Total Attendances: '+tp,W/2,167,{align:'center'});
-  doc.text('Generated: '+new Date().toLocaleString(),W/2,177,{align:'center'});
-  doc.setFontSize(8);doc.text('AttendX PRO · Created by KЭL ♛ PHANTOM',W/2,285,{align:'center'});
-  ss.forEach((s,idx)=>{
-    doc.addPage();
-    const recs=getRec(s.id);
-    doc.setFillColor(...t.bg);doc.rect(0,0,W,297,'F');
-    doc.setFillColor(...t.headerBg);doc.rect(0,0,W,48,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...t.headerText);
-    doc.text('SESSION '+(idx+1)+' OF '+ss.length,M,11);
-    doc.setFontSize(17);doc.text(s.sub.toUpperCase(),M,22);
-    doc.setFont('helvetica','normal');doc.setFontSize(8.5);
-    doc.text([s.cls?'Class: '+s.cls:null,s.dept?s.dept:null,s.lec?s.lec:null,'Time: '+s.time].filter(Boolean).join('   |   '),M,31);
-    doc.setFontSize(7.5);doc.text('Present: '+recs.length+'   |   Duration: '+s.dur+' min',M,39);
-    if(!recs.length){
-      doc.setFont('helvetica','italic');doc.setFontSize(10);doc.setTextColor(...t.metaText);
-      doc.text('No records.',W/2,62,{align:'center'});
-    } else {
-      doc.autoTable({startY:53,margin:{left:M,right:M},
-        head:[['#','First Name','Last Name','Matricule','Class','Department','Time']],
-        body:recs.map((r,i)=>[i+1,r.fN,r.lN,r.mat,r.cls||'—',r.dept||'—',r.time]),
-        styles:{font:'helvetica',fontSize:9,textColor:t.tableText,fillColor:t.tableFill,lineColor:t.tableBorder,lineWidth:0.25,cellPadding:3.5},
-        headStyles:{fillColor:t.tableHead,textColor:t.tableHeadText,fontStyle:'bold',fontSize:8},
-        alternateRowStyles:{fillColor:t.tableAlt},
-        columnStyles:{0:{cellWidth:9,halign:'center',textColor:t.metaText},3:{fontStyle:'bold'},6:{cellWidth:22}},
-        didParseCell(d){if(d.section==='body'&&d.row.index===0)d.cell.styles.textColor=t.firstRow;}
+function downloadDailyPDF(){
+  todaySessions().then(ss=>{
+    if(!ss.length){toast('No sessions today','warn');return;}
+    ss.sort((a,b)=>a.start-b.start);
+    Promise.all(ss.map(s=>getRec(s.id).then(r=>({s,r})))).then(items=>{
+      const theme = localStorage.getItem('ax_pdf_theme') || 'blue';
+      const themes = {
+        blue:   {bg:[255,255,255],headerBg:[59,111,232],headerText:[255,255,255],metaText:[74,88,120],tableFill:[245,248,255],tableAlt:[235,240,255],tableHead:[59,111,232],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[216,226,248],firstRow:[245,158,11]},
+        school: {bg:[230,240,255],headerBg:[100,149,237],headerText:[255,255,255],metaText:[74,88,120],tableFill:[255,255,255],tableAlt:[240,248,255],tableHead:[100,149,237],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[180,200,230],firstRow:[255,140,0]},
+        peach:  {bg:[255,250,240],headerBg:[255,200,150],headerText:[80,40,20],metaText:[120,80,60],tableFill:[255,245,235],tableAlt:[255,235,220],tableHead:[255,180,120],tableHeadText:[80,40,20],tableText:[80,40,20],tableBorder:[255,220,180],firstRow:[255,140,80]},
+        green:  {bg:[240,255,240],headerBg:[76,175,80],headerText:[255,255,255],metaText:[80,120,80],tableFill:[250,255,250],tableAlt:[240,250,240],tableHead:[76,175,80],tableHeadText:[255,255,255],tableText:[30,60,30],tableBorder:[200,230,200],firstRow:[255,193,7]}
+      };
+      const t = themes[theme];
+      const {jsPDF}=window.jspdf;
+      const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      const W=210,M=16;
+      const tp=items.reduce((a,{r})=>a+r.length,0);
+      // Cover
+      doc.setFillColor(...t.bg);doc.rect(0,0,W,297,'F');
+      doc.setFillColor(...t.headerBg);doc.rect(0,0,W,2,'F');doc.rect(0,295,W,2,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(34);doc.setTextColor(...t.headerBg);
+      doc.text('FULL DAY',W/2,108,{align:'center'});doc.text('ATTENDANCE REPORT',W/2,125,{align:'center'});
+      doc.setFont('helvetica','normal');doc.setFontSize(12);doc.setTextColor(...t.metaText);
+      doc.text(new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),W/2,141,{align:'center'});
+      doc.setFontSize(10);
+      doc.text('Total Sessions: '+ss.length,W/2,157,{align:'center'});
+      doc.text('Total Attendances: '+tp,W/2,167,{align:'center'});
+      doc.text('Generated: '+new Date().toLocaleString(),W/2,177,{align:'center'});
+      doc.setFontSize(8);doc.setTextColor(...t.metaText);
+      doc.text('AttendX PRO · Created by KЭL ♛ PHANTOM',W/2,285,{align:'center'});
+      items.forEach(({s,r:recs},idx)=>{
+        doc.addPage();
+        doc.setFillColor(...t.bg);doc.rect(0,0,W,297,'F');
+        doc.setFillColor(...t.headerBg);doc.rect(0,0,W,48,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...t.headerText);
+        doc.text('SESSION '+(idx+1)+' OF '+ss.length,M,11);
+        doc.setFontSize(17);doc.text(s.sub.toUpperCase(),M,22);
+        doc.setFont('helvetica','normal');doc.setFontSize(8.5);
+        doc.text([s.cls?'Class: '+s.cls:null,s.dept?s.dept:null,s.lec?s.lec:null,'Time: '+s.time].filter(Boolean).join('   |   '),M,31);
+        doc.setFontSize(7.5);doc.text('Present: '+recs.length+'   |   Duration: '+s.dur+' min',M,39);
+        if(!recs.length){doc.setFont('helvetica','italic');doc.setFontSize(10);doc.setTextColor(...t.metaText);doc.text('No records.',W/2,62,{align:'center'});}
+        else {
+          doc.autoTable({startY:53,margin:{left:M,right:M},
+            head:[['#','First Name','Last Name','Matricule','Class','Department','Time']],
+            body:recs.map((r,i)=>[i+1,r.fN,r.lN,r.mat,r.cls||'—',r.dept||'—',r.time]),
+            styles:{font:'helvetica',fontSize:9,textColor:t.tableText,fillColor:t.tableFill,lineColor:t.tableBorder,lineWidth:0.25,cellPadding:3.5},
+            headStyles:{fillColor:t.tableHead,textColor:t.tableHeadText,fontStyle:'bold',fontSize:8},
+            alternateRowStyles:{fillColor:t.tableAlt},
+            columnStyles:{0:{cellWidth:9,halign:'center',textColor:t.metaText},3:{fontStyle:'bold'},6:{cellWidth:22}},
+            didParseCell(d){if(d.section==='body'&&d.row.index===0)d.cell.styles.textColor=t.firstRow;}
+          });
+        }
+        doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...t.metaText);
+        doc.text('AttendX PRO · KЭL ♛ PHANTOM',M,285);
+        doc.text('Page '+(idx+2),W-M,285,{align:'right'});
       });
-    }
-    doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...t.metaText);
-    doc.text('AttendX PRO · KЭL ♛ PHANTOM',M,285);
-    doc.text('Page '+(idx+2),W-M,285,{align:'right'});
+      doc.save('AttendX_FullDay_'+new Date().toLocaleDateString('en-GB').replace(/\//g,'-')+'.pdf');
+      toast('Full Day PDF saved','ok');
+    });
   });
-  doc.save('AttendX_FullDay_'+new Date().toLocaleDateString('en-GB').replace(/\//g,'-')+'.pdf');
-  toast('Full Day PDF saved','ok');
 }
 
 /* ── QR TOOL ── */
@@ -2474,19 +2608,107 @@ function reloadQRHist(i){
 
 /* ── HELPERS ── */
 function v(id){return (document.getElementById(id)?.value||'').trim();}
-function getSess(id){return JSON.parse(localStorage.getItem('ax_s_'+id)||'null');}
-function getRec(id){return JSON.parse(localStorage.getItem('ax_r_'+id)||'[]');}
-function todaySessions(){
-  const today=new Date().toDateString();
-  const arr=[];
-  for(let k in localStorage){
-    if(k.startsWith('ax_s_')){
-      const s=JSON.parse(localStorage.getItem(k));
-      if(new Date(s.start).toDateString()===today)arr.push(s);
-    }
+
+/* ── DEVICE FINGERPRINT ── */
+async function getDeviceId(){
+  if(window._deviceId) return window._deviceId;
+  try {
+    const fp = await FingerprintJS.load();
+    const result = await fp.get();
+    window._deviceId = result.visitorId;
+  } catch(e){
+    // fallback: combine available browser signals
+    const raw = [
+      navigator.userAgent, navigator.language, screen.width, screen.height,
+      screen.colorDepth, navigator.hardwareConcurrency, navigator.deviceMemory,
+      Intl.DateTimeFormat().resolvedOptions().timeZone
+    ].join('|');
+    let hash = 0;
+    for(let i=0;i<raw.length;i++) hash = ((hash<<5)-hash)+raw.charCodeAt(i);
+    window._deviceId = 'fp_'+(hash>>>0).toString(16);
   }
-  return arr.sort((a,b)=>b.start-a.start);
+  return window._deviceId;
 }
+
+/* ── WAIT FOR FIREBASE ── */
+function waitForFirebase(){
+  return new Promise(resolve=>{
+    if(window._firebaseReady) return resolve();
+    document.addEventListener('firebaseReady', resolve, {once:true});
+  });
+}
+
+/* ── FIREBASE DATA FUNCTIONS ── */
+async function saveSess(sess){
+  await waitForFirebase();
+  await window._fsSetDoc(window._fsDoc(window._db,'sessions',String(sess.id)), sess);
+}
+
+async function getSess(id){
+  await waitForFirebase();
+  const snap = await window._fsGetDoc(window._fsDoc(window._db,'sessions',String(id)));
+  return snap.exists() ? snap.data() : null;
+}
+
+async function getRec(sid){
+  await waitForFirebase();
+  const snap = await window._fsGetDocs(window._fsColl(window._db,'sessions',String(sid),'records'));
+  return snap.docs.map(d=>d.data());
+}
+
+async function saveRec(sid, rec){
+  await waitForFirebase();
+  await window._fsSetDoc(window._fsDoc(window._db,'sessions',String(sid),'records',rec.mat.toUpperCase()), rec);
+}
+
+async function saveDeviceMark(sid, deviceId){
+  await waitForFirebase();
+  await window._fsSetDoc(window._fsDoc(window._db,'sessions',String(sid),'devices',deviceId), {ts:Date.now()});
+}
+
+async function checkDeviceMark(sid, deviceId){
+  await waitForFirebase();
+  const snap = await window._fsGetDoc(window._fsDoc(window._db,'sessions',String(sid),'devices',deviceId));
+  return snap.exists();
+}
+
+async function todaySessions(){
+  await waitForFirebase();
+  const today = new Date().toDateString();
+  const snap  = await window._fsGetDocs(window._fsColl(window._db,'sessions'));
+  return snap.docs.map(d=>d.data())
+    .filter(s=>new Date(s.start).toDateString()===today)
+    .sort((a,b)=>b.start-a.start);
+}
+
+async function deleteSess(sid){
+  await waitForFirebase();
+  // delete all records subcollection
+  const rSnap = await window._fsGetDocs(window._fsColl(window._db,'sessions',String(sid),'records'));
+  for(const d of rSnap.docs) await window._fsDeleteDoc(d.ref);
+  const dSnap = await window._fsGetDocs(window._fsColl(window._db,'sessions',String(sid),'devices'));
+  for(const d of dSnap.docs) await window._fsDeleteDoc(d.ref);
+  await window._fsDeleteDoc(window._fsDoc(window._db,'sessions',String(sid)));
+}
+
+async function clearAllData(){
+  await waitForFirebase();
+  const snap = await window._fsGetDocs(window._fsColl(window._db,'sessions'));
+  for(const d of snap.docs) await deleteSess(d.id);
+}
+
+/* ── REALTIME LISTENER ── */
+let _liveUnsub = null;
+function subscribeSession(sid, onChange){
+  waitForFirebase().then(()=>{
+    if(_liveUnsub) _liveUnsub();
+    _liveUnsub = window._fsOnSnap(
+      window._fsColl(window._db,'sessions',String(sid),'records'),
+      snap => onChange(snap.docs.map(d=>d.data()))
+    );
+  });
+}
+function unsubscribeSession(){ if(_liveUnsub){ _liveUnsub(); _liveUnsub=null; } }
 function showAlert(id,type,msg){
   const el=document.getElementById(id); if(!el)return;
   const ico={ok:'✓',err:'✕',warn:'⚠',info:'ℹ'};
@@ -2505,16 +2727,34 @@ function toast(msg,type='info'){
 }
 
 /* ── CLOSE MODALS ON BACKDROP ── */
-['sessModal','settModal','confModal','pdfThemeModal'].forEach(id=>{
+['sessModal','settModal','confModal'].forEach(id=>{
   document.getElementById(id)?.addEventListener('click',e=>{
     if(e.target===document.getElementById(id)){
       if(id==='sessModal')closeModal();
       if(id==='settModal')closeSet();
       if(id==='confModal')closeConf();
-      if(id==='pdfThemeModal')closePdfThemeModal();
     }
   });
 });
+
+/* ── FLOATING SCHOOL ICONS ── */
+(function spawnIcons(){
+  const icons = ['📚','📖','✏️','📝','🎓','📐','📏','🔬','📓','🖊️','📌','🏫'];
+  const bg = document.getElementById('schoolBg');
+  const count = 18;
+  for(let i = 0; i < count; i++){
+    const el = document.createElement('div');
+    el.className = 'icon';
+    el.textContent = icons[i % icons.length];
+    const left = Math.random() * 96;
+    const top  = Math.random() * 96;
+    const dur  = 4 + Math.random() * 6;   // 4s – 10s
+    const delay= Math.random() * -10;      // stagger start
+    const size = 22 + Math.random() * 20;  // 22px – 42px
+    el.style.cssText = `left:${left}%;top:${top}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;`;
+    bg.appendChild(el);
+  }
+})();
 
 /* ── BOOT ── */
 init();
