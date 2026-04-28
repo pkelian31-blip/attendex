@@ -2240,12 +2240,12 @@ function checkStudentGeo(s) {
     box.style.display='block'; box.style.background=bg;
     box.style.border=border; box.style.color=color; box.textContent=text;
   }
-  function setBtnState(waiting) {
+  function setBtnState(waiting, label) {
     if (!btn) return;
     btn.disabled = waiting;
     btn.style.opacity = waiting ? '0.5' : '1';
     btn.style.cursor  = waiting ? 'not-allowed' : 'pointer';
-    btn.textContent   = waiting ? '⏳ Getting your location…' : '✓ Submit My Attendance';
+    btn.textContent   = label || '✓ Submit My Attendance';
   }
 
   if (!navigator.geolocation) {
@@ -2255,49 +2255,92 @@ function checkStudentGeo(s) {
   }
 
   S.geoBlocked = true;
-  setBtnState(true);
+  setBtnState(true, '⏳ Getting your location — please stand still…');
   setBox('var(--blue3)','1px solid rgba(79,158,255,0.2)','var(--blue)',
-    '📡 Getting your precise location — please allow access and wait up to 20 seconds…');
+    '📡 Please STAND STILL and do not move — getting your precise location. This takes up to 30 seconds…');
 
-  _requestGeo(
+  // Collect multiple readings and pick the most accurate one
+  const readings = [];
+  let watchId = null;
+  let settled = false;
+  const GPS_BUFFER = 30; // extra metres added to radius to account for GPS error
+  const MIN_READINGS = 3; // collect at least 3 readings before deciding
+  const MAX_WAIT = 30000; // 30 seconds max
+
+  const timeout = setTimeout(()=>{
+    if(settled) return;
+    settled = true;
+    navigator.geolocation.clearWatch(watchId);
+    if(readings.length === 0){
+      S.geoBlocked = true;
+      setBtnState(false);
+      setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
+        '❌ Could not get your location. Make sure GPS is on, stand in open area, and reload.');
+      return;
+    }
+    processReadings();
+  }, MAX_WAIT);
+
+  watchId = navigator.geolocation.watchPosition(
     pos => {
-      const stuLat = pos.coords.latitude;
-      const stuLng = pos.coords.longitude;
-      const acc    = Math.round(pos.coords.accuracy);
-      const dist   = Math.round(haversine(s.geoLat, s.geoLng, stuLat, stuLng));
-      S.studentDist = dist;
+      if(settled) return;
+      readings.push(pos);
+      const count = readings.length;
+      const acc = Math.round(pos.coords.accuracy);
+      setBox('var(--blue3)','1px solid rgba(79,158,255,0.2)','var(--blue)',
+        `📡 STAND STILL — Reading ${count}/${MIN_READINGS} (±${acc}m accuracy)… do not move.`);
 
-      // Show real coordinates for transparency
-      const coordInfo = `Your location: ${stuLat.toFixed(5)}, ${stuLng.toFixed(5)} (±${acc}m accuracy) — Distance: ${dist}m`;
-
-      if (dist <= s.geoRadius) {
-        S.geoBlocked = false;
-        setBtnState(false);
-        setBox('var(--green2)','1px solid rgba(79,255,160,0.2)','var(--green)',
-          `✅ Within range (${dist}m from classroom, limit: ${s.geoRadius}m). ${coordInfo}`);
-      } else {
-        S.geoBlocked = true;
-        setBtnState(false);
-        btn.textContent = '✓ Submit My Attendance';
-        btn.disabled = false; btn.style.opacity='1'; btn.style.cursor='pointer';
-        setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
-          `❌ Too far (${dist}m away, limit: ${s.geoRadius}m). ${coordInfo}`);
+      // Once we have enough readings OR accuracy is very good, process
+      if(count >= MIN_READINGS || acc <= 20){
+        settled = true;
+        clearTimeout(timeout);
+        navigator.geolocation.clearWatch(watchId);
+        processReadings();
       }
     },
     err => {
+      if(settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      navigator.geolocation.clearWatch(watchId);
       S.geoBlocked = true;
       setBtnState(false);
-      btn.textContent = '✓ Submit My Attendance';
-      btn.disabled = false; btn.style.opacity='1'; btn.style.cursor='pointer';
       const msgs = {
-        1:'Location access denied. Go to browser settings → allow location for this site → reload.',
-        2:'Could not get your position. Move to open area and try again.',
-        3:'Location timed out. Move to open area, check GPS is on, and reload.'
+        1:'Location access denied. Go to browser Settings → allow location for this site → reload.',
+        2:'Could not get your position. Move to open area, ensure GPS is on, and reload.',
+        3:'Location timed out. Move to open area and reload.'
       };
       setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
         '❌ '+(msgs[err.code]||'Location error.'));
-    }
+    },
+    { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
   );
+
+  function processReadings(){
+    // Pick the reading with best (lowest) accuracy value
+    const best = readings.reduce((a,b) => a.coords.accuracy < b.coords.accuracy ? a : b);
+    const stuLat = best.coords.latitude;
+    const stuLng = best.coords.longitude;
+    const acc    = Math.round(best.coords.accuracy);
+    const dist   = Math.round(haversine(s.geoLat, s.geoLng, stuLat, stuLng));
+    S.studentDist = dist;
+
+    // Apply GPS buffer to be fair to students
+    const effectiveRadius = s.geoRadius + GPS_BUFFER;
+    const coordInfo = `Your GPS: ${stuLat.toFixed(5)}, ${stuLng.toFixed(5)} · Accuracy: ±${acc}m · Distance: ${dist}m`;
+
+    if(dist <= effectiveRadius){
+      S.geoBlocked = false;
+      setBtnState(false);
+      setBox('var(--green2)','1px solid rgba(79,255,160,0.2)','var(--green)',
+        `✅ You are within range (${dist}m from classroom, limit: ${s.geoRadius}m). ${coordInfo}`);
+    } else {
+      S.geoBlocked = true;
+      setBtnState(false);
+      setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
+        `❌ Too far away (${dist}m, limit: ${s.geoRadius}m). If you are physically present, ask your teacher to increase the radius. ${coordInfo}`);
+    }
+  }
 }
 
 function submitAttend(){
