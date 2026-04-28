@@ -1113,31 +1113,109 @@ body::after { content: none; }
 <!-- ─────── LOGIN ─────── -->
 <div class="page" id="pgLogin">
   <div class="login-wrap">
-    <div class="login-card a-scalein">
+    <!-- Step 1: choose role -->
+    <div class="login-card a-scalein" id="loginStep1">
       <div class="login-lock">🔐</div>
-      <div class="login-title">Admin Access</div>
-      <div class="login-sub">Enter your 4-digit PIN to access the dashboard.</div>
-      <div class="pin-dots">
-        <div class="pin-dot" id="pd0"></div>
-        <div class="pin-dot" id="pd1"></div>
-        <div class="pin-dot" id="pd2"></div>
-        <div class="pin-dot" id="pd3"></div>
+      <div class="login-title">Welcome to AttendX</div>
+      <div class="login-sub">How are you accessing today?</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
+        <button class="btn btn-primary btn-lg btn-full" onclick="showLoginStep('admin')">👨‍🏫 Admin Login</button>
+        <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('register')">➕ Register as New Admin</button>
+        <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('super')" style="border-color:var(--gold);color:var(--gold);">🛡 Super Admin</button>
+      </div>
+    </div>
+
+    <!-- Step 2a: Admin login -->
+    <div class="login-card a-scalein" id="loginStepAdmin" style="display:none;">
+      <div class="login-lock">👨‍🏫</div>
+      <div class="login-title">Admin Login</div>
+      <div class="login-sub">Enter your username and PIN.</div>
+      <div class="field" style="margin-top:8px;"><label>Username</label><input id="adminUsername" placeholder="Your username" autocomplete="username"/></div>
+      <div class="pin-dots" style="margin-top:8px;">
+        <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
       </div>
       <div class="numpad">
-        <div class="nk" onclick="nkPress('1')">1</div>
-        <div class="nk" onclick="nkPress('2')">2</div>
-        <div class="nk" onclick="nkPress('3')">3</div>
-        <div class="nk" onclick="nkPress('4')">4</div>
-        <div class="nk" onclick="nkPress('5')">5</div>
-        <div class="nk" onclick="nkPress('6')">6</div>
-        <div class="nk" onclick="nkPress('7')">7</div>
-        <div class="nk" onclick="nkPress('8')">8</div>
-        <div class="nk" onclick="nkPress('9')">9</div>
-        <div class="nk w2" onclick="nkPress('0')">0</div>
-        <div class="nk del" onclick="nkDel()">⌫</div>
+        <div class="nk" onclick="nkPress('1')">1</div><div class="nk" onclick="nkPress('2')">2</div><div class="nk" onclick="nkPress('3')">3</div>
+        <div class="nk" onclick="nkPress('4')">4</div><div class="nk" onclick="nkPress('5')">5</div><div class="nk" onclick="nkPress('6')">6</div>
+        <div class="nk" onclick="nkPress('7')">7</div><div class="nk" onclick="nkPress('8')">8</div><div class="nk" onclick="nkPress('9')">9</div>
+        <div class="nk w2" onclick="nkPress('0')">0</div><div class="nk del" onclick="nkDel()">⌫</div>
       </div>
       <div class="alert" id="loginAlert"></div>
-      <p style="text-align:center;font-size:11px;color:var(--text3);margin-top:14px;font-family:var(--mono);">Default PIN: 1234 &nbsp;·&nbsp; Change in Settings</p>
+      <button class="btn btn-ghost btn-full" style="margin-top:10px;" onclick="showLoginStep('step1')">← Back</button>
+    </div>
+
+    <!-- Step 2b: Register new admin -->
+    <div class="login-card a-scalein" id="loginStepRegister" style="display:none;">
+      <div class="login-lock">➕</div>
+      <div class="login-title">Register Admin</div>
+      <div class="login-sub">Create your admin account.</div>
+      <div class="field" style="margin-top:8px;"><label>Full Name</label><input id="regName" placeholder="e.g. Dr. Jean Mbarga"/></div>
+      <div class="field"><label>Username</label><input id="regUsername" placeholder="e.g. jmbarga" autocomplete="username"/></div>
+      <div class="field"><label>4-digit PIN</label>
+        <div class="pin-dots" style="justify-content:flex-start;gap:8px;margin:6px 0;">
+          <div class="pin-dot" id="rp0"></div><div class="pin-dot" id="rp1"></div>
+          <div class="pin-dot" id="rp2"></div><div class="pin-dot" id="rp3"></div>
+        </div>
+        <div class="numpad">
+          <div class="nk" onclick="nkPressReg('1')">1</div><div class="nk" onclick="nkPressReg('2')">2</div><div class="nk" onclick="nkPressReg('3')">3</div>
+          <div class="nk" onclick="nkPressReg('4')">4</div><div class="nk" onclick="nkPressReg('5')">5</div><div class="nk" onclick="nkPressReg('6')">6</div>
+          <div class="nk" onclick="nkPressReg('7')">7</div><div class="nk" onclick="nkPressReg('8')">8</div><div class="nk" onclick="nkPressReg('9')">9</div>
+          <div class="nk w2" onclick="nkPressReg('0')">0</div><div class="nk del" onclick="nkDelReg()">⌫</div>
+        </div>
+      </div>
+      <div class="alert" id="regAlert"></div>
+      <button class="btn btn-primary btn-full" style="margin-top:6px;" onclick="registerAdmin()">Create Account</button>
+      <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="showLoginStep('step1')">← Back</button>
+    </div>
+
+    <!-- Step 2c: Super admin login -->
+    <div class="login-card a-scalein" id="loginStepSuper" style="display:none;">
+      <div class="login-lock" style="background:var(--gold2);border-color:rgba(245,158,11,0.3);">🛡</div>
+      <div class="login-title">Super Admin</div>
+      <div class="login-sub">Enter the super admin password.</div>
+      <div class="field" style="margin-top:8px;">
+        <label>Password</label>
+        <input id="superPwd" type="password" placeholder="Super admin password"/>
+      </div>
+      <div class="alert" id="superAlert"></div>
+      <button class="btn btn-full" style="background:var(--gold);color:#fff;margin-top:6px;padding:12px;border-radius:var(--r2);font-weight:700;border:none;cursor:pointer;" onclick="trySuperLogin()">Enter Super Admin</button>
+      <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="showLoginStep('step1')">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── SUPER ADMIN PAGE ─────── -->
+<div class="page" id="pgSuper">
+  <div class="dash-wrap">
+    <div class="dash-top a-fadeup">
+      <div>
+        <div class="dash-title" style="color:var(--gold);">🛡 Super Admin Panel</div>
+        <div class="dash-sub">Manage all admin accounts</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="superOut()">Sign Out</button>
+    </div>
+    <div class="panel-block a-fadeup d1">
+      <div class="pb-head">
+        <div class="pb-title"><div class="pb-icon" style="background:var(--gold2);">👥</div>Registered Admins</div>
+        <span id="adminCount" style="font-size:10px;color:var(--text3);font-family:var(--mono);">0 admins</span>
+      </div>
+      <div class="pb-body" id="adminList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── MODAL: Reset Admin PIN ─────── -->
+<div class="overlay" id="resetPinModal">
+  <div class="confirm-box" style="max-width:360px;text-align:left;">
+    <div style="font-size:24px;text-align:center;margin-bottom:10px;">🔑</div>
+    <div style="font-family:var(--head);font-size:17px;font-weight:800;margin-bottom:6px;text-align:center;">Reset PIN</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:16px;text-align:center;" id="resetPinFor"></div>
+    <div class="field"><label>New 4-digit PIN</label><input id="newAdminPin" type="password" maxlength="4" inputmode="numeric" placeholder="Enter new PIN"/></div>
+    <div class="alert" id="resetPinAlert"></div>
+    <div class="confirm-acts" style="margin-top:12px;">
+      <button class="btn btn-ghost btn-full" onclick="closeResetPin()">Cancel</button>
+      <button class="btn btn-primary btn-full" onclick="confirmResetPin()">Reset PIN</button>
     </div>
   </div>
 </div>
@@ -1620,6 +1698,7 @@ body::after { content: none; }
 /* ── STATE ── */
 const S = {
   loggedIn:       false,
+  currentAdmin:   null,
   pinInput:       '',
   currentSession: null,
   activeSessionId:null,
@@ -1667,21 +1746,24 @@ function init() {
 
 /* ── PAGE SYSTEM ── */
 function showPage(name) {
-  const map = {landing:'pgLanding',login:'pgLogin',dash:'pgDash',student:'pgStudent',qr:'pgQR'};
+  const map = {landing:'pgLanding',login:'pgLogin',dash:'pgDash',student:'pgStudent',qr:'pgQR',super:'pgSuper'};
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const el = document.getElementById(map[name]);
   if (el) el.classList.add('active');
 
-  const navTabs = document.getElementById('navTabs');
+  const navTabs  = document.getElementById('navTabs');
   const navRight = document.getElementById('navRight');
-  const ntDash = document.getElementById('ntDash');
-  const ntQR   = document.getElementById('ntQR');
+  const ntDash   = document.getElementById('ntDash');
+  const ntQR     = document.getElementById('ntQR');
 
   if (name === 'dash' || name === 'qr') {
     navTabs.style.display = 'flex';
     navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showSettings()">⚙</button><button class="nav-btn nav-btn-ghost" onclick="adminOut()">Sign Out</button>`;
     ntDash.classList.toggle('active', name==='dash');
     ntQR.classList.toggle('active',  name==='qr');
+  } else if (name === 'super') {
+    navTabs.style.display = 'none';
+    navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="superOut()">Sign Out</button>`;
   } else if (name === 'student') {
     navTabs.style.display = 'none';
     navRight.innerHTML = '';
@@ -1689,49 +1771,189 @@ function showPage(name) {
     navTabs.style.display = 'none';
     navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showLogin()">Admin Login</button><button class="nav-btn nav-btn-solid" onclick="showLogin()">Get Started →</button>`;
   }
-
   document.getElementById('siteFooter').style.display = name === 'student' ? 'none' : 'flex';
 }
 
 function goHome()      { showPage('landing'); }
 function showLogin()   { S.pinInput=''; updateDots(); showPage('login'); }
 function navTo(pg)     { showPage(pg); if(pg==='dash'){ refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); } }
-function adminOut()    { S.loggedIn=false; if(S.liveInt)clearInterval(S.liveInt); showPage('landing'); }
+function adminOut()    { S.loggedIn=false; S.currentAdmin=null; if(S.liveInt)clearInterval(S.liveInt); showPage('landing'); }
 
-/* ── PIN LOGIN ── */
+/* ── LOGIN FLOW ── */
+const SUPER_PWD = 'AttendX@2025';
+let S_regPin = '';
+
+function showLogin(){ S.pinInput=''; S_regPin=''; showLoginStep('step1'); showPage('login'); }
+function showLoginStep(step){
+  ['loginStep1','loginStepAdmin','loginStepRegister','loginStepSuper'].forEach(id=>{
+    document.getElementById(id).style.display='none';
+  });
+  const map = {step1:'loginStep1',admin:'loginStepAdmin',register:'loginStepRegister',super:'loginStepSuper'};
+  if(map[step]) document.getElementById(map[step]).style.display='block';
+  S.pinInput=''; S_regPin='';
+  updateDots(); updateRegDots();
+}
+
+/* ── ADMIN PIN NUMPAD ── */
 function nkPress(d) {
   if (S.pinInput.length >= 4) return;
-  S.pinInput += d;
-  updateDots();
+  S.pinInput += d; updateDots();
   if (S.pinInput.length === 4) setTimeout(tryLogin, 160);
 }
 function nkDel() { S.pinInput = S.pinInput.slice(0,-1); updateDots(); }
 function updateDots() {
-  for (let i=0;i<4;i++) {
-    const d = document.getElementById('pd'+i);
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('pd'+i);
+    if(!d) return;
     d.classList.toggle('on', i < S.pinInput.length);
     d.classList.remove('err');
   }
 }
-function tryLogin() {
-  const pin = localStorage.getItem('ax_pin')||'1234';
-  if (S.pinInput === pin) {
-    S.loggedIn = true;
-    showPage('dash');
-    refreshDash();
-    startLiveLoop();
-    autoRequestTeacherGeo();
-  } else {
+
+/* ── REGISTER PIN NUMPAD ── */
+function nkPressReg(d){
+  if(S_regPin.length>=4) return;
+  S_regPin+=d; updateRegDots();
+}
+function nkDelReg(){ S_regPin=S_regPin.slice(0,-1); updateRegDots(); }
+function updateRegDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('rp'+i);
+    if(!d) return;
+    d.classList.toggle('on', i < S_regPin.length);
+  }
+}
+
+/* ── TRY ADMIN LOGIN ── */
+async function tryLogin() {
+  const username = document.getElementById('adminUsername').value.trim().toLowerCase();
+  if(!username){ showAlert('loginAlert','err','Please enter your username.'); S.pinInput=''; updateDots(); return; }
+
+  await waitForFirebase();
+  const snap = await window._fsGetDoc(window._fsDoc(window._db,'admins',username));
+  if(!snap.exists()){
+    showAlert('loginAlert','err','Username not found. Please register first.');
+    S.pinInput=''; updateDots(); return;
+  }
+  const admin = snap.data();
+  if(admin.blocked){
+    for(let i=0;i<4;i++) document.getElementById('pd'+i).classList.add('err');
+    showAlert('loginAlert','err','⛔ Your account has been suspended. Contact the super admin.');
+    S.pinInput=''; updateDots(); return;
+  }
+  if(S.pinInput !== admin.pin){
     for(let i=0;i<4;i++) document.getElementById('pd'+i).classList.add('err');
     showAlert('loginAlert','err','Incorrect PIN. Try again.');
     setTimeout(()=>{ S.pinInput=''; updateDots(); }, 700);
+    return;
+  }
+  // Log login time
+  await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
+    {...admin, lastLogin: Date.now()}, {merge:true});
+
+  S.loggedIn = true;
+  S.currentAdmin = username;
+  showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
+}
+
+/* ── REGISTER NEW ADMIN ── */
+async function registerAdmin(){
+  const name     = document.getElementById('regName').value.trim();
+  const username = document.getElementById('regUsername').value.trim().toLowerCase();
+  if(!name||!username){ showAlert('regAlert','err','Name and username are required.'); return; }
+  if(!/^[a-z0-9_]+$/.test(username)){ showAlert('regAlert','err','Username: letters, numbers and _ only.'); return; }
+  if(S_regPin.length<4){ showAlert('regAlert','err','Please enter a 4-digit PIN.'); return; }
+
+  await waitForFirebase();
+  const snap = await window._fsGetDoc(window._fsDoc(window._db,'admins',username));
+  if(snap.exists()){ showAlert('regAlert','err','Username already taken. Choose another.'); return; }
+
+  await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
+    name, username, pin:S_regPin, blocked:false, createdAt:Date.now(), lastLogin:null
+  });
+  showAlert('regAlert','ok','✓ Account created! You can now login.');
+  setTimeout(()=>showLoginStep('admin'),1500);
+}
+
+/* ── SUPER ADMIN LOGIN ── */
+function trySuperLogin(){
+  const pwd = document.getElementById('superPwd').value;
+  if(pwd === SUPER_PWD){
+    showPage('super'); loadAdminList();
+  } else {
+    showAlert('superAlert','err','Incorrect password.');
+    document.getElementById('superPwd').value='';
   }
 }
+function superOut(){ showPage('landing'); }
+
+/* ── LOAD ADMIN LIST ── */
+async function loadAdminList(){
+  await waitForFirebase();
+  const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
+  const admins = snap.docs.map(d=>d.data());
+  const list = document.getElementById('adminList');
+  document.getElementById('adminCount').textContent = admins.length+' admin'+(admins.length!==1?'s':'');
+  if(!admins.length){
+    list.innerHTML='<div class="empty-st"><div class="ei">👥</div><div class="et">No admins registered yet.</div></div>';
+    return;
+  }
+  list.innerHTML = admins.map(a=>`
+    <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div>
+        <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;">
+          ${a.name}
+          ${a.blocked?'<span class="badge" style="background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,0.2);">BLOCKED</span>':'<span class="badge" style="background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,0.2);">ACTIVE</span>'}
+        </div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px;">
+          @${a.username} · Last login: ${a.lastLogin?new Date(a.lastLogin).toLocaleString():'Never'}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑 Reset PIN</button>
+        <button class="btn ${a.blocked?'btn-green':'btn-red'} btn-xs" onclick="toggleBlock('${a.username}',${a.blocked})">
+          ${a.blocked?'✓ Unblock':'⛔ Block'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ── BLOCK / UNBLOCK ── */
+async function toggleBlock(username, currentlyBlocked){
+  await waitForFirebase();
+  await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
+    {blocked:!currentlyBlocked},{merge:true});
+  toast(username+(currentlyBlocked?' unblocked':' blocked'),'ok');
+  loadAdminList();
+}
+
+/* ── RESET PIN ── */
+let _resetTarget = null;
+function openResetPin(username, name){
+  _resetTarget = username;
+  document.getElementById('resetPinFor').textContent = 'Resetting PIN for: '+name+' (@'+username+')';
+  document.getElementById('newAdminPin').value='';
+  document.getElementById('resetPinAlert').classList.remove('show');
+  document.getElementById('resetPinModal').classList.add('show');
+}
+function closeResetPin(){ document.getElementById('resetPinModal').classList.remove('show'); _resetTarget=null; }
+async function confirmResetPin(){
+  const pin = document.getElementById('newAdminPin').value.trim();
+  if(!/^\d{4}$/.test(pin)){ showAlert('resetPinAlert','err','PIN must be exactly 4 digits.'); return; }
+  await waitForFirebase();
+  await window._fsSetDoc(window._fsDoc(window._db,'admins',_resetTarget),{pin},{merge:true});
+  toast('PIN reset for @'+_resetTarget,'ok');
+  closeResetPin();
+}
+
 document.addEventListener('keydown', e => {
   const lp = document.getElementById('pgLogin');
-  if (lp.classList.contains('active')) {
-    if (e.key>='0'&&e.key<='9') nkPress(e.key);
-    if (e.key==='Backspace') nkDel();
+  if(lp.classList.contains('active')){
+    if(document.getElementById('loginStepAdmin').style.display!=='none'){
+      if(e.key>='0'&&e.key<='9') nkPress(e.key);
+      if(e.key==='Backspace') nkDel();
+    }
   }
 });
 
@@ -2778,12 +3000,14 @@ function toast(msg,type='info'){
 }
 
 /* ── CLOSE MODALS ON BACKDROP ── */
-['sessModal','settModal','confModal'].forEach(id=>{
+['sessModal','settModal','confModal','pdfThemeModal','resetPinModal'].forEach(id=>{
   document.getElementById(id)?.addEventListener('click',e=>{
     if(e.target===document.getElementById(id)){
       if(id==='sessModal')closeModal();
       if(id==='settModal')closeSet();
       if(id==='confModal')closeConf();
+      if(id==='pdfThemeModal')closePdfThemeModal();
+      if(id==='resetPinModal')closeResetPin();
     }
   });
 });
