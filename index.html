@@ -1524,6 +1524,17 @@ body::after { content: none; }
     </div>
     <div class="modal-body">
       <div class="set-sec">
+        <div class="set-sec-title">School Information</div>
+        <div class="field">
+          <label>School Name</label>
+          <input id="schoolName" placeholder="e.g. University of Yaoundé I"/>
+          <div class="hint">Appears in the footer of all PDF reports.</div>
+        </div>
+        <button class="btn btn-primary" onclick="saveSchoolName()">Save</button>
+        <div class="alert" id="schoolNameAlert"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="set-sec">
         <div class="set-sec-title">Security — Change PIN</div>
         <div class="pin-grid">
           <div class="field"><label>New PIN</label><input id="newPin" type="password" placeholder="4 digits" maxlength="4" inputmode="numeric"/></div>
@@ -2071,15 +2082,20 @@ function confDelete(sid){
 /* ── SETTINGS ── */
 function showSettings(){
   document.getElementById('settModal').classList.add('show');
-  // load saved theme
   const saved = localStorage.getItem('ax_pdf_theme') || 'blue';
   document.getElementById('pdfTheme').value = saved;
+  document.getElementById('schoolName').value = localStorage.getItem('ax_school') || '';
 }
 function closeSet(){
-  // save theme on close
   const t = document.getElementById('pdfTheme').value;
   localStorage.setItem('ax_pdf_theme', t);
   document.getElementById('settModal').classList.remove('show');
+}
+function saveSchoolName(){
+  const name = document.getElementById('schoolName').value.trim();
+  if(!name){ showAlert('schoolNameAlert','err','Please enter a school name.'); return; }
+  localStorage.setItem('ax_school', name);
+  showAlert('schoolNameAlert','ok','✓ School name saved.');
 }
 function changePin(){
   const np=document.getElementById('newPin').value;
@@ -2401,9 +2417,10 @@ function _buildPDF(s, recs){
       didParseCell(d){if(d.section==='body'&&d.row.index===0)d.cell.styles.textColor=t.firstRow;}
     });
   }
+  const schoolName = localStorage.getItem('ax_school') || 'AttendX PRO';
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...t.metaText);
-  doc.text('AttendX PRO · Created by KЭL ♛ PHANTOM · '+new Date().getFullYear(),M,285);
-  doc.text('Confidential — Official Attendance Record',W-M,285,{align:'right'});
+  doc.text(schoolName+' · Created by KЭL ♛ PHANTOM',M,285);
+  doc.text('Official Attendance Record',W-M,285,{align:'right'});
   doc.save(s.sub.replace(/[^a-z0-9]/gi,'_')+'_'+s.cls.replace(/[^a-z0-9]/gi,'_')+'_Attendance.pdf');
   toast('PDF saved: '+s.sub,'ok');
 }
@@ -2436,8 +2453,9 @@ function downloadDailyPDF(){
       doc.text('Total Sessions: '+ss.length,W/2,157,{align:'center'});
       doc.text('Total Attendances: '+tp,W/2,167,{align:'center'});
       doc.text('Generated: '+new Date().toLocaleString(),W/2,177,{align:'center'});
+      const schoolN = localStorage.getItem('ax_school') || 'AttendX PRO';
       doc.setFontSize(8);doc.setTextColor(...t.metaText);
-      doc.text('AttendX PRO · Created by KЭL ♛ PHANTOM',W/2,285,{align:'center'});
+      doc.text(schoolN+' · Created by KЭL ♛ PHANTOM',W/2,285,{align:'center'});
       items.forEach(({s,r:recs},idx)=>{
         doc.addPage();
         doc.setFillColor(...t.bg);doc.rect(0,0,W,297,'F');
@@ -2461,8 +2479,8 @@ function downloadDailyPDF(){
           });
         }
         doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...t.metaText);
-        doc.text('AttendX PRO · KЭL ♛ PHANTOM',M,285);
-        doc.text('Page '+(idx+2),W-M,285,{align:'right'});
+        doc.text((localStorage.getItem('ax_school')||'AttendX PRO')+' · KЭL ♛ PHANTOM',M,285);
+        doc.text('Official Attendance Record · Page '+(idx+2),W-M,285,{align:'right'});
       });
       doc.save('AttendX_FullDay_'+new Date().toLocaleDateString('en-GB').replace(/\//g,'-')+'.pdf');
       toast('Full Day PDF saved','ok');
