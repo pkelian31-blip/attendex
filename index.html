@@ -1149,21 +1149,8 @@ body::after { content: none; }
     <div class="login-card a-scalein" id="loginStepRegister" style="display:none;">
       <div class="login-lock">➕</div>
       <div class="login-title">Register Admin</div>
-      <div class="login-sub">Create your admin account.</div>
-      <div class="field" style="margin-top:8px;"><label>Full Name</label><input id="regName" placeholder="e.g. Dr. Jean Mbarga"/></div>
-      <div class="field"><label>Username</label><input id="regUsername" placeholder="e.g. jmbarga" autocomplete="username"/></div>
-      <div class="field"><label>4-digit PIN</label>
-        <div class="pin-dots" style="justify-content:flex-start;gap:8px;margin:6px 0;">
-          <div class="pin-dot" id="rp0"></div><div class="pin-dot" id="rp1"></div>
-          <div class="pin-dot" id="rp2"></div><div class="pin-dot" id="rp3"></div>
-        </div>
-        <div class="numpad">
-          <div class="nk" onclick="nkPressReg('1')">1</div><div class="nk" onclick="nkPressReg('2')">2</div><div class="nk" onclick="nkPressReg('3')">3</div>
-          <div class="nk" onclick="nkPressReg('4')">4</div><div class="nk" onclick="nkPressReg('5')">5</div><div class="nk" onclick="nkPressReg('6')">6</div>
-          <div class="nk" onclick="nkPressReg('7')">7</div><div class="nk" onclick="nkPressReg('8')">8</div><div class="nk" onclick="nkPressReg('9')">9</div>
-          <div class="nk w2" onclick="nkPressReg('0')">0</div><div class="nk del" onclick="nkDelReg()">⌫</div>
-        </div>
-      </div>
+      <div class="login-sub">Enter your name to create an account. Your default PIN will be <strong>1234</strong> — you can change it after login.</div>
+      <div class="field" style="margin-top:12px;"><label>Full Name</label><input id="regName" placeholder="e.g. Dr. Jean Mbarga"/></div>
       <div class="alert" id="regAlert"></div>
       <button class="btn btn-primary btn-full" style="margin-top:6px;" onclick="registerAdmin()">Create Account</button>
       <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="showLoginStep('step1')">← Back</button>
@@ -1191,16 +1178,23 @@ body::after { content: none; }
     <div class="dash-top a-fadeup">
       <div>
         <div class="dash-title" style="color:var(--gold);">🛡 Super Admin Panel</div>
-        <div class="dash-sub">Manage all admin accounts</div>
+        <div class="dash-sub">Full access — all admins and all sessions</div>
       </div>
       <button class="btn btn-ghost btn-sm" onclick="superOut()">Sign Out</button>
     </div>
-    <div class="panel-block a-fadeup d1">
+    <div class="panel-block a-fadeup d1" style="margin-bottom:18px;">
       <div class="pb-head">
         <div class="pb-title"><div class="pb-icon" style="background:var(--gold2);">👥</div>Registered Admins</div>
         <span id="adminCount" style="font-size:10px;color:var(--text3);font-family:var(--mono);">0 admins</span>
       </div>
       <div class="pb-body" id="adminList"></div>
+    </div>
+    <div class="panel-block a-fadeup d2">
+      <div class="pb-head">
+        <div class="pb-title"><div class="pb-icon" style="background:var(--blue3);">📋</div>All Sessions (Today)</div>
+        <span id="superSessCount" style="font-size:10px;color:var(--text3);font-family:var(--mono);"></span>
+      </div>
+      <div class="pb-body" id="superSessList"></div>
     </div>
   </div>
 </div>
@@ -1898,21 +1892,21 @@ async function tryLogin() {
 
 /* ── REGISTER NEW ADMIN ── */
 async function registerAdmin(){
-  const name     = document.getElementById('regName').value.trim();
-  const username = document.getElementById('regUsername').value.trim().toLowerCase();
-  if(!name||!username){ showAlert('regAlert','err','Name and username are required.'); return; }
-  if(!/^[a-z0-9_]+$/.test(username)){ showAlert('regAlert','err','Username: letters, numbers and _ only.'); return; }
-  if(S_regPin.length<4){ showAlert('regAlert','err','Please enter a 4-digit PIN.'); return; }
+  const name = document.getElementById('regName').value.trim();
+  if(!name){ showAlert('regAlert','err','Please enter your full name.'); return; }
+  // Generate username from name (lowercase, no spaces)
+  const username = name.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,20)+'_'+Date.now().toString().slice(-4);
 
   await waitForFirebase();
-  const snap = await window._fsGetDoc(window._fsDoc(window._db,'admins',username));
-  if(snap.exists()){ showAlert('regAlert','err','Username already taken. Choose another.'); return; }
-
   await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
-    name, username, pin:S_regPin, blocked:false, createdAt:Date.now(), lastLogin:null
+    name, username, pin:'1234', blocked:false, createdAt:Date.now(), lastLogin:null
   });
-  showAlert('regAlert','ok','✓ Account created! You can now login.');
-  setTimeout(()=>showLoginStep('admin'),1500);
+  showAlert('regAlert','ok','✓ Account created! Your username is: '+username+'\nDefault PIN: 1234');
+  // Auto-fill the login form
+  setTimeout(()=>{
+    showLoginStep('admin');
+    document.getElementById('adminUsername').value = username;
+  }, 2000);
 }
 
 /* ── SUPER ADMIN LOGIN ── */
@@ -2102,7 +2096,7 @@ function createSession() {
   if(!sub||!cls||!time) { showAlert('createAlert','err','Subject, class and start time are required.'); return; }
 
   const start = Date.now(), expiry = start + dur*60*1000, id = start;
-  const sess = {id,sub,cls,dept,lec,time,dur,room,start,expiry};
+  const sess = {id,sub,cls,dept,lec,time,dur,room,start,expiry,adminId:S.currentAdmin||'default'};
   const radius = parseInt(v('inRadius'))||100;
   if (S.teacherLat != null) {
     sess.geoLat    = S.teacherLat;
@@ -2360,13 +2354,15 @@ function saveSchoolName(){
   localStorage.setItem('ax_school', name);
   showAlert('schoolNameAlert','ok','✓ School name saved.');
 }
-function changePin(){
+async function changePin(){
   const np=document.getElementById('newPin').value;
   const cp=document.getElementById('confPin').value;
   if(!np||np.length<4){ showAlert('pinAlert','err','PIN must be exactly 4 digits.'); return; }
   if(!/^\d{4}$/.test(np)){ showAlert('pinAlert','err','Digits only (0-9).'); return; }
   if(np!==cp){ showAlert('pinAlert','err','PINs do not match.'); return; }
-  localStorage.setItem('ax_pin',np);
+  if(!S.currentAdmin){ showAlert('pinAlert','err','Not logged in.'); return; }
+  await waitForFirebase();
+  await window._fsSetDoc(window._fsDoc(window._db,'admins',S.currentAdmin),{pin:np},{merge:true});
   showAlert('pinAlert','ok','✓ PIN updated!');
   document.getElementById('newPin').value='';
   document.getElementById('confPin').value='';
@@ -2997,7 +2993,12 @@ async function todaySessions(){
   const today = new Date().toDateString();
   const snap  = await window._fsGetDocs(window._fsColl(window._db,'sessions'));
   return snap.docs.map(d=>d.data())
-    .filter(s=>new Date(s.start).toDateString()===today)
+    .filter(s=>{
+      if(new Date(s.start).toDateString()!==today) return false;
+      // each admin only sees their own sessions
+      const owner = s.adminId || 'default';
+      return owner === (S.currentAdmin||'default');
+    })
     .sort((a,b)=>b.start-a.start);
 }
 
