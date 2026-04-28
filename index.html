@@ -1468,6 +1468,20 @@ body::after { content: none; }
         <div class="qr-panel active" id="qrp-link">
           <div class="field"><label>Paste Session Link</label><input id="qr-link-url" placeholder="Paste attendance link here…"/><p class="hint">Paste a session link to generate a scannable QR for students.</p></div>
           <div class="field"><label>Label (optional)</label><input id="qr-link-label" placeholder="e.g. Mathematics Level 1"/></div>
+          <div class="field">
+            <label>QR Expiry</label>
+            <div class="sel-wrap"><select id="qr-link-expiry">
+              <option value="0">No expiry — permanent</option>
+              <option value="1">1 day</option>
+              <option value="2">2 days</option>
+              <option value="3">3 days</option>
+              <option value="5" selected>5 days</option>
+              <option value="7">7 days</option>
+              <option value="14">14 days</option>
+              <option value="30">30 days</option>
+            </select></div>
+            <p class="hint">After this time the QR link will show "Expired" to anyone who opens it.</p>
+          </div>
         </div>
 
         <!-- EMAIL PANEL -->
@@ -1727,7 +1741,21 @@ function init() {
     new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
   const p = new URLSearchParams(location.search);
-  const sid = p.get('session');
+  const sid     = p.get('session');
+  const qrLink  = p.get('qr_link');
+  const qrExp   = p.get('qr_exp');
+
+  if(qrLink){
+    // This is a timed QR redirect
+    if(qrExp && Date.now() > parseInt(qrExp)){
+      showQRExpired();
+    } else {
+      // Valid — redirect to the actual link
+      window.location.replace(decodeURIComponent(qrLink));
+    }
+    return;
+  }
+
   if (sid) {
     loadStudentPage(sid);
   } else {
@@ -1738,10 +1766,22 @@ function init() {
     document.getElementById('topnav').classList.toggle('up', window.scrollY > 8);
   });
 
-  // Set current time in create form
   const now = new Date();
   const tf = document.getElementById('inTime');
   if (tf) tf.value = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+}
+
+function showQRExpired(){
+  document.getElementById('topnav').style.display='none';
+  document.getElementById('siteFooter').style.display='none';
+  document.body.innerHTML=`
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F0F4FF;font-family:'Figtree',sans-serif;padding:24px;">
+      <div style="text-align:center;max-width:400px;">
+        <div style="font-size:72px;margin-bottom:16px;">⏰</div>
+        <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#EF4444;margin-bottom:10px;">QR Code Expired</div>
+        <div style="font-size:15px;color:#4A5880;line-height:1.6;">This QR code has expired and is no longer valid.<br/>Please contact your administrator for a new one.</div>
+      </div>
+    </div>`;
 }
 
 /* ── PAGE SYSTEM ── */
@@ -2770,6 +2810,13 @@ function generateQR(){
   if(qrCurrentTab==='link'){
     link=document.getElementById('qr-link-url').value.trim();
     if(!link){toast('Please paste a session link first','warn');return;}
+    // Encode expiry into the link
+    const days = parseInt(document.getElementById('qr-link-expiry').value)||0;
+    if(days > 0){
+      const expiry = Date.now() + days*24*60*60*1000;
+      // Wrap the original link with expiry via our app's QR proxy
+      link = 'https://attendex-pro.vercel.app?qr_link='+encodeURIComponent(link)+'&qr_exp='+expiry;
+    }
   } else if(qrCurrentTab==='email'){
     const em=document.getElementById('qr-em').value.trim();
     const el=document.getElementById('err-em');
