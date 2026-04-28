@@ -1853,7 +1853,7 @@ function nkDelReg(){ S_regPin=S_regPin.slice(0,-1); updateRegDots(); }
 function updateRegDots(){
   for(let i=0;i<4;i++){
     const d=document.getElementById('rp'+i);
-    if(!d) return;
+    if(!d) continue;
     d.classList.toggle('on', i < S_regPin.length);
   }
 }
@@ -1894,19 +1894,24 @@ async function tryLogin() {
 async function registerAdmin(){
   const name = document.getElementById('regName').value.trim();
   if(!name){ showAlert('regAlert','err','Please enter your full name.'); return; }
-  // Generate username from name (lowercase, no spaces)
-  const username = name.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,20)+'_'+Date.now().toString().slice(-4);
 
-  await waitForFirebase();
-  await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
-    name, username, pin:'1234', blocked:false, createdAt:Date.now(), lastLogin:null
-  });
-  showAlert('regAlert','ok','✓ Account created! Your username is: '+username+'\nDefault PIN: 1234');
-  // Auto-fill the login form
-  setTimeout(()=>{
-    showLoginStep('admin');
-    document.getElementById('adminUsername').value = username;
-  }, 2000);
+  showAlert('regAlert','info','⏳ Creating account…');
+
+  try {
+    await waitForFirebase();
+    // Generate unique username from name
+    const username = name.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,20)+'_'+Date.now().toString().slice(-4);
+    await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
+      name, username, pin:'1234', blocked:false, createdAt:Date.now(), lastLogin:null
+    });
+    showAlert('regAlert','ok','✓ Account created!\nUsername: '+username+'\nDefault PIN: 1234\n\nSave your username — you need it to login.');
+    setTimeout(()=>{
+      showLoginStep('admin');
+      document.getElementById('adminUsername').value = username;
+    }, 3000);
+  } catch(e){
+    showAlert('regAlert','err','Failed to create account: '+e.message);
+  }
 }
 
 /* ── SUPER ADMIN LOGIN ── */
