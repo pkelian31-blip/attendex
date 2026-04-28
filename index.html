@@ -1853,7 +1853,8 @@ function createSession() {
     toast('Session saved to database','ok');
   }).catch(e=>{ toast('DB error: '+e.message,'err'); });
 
-  const link = location.href.split('?')[0]+'?session='+id;
+  const baseUrl = 'https://attendex-pro.vercel.app';
+  const link = baseUrl+'?session='+id;
   document.getElementById('genLink').value = link;
 
   const lo = document.getElementById('linkOut');
