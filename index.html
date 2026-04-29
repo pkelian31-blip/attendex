@@ -3185,6 +3185,30 @@ function submitAttend(){
 
 /* ── PDF GENERATION ── */
 function autoGenPDF(sess){ if(sess)setTimeout(()=>genPDF(sess.id),800); }
+
+/* Mobile-safe PDF save */
+function mobileSavePDF(doc, filename){
+  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+  if(isMobile){
+    // On mobile: open PDF in new tab so user can save from browser menu
+    const blob = doc.output('blob');
+    const url  = URL.createObjectURL(blob);
+    const win  = window.open(url, '_blank');
+    if(!win){
+      // Popup blocked — fallback: use data URI
+      const dataUri = doc.output('datauristring');
+      const a = document.createElement('a');
+      a.href = dataUri;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+    setTimeout(()=>URL.revokeObjectURL(url), 10000);
+  } else {
+    doc.save(filename);
+  }
+}
 function dlSessionPDF(sid){ genPDF(sid); }
 
 function genPDF(sid){
@@ -3244,7 +3268,7 @@ function _buildPDF(s, recs){
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...t.metaText);
   doc.text(schoolName+' · Created by KЭL ♛ PHANTOM',M,285);
   doc.text('Official Attendance Record',W-M,285,{align:'right'});
-  doc.save(s.sub.replace(/[^a-z0-9]/gi,'_')+'_'+s.cls.replace(/[^a-z0-9]/gi,'_')+'_Attendance.pdf');
+  mobileSavePDF(doc, s.sub.replace(/[^a-z0-9]/gi,'_')+'_'+s.cls.replace(/[^a-z0-9]/gi,'_')+'_Attendance.pdf');
   toast('PDF saved: '+s.sub,'ok');
 }
 
@@ -3305,7 +3329,7 @@ function downloadDailyPDF(){
         doc.text((localStorage.getItem('ax_school')||'AttendX PRO')+' · KЭL ♛ PHANTOM',M,285);
         doc.text('Official Attendance Record · Page '+(idx+2),W-M,285,{align:'right'});
       });
-      doc.save('AttendX_FullDay_'+new Date().toLocaleDateString('en-GB').replace(/\//g,'-')+'.pdf');
+      mobileSavePDF(doc, 'AttendX_FullDay_'+new Date().toLocaleDateString('en-GB').replace(/\//g,'-')+'.pdf');
       toast('Full Day PDF saved','ok');
     });
   });
