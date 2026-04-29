@@ -2160,9 +2160,9 @@ async function registerAdmin(){
 
     if(nameExists){
       if(nameExists.blocked){
-        showAlert('regAlert','err','⛔ This name is associated with a blocked account. Contact the super admin.');
+        showAlert('regAlert','err','⛔ This name belongs to a blocked account. Please use a different name or contact the super admin.');
       } else {
-        showAlert('regAlert','err','An account with this name already exists. Please login instead.');
+        showAlert('regAlert','err','❌ This name is already taken. Please enter a different name to register.');
       }
       return;
     }
