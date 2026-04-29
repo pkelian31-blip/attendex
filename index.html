@@ -1074,6 +1074,7 @@ body::after { content: none; }
     <div class="landing-cta a-fadeup d3">
       <button class="cta-btn cta-primary" onclick="showLogin()">Open Admin Panel →</button>
       <button class="cta-btn cta-outline" onclick="showLogin()">View Demo</button>
+      <button class="cta-btn cta-outline" onclick="openContact()" style="border-color:var(--green);color:var(--green);">📞 Contact Us</button>
     </div>
     <div class="features-grid a-fadeup d4">
       <div class="feat">
@@ -1740,6 +1741,32 @@ body::after { content: none; }
 <!-- ══════════ TOAST STACK ══════════ -->
 <div class="toast-stack" id="toastStack"></div>
 
+<!-- ══════════ MODAL: Contact ══════════ -->
+<div class="overlay" id="contactModal">
+  <div class="confirm-box" style="max-width:420px;text-align:left;">
+    <div style="text-align:center;margin-bottom:18px;">
+      <div style="font-size:40px;margin-bottom:8px;">👋</div>
+      <div style="font-family:var(--head);font-size:20px;font-weight:800;">Contact Us</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:4px;">Need access or have a question? Reach out directly.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+      <a href="https://wa.me/237651908060" target="_blank" style="display:flex;align-items:center;gap:12px;background:#25D366;color:#fff;border-radius:var(--r2);padding:13px 16px;text-decoration:none;font-weight:700;font-size:14px;transition:opacity 0.2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        <span style="font-size:22px;">💬</span>
+        <div><div>WhatsApp</div><div style="font-size:11px;font-weight:400;opacity:0.9;">+237 651 908 060</div></div>
+      </a>
+      <a href="mailto:pkelian31@gmail.com" style="display:flex;align-items:center;gap:12px;background:var(--blue3);border:1px solid var(--line2);color:var(--blue);border-radius:var(--r2);padding:13px 16px;text-decoration:none;font-weight:700;font-size:14px;transition:opacity 0.2s;" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
+        <span style="font-size:22px;">✉️</span>
+        <div><div>Email (Primary)</div><div style="font-size:11px;font-weight:400;opacity:0.8;">pkelian31@gmail.com</div></div>
+      </a>
+      <a href="mailto:validekelian@gmail.com" style="display:flex;align-items:center;gap:12px;background:var(--blue3);border:1px solid var(--line2);color:var(--blue);border-radius:var(--r2);padding:13px 16px;text-decoration:none;font-weight:700;font-size:14px;transition:opacity 0.2s;" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
+        <span style="font-size:22px;">✉️</span>
+        <div><div>Email (Secondary)</div><div style="font-size:11px;font-weight:400;opacity:0.8;">validekelian@gmail.com</div></div>
+      </a>
+    </div>
+    <button class="btn btn-ghost btn-full" onclick="closeContact()">Close</button>
+  </div>
+</div>
+
 <!-- ══════════ FOOTER ══════════ -->
 <footer class="site-footer" id="siteFooter">
   <div class="footer-brand">
@@ -1757,6 +1784,7 @@ body::after { content: none; }
     <a href="#" onclick="navTo('dash')">Dashboard</a>
     <a href="#" onclick="navTo('qr')">QR Tool</a>
     <a href="#" onclick="goHome()">Home</a>
+    <a href="#" onclick="openContact()">Contact</a>
   </div>
 </footer>
 
@@ -2072,6 +2100,10 @@ async function openSuperSessModal(){
 function closeSuperSessModal(){
   document.getElementById('superSessModal').classList.remove('show');
 }
+
+/* ── CONTACT ── */
+function openContact(){ document.getElementById('contactModal').classList.add('show'); }
+function closeContact(){ document.getElementById('contactModal').classList.remove('show'); }
 
 function superSessSelectAll(){
   document.querySelectorAll('.super-sess-chk').forEach(c=>c.checked=true);
@@ -3311,7 +3343,7 @@ function toast(msg,type='info'){
 }
 
 /* ── CLOSE MODALS ON BACKDROP ── */
-['sessModal','settModal','confModal','pdfThemeModal','resetPinModal','superSessModal'].forEach(id=>{
+['sessModal','settModal','confModal','pdfThemeModal','resetPinModal','superSessModal','contactModal'].forEach(id=>{
   document.getElementById(id)?.addEventListener('click',e=>{
     if(e.target===document.getElementById(id)){
       if(id==='sessModal')closeModal();
@@ -3320,6 +3352,7 @@ function toast(msg,type='info'){
       if(id==='pdfThemeModal')closePdfThemeModal();
       if(id==='resetPinModal')closeResetPin();
       if(id==='superSessModal')closeSuperSessModal();
+      if(id==='contactModal')closeContact();
     }
   });
 });
