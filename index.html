@@ -160,8 +160,7 @@ body::after { content: none; }
 /* Twinkling stars */
 .school-bg .star {
   position: absolute;
-  width: 3px;
-  height: 3px;
+  width: 3px; height: 3px;
   background: var(--blue);
   border-radius: 50%;
   animation: twinkle ease-in-out infinite;
@@ -169,6 +168,67 @@ body::after { content: none; }
 @keyframes twinkle {
   0%, 100% { opacity: 0.2; transform: scale(1); }
   50%      { opacity: 0.8; transform: scale(1.4); }
+}
+
+/* ── Book theme ── */
+.school-bg .book-wrap {
+  position: absolute;
+  animation: driftOrb ease-in-out infinite;
+}
+.school-bg .book {
+  width: 60px; height: 70px;
+  position: relative;
+  transform-style: preserve-3d;
+}
+.school-bg .book-cover {
+  width: 60px; height: 70px;
+  background: linear-gradient(135deg, var(--blue), var(--blue2));
+  border-radius: 3px 8px 8px 3px;
+  position: absolute;
+  box-shadow: 2px 2px 8px rgba(59,111,232,0.2);
+  opacity: 0.18;
+}
+.school-bg .book-page {
+  position: absolute;
+  width: 54px; height: 64px;
+  top: 3px; left: 3px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 0 6px 6px 0;
+  transform-origin: left center;
+  animation: turnPage ease-in-out infinite;
+  opacity: 0.15;
+}
+@keyframes turnPage {
+  0%,100% { transform: rotateY(0deg); }
+  50%     { transform: rotateY(-140deg); }
+}
+
+/* ── Phantom theme ── */
+.school-bg .phantom-letter {
+  position: absolute;
+  font-family: var(--head);
+  font-weight: 800;
+  animation: phantomFloat ease-in-out infinite;
+  user-select: none;
+}
+@keyframes phantomFloat {
+  0%,100% { transform: translateY(0) scale(1); opacity: 0.18; }
+  50%     { transform: translateY(-28px) scale(1.08); opacity: 0.28; }
+}
+
+/* ── Docs theme ── */
+.school-bg .doc-item {
+  position: absolute;
+  font-size: 28px;
+  opacity: 0;
+  animation: docFloat ease-in-out infinite;
+  user-select: none;
+}
+@keyframes docFloat {
+  0%,100% { transform: translateY(0) rotate(-5deg); opacity: 0.10; }
+  25%     { transform: translateY(-20px) rotate(3deg); opacity: 0.16; }
+  50%     { transform: translateY(-10px) rotate(-2deg); opacity: 0.13; }
+  75%     { transform: translateY(-25px) rotate(4deg); opacity: 0.15; }
 }
 
 /* ════════════════════════════════
@@ -1714,6 +1774,21 @@ body::after { content: none; }
       </div>
       <div class="divider"></div>
       <div class="set-sec">
+        <div class="set-sec-title">Background Theme</div>
+        <div class="field">
+          <label>Choose Animated Background</label>
+          <div class="sel-wrap">
+            <select id="bgTheme" onchange="changeBgTheme()">
+              <option value="school">School Icons — Books, pencils, graduation caps</option>
+              <option value="book">Opening Book — Pages turning animation</option>
+              <option value="phantom">KЭL ♛ PHANTOM — Animated signature</option>
+              <option value="docs">Documents — PDFs, clocks, papers floating</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="set-sec">
         <div class="set-sec-title">Security — Change PIN</div>
         <div class="pin-grid">
           <div class="field"><label>New PIN</label><input id="newPin" type="password" placeholder="4 digits" maxlength="4" inputmode="numeric"/></div>
@@ -1774,68 +1849,29 @@ body::after { content: none; }
 
 <!-- ══════════ MODAL: Contact ══════════ -->
 <div class="overlay" id="contactModal">
-  <div class="modal" style="max-width:480px;">
-    <div style="position:relative;overflow:hidden;border-radius:var(--r5) var(--r5) 0 0;">
-      <!-- Animated header banner -->
-      <div style="background:linear-gradient(135deg,#3B6FE8,#0EA5E9,#10B981);background-size:200% 200%;animation:gradShift 4s ease infinite;padding:36px 28px 28px;text-align:center;position:relative;">
-        <div style="position:absolute;inset:0;opacity:0.08;background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:24px 24px;"></div>
-        <div style="font-size:52px;margin-bottom:10px;animation:floatY 3s ease-in-out infinite;">👋</div>
-        <div style="font-family:var(--head);font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-0.5px;">Let's Talk!</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6;max-width:300px;margin:0 auto;">Need admin access, have a question, or want to partner with us? We're always happy to hear from you.</div>
-        <div class="modal-close" onclick="closeContact()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:#fff;">✕</div>
-      </div>
+  <div class="confirm-box" style="max-width:380px;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="width:64px;height:64px;margin:0 auto 14px;background:linear-gradient(135deg,var(--blue),var(--cyan));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 8px 32px rgba(59,111,232,0.25);animation:floatY 3s ease-in-out infinite;">�</div>
+      <div style="font-family:var(--head);font-size:20px;font-weight:800;margin-bottom:4px;">Get in Touch</div>
+      <div style="font-size:11px;color:var(--text3);">Quick response guaranteed</div>
     </div>
-    <div class="modal-body" style="padding:24px;">
-      <div style="display:flex;flex-direction:column;gap:12px;">
-
-        <!-- WhatsApp -->
-        <a href="https://wa.me/237651908060" target="_blank"
-           style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border-radius:var(--r3);padding:16px 18px;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 16px rgba(37,211,102,0.3);"
-           onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(37,211,102,0.45)'"
-           onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(37,211,102,0.3)'">
-          <div style="width:44px;height:44px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">💬</div>
-          <div style="flex:1;">
-            <div style="font-weight:800;font-size:14px;font-family:var(--head);">Chat on WhatsApp</div>
-            <div style="font-size:12px;opacity:0.9;margin-top:2px;">+237 651 908 060 · Fastest response</div>
-          </div>
-          <div style="font-size:18px;opacity:0.7;">→</div>
-        </a>
-
-        <!-- Email Primary -->
-        <a href="mailto:pkelian31@gmail.com"
-           style="display:flex;align-items:center;gap:14px;background:var(--s1);border:1.5px solid var(--line2);color:var(--text);border-radius:var(--r3);padding:16px 18px;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;"
-           onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 24px rgba(59,111,232,0.12)';this.style.borderColor='var(--blue)'"
-           onmouseout="this.style.transform='';this.style.boxShadow='';this.style.borderColor='var(--line2)'">
-          <div style="width:44px;height:44px;background:var(--blue3);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">✉️</div>
-          <div style="flex:1;">
-            <div style="font-weight:800;font-size:14px;font-family:var(--head);color:var(--text);">Primary Email</div>
-            <div style="font-size:12px;color:var(--text3);margin-top:2px;">pkelian31@gmail.com</div>
-          </div>
-          <div style="font-size:18px;color:var(--text3);">→</div>
-        </a>
-
-        <!-- Email Secondary -->
-        <a href="mailto:validekelian@gmail.com"
-           style="display:flex;align-items:center;gap:14px;background:var(--s1);border:1.5px solid var(--line2);color:var(--text);border-radius:var(--r3);padding:16px 18px;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;"
-           onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 24px rgba(59,111,232,0.12)';this.style.borderColor='var(--blue)'"
-           onmouseout="this.style.transform='';this.style.boxShadow='';this.style.borderColor='var(--line2)'">
-          <div style="width:44px;height:44px;background:var(--cyan2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">📧</div>
-          <div style="flex:1;">
-            <div style="font-weight:800;font-size:14px;font-family:var(--head);color:var(--text);">Secondary Email</div>
-            <div style="font-size:12px;color:var(--text3);margin-top:2px;">validekelian@gmail.com</div>
-          </div>
-          <div style="font-size:18px;color:var(--text3);">→</div>
-        </a>
-
-      </div>
-
-      <div style="margin-top:18px;padding:14px;background:var(--gold2);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r2);display:flex;align-items:center;gap:10px;">
-        <span style="font-size:18px;">⏰</span>
-        <div style="font-size:12px;color:var(--gold);line-height:1.5;"><strong>Response time:</strong> Usually within a few hours on WhatsApp. Emails answered within 24h.</div>
-      </div>
-
-      <button class="btn btn-ghost btn-full" onclick="closeContact()" style="margin-top:14px;">Maybe Later</button>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
+      <a href="https://wa.me/237651908060" target="_blank" style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#25D366;color:#fff;border-radius:var(--r2);padding:12px 15px;text-decoration:none;transition:all 0.2s;box-shadow:0 3px 12px rgba(37,211,102,0.3);" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(37,211,102,0.45)'" onmouseout="this.style.transform='';this.style.boxShadow='0 3px 12px rgba(37,211,102,0.3)'">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:20px;">💬</span>
+          <div><div style="font-weight:700;font-size:13px;">WhatsApp</div><div style="font-size:10px;opacity:0.85;">+237 651 908 060</div></div>
+        </div>
+        <span style="font-size:16px;opacity:0.7;">→</span>
+      </a>
+      <a href="mailto:pkelian31@gmail.com" style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--s1);border:1.5px solid var(--line2);color:var(--text);border-radius:var(--r2);padding:12px 15px;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--blue)'" onmouseout="this.style.transform='';this.style.borderColor='var(--line2)'">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:20px;">✉️</span>
+          <div><div style="font-weight:700;font-size:13px;color:var(--text);">Email</div><div style="font-size:10px;color:var(--text3);">pkelian31@gmail.com</div></div>
+        </div>
+        <span style="font-size:16px;color:var(--text3);">→</span>
+      </a>
     </div>
+    <button class="btn btn-ghost btn-full" onclick="closeContact()">Close</button>
   </div>
 </div>
 
@@ -2709,6 +2745,7 @@ function showSettings(){
   const saved = localStorage.getItem('ax_pdf_theme') || 'blue';
   document.getElementById('pdfTheme').value = saved;
   document.getElementById('schoolName').value = localStorage.getItem('ax_school') || '';
+  document.getElementById('bgTheme').value = localStorage.getItem('ax_bg_theme') || 'school';
 }
 function closeSet(){
   const t = document.getElementById('pdfTheme').value;
@@ -3430,59 +3467,112 @@ function toast(msg,type='info'){
 });
 
 /* ── ANIMATED SCHOOL BACKGROUND ── */
-(function buildSchoolBg(){
+let _currentBgTheme = localStorage.getItem('ax_bg_theme') || 'school';
+
+function changeBgTheme(){
+  const t = document.getElementById('bgTheme').value;
+  _currentBgTheme = t;
+  localStorage.setItem('ax_bg_theme', t);
+  buildBg(t);
+}
+
+function buildBg(theme){
   const bg = document.getElementById('schoolBg');
   if(!bg) return;
+  bg.innerHTML = '';
 
-  const icons = ['📚','📖','✏️','📝','🎓','📐','📏','🔬','📓','🖊️','📌','🏫','🧪','🧮','🖍️','📊','🔭','🧲','💡','🏆'];
+  if(theme === 'school'){
+    const icons = ['📚','📖','✏️','📝','🎓','📐','📏','🔬','📓','🖊️','📌','🏫','🧪','🧮','🖍️','📊','🔭','🧲','💡','🏆'];
+    for(let i=0;i<22;i++){
+      const el = document.createElement('div');
+      el.className = 'particle';
+      el.textContent = icons[Math.floor(Math.random()*icons.length)];
+      const left=2+Math.random()*96, dur=10+Math.random()*18, delay=Math.random()*-25, size=16+Math.random()*22;
+      el.style.cssText=`left:${left}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;`;
+      bg.appendChild(el);
+    }
+    const orbColors=['rgba(59,111,232,0.07)','rgba(14,165,233,0.06)','rgba(16,185,129,0.05)','rgba(245,158,11,0.05)','rgba(139,92,246,0.05)'];
+    for(let i=0;i<6;i++){
+      const orb=document.createElement('div'); orb.className='orb';
+      const size=200+Math.random()*300, left=Math.random()*90, top=Math.random()*90, dur=8+Math.random()*10, delay=Math.random()*-12;
+      orb.style.cssText=`width:${size}px;height:${size}px;left:${left}%;top:${top}%;background:${orbColors[i%orbColors.length]};animation-duration:${dur}s;animation-delay:${delay}s;`;
+      bg.appendChild(orb);
+    }
+    const starColors=['var(--blue)','var(--cyan)','var(--green)','var(--gold)'];
+    for(let i=0;i<35;i++){
+      const star=document.createElement('div'); star.className='star';
+      const left=Math.random()*100, top=Math.random()*100, dur=2+Math.random()*4, delay=Math.random()*-6, size=2+Math.random()*3;
+      star.style.cssText=`left:${left}%;top:${top}%;width:${size}px;height:${size}px;background:${starColors[i%starColors.length]};animation-duration:${dur}s;animation-delay:${delay}s;`;
+      bg.appendChild(star);
+    }
 
-  // 1. Rising particles from bottom
-  for(let i = 0; i < 22; i++){
-    const el = document.createElement('div');
-    el.className = 'particle';
-    el.textContent = icons[Math.floor(Math.random() * icons.length)];
-    const left  = 2 + Math.random() * 96;
-    const dur   = 10 + Math.random() * 18;   // 10s–28s slow rise
-    const delay = Math.random() * -25;
-    const size  = 16 + Math.random() * 22;
-    el.style.cssText = `left:${left}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;`;
-    bg.appendChild(el);
+  } else if(theme === 'book'){
+    const bookColors=['#3B6FE8','#0EA5E9','#10B981','#F59E0B','#8B5CF6','#EF4444'];
+    for(let i=0;i<12;i++){
+      const wrap=document.createElement('div'); wrap.className='book-wrap';
+      const left=5+Math.random()*88, top=5+Math.random()*88, dur=6+Math.random()*8, delay=Math.random()*-10, scale=0.5+Math.random()*0.8;
+      wrap.style.cssText=`left:${left}%;top:${top}%;animation-duration:${dur}s;animation-delay:${delay}s;transform:scale(${scale});`;
+      const book=document.createElement('div'); book.className='book';
+      const cover=document.createElement('div'); cover.className='book-cover';
+      cover.style.background=`linear-gradient(135deg,${bookColors[i%bookColors.length]},${bookColors[(i+1)%bookColors.length]})`;
+      const page=document.createElement('div'); page.className='book-page';
+      const pageDur=2+Math.random()*3, pageDelay=Math.random()*-4;
+      page.style.cssText=`animation-duration:${pageDur}s;animation-delay:${pageDelay}s;`;
+      book.appendChild(cover); book.appendChild(page); wrap.appendChild(book); bg.appendChild(wrap);
+    }
+    // also add some twinkling stars
+    for(let i=0;i<20;i++){
+      const star=document.createElement('div'); star.className='star';
+      const left=Math.random()*100, top=Math.random()*100, dur=2+Math.random()*4, delay=Math.random()*-6;
+      star.style.cssText=`left:${left}%;top:${top}%;animation-duration:${dur}s;animation-delay:${delay}s;background:var(--blue);`;
+      bg.appendChild(star);
+    }
+
+  } else if(theme === 'phantom'){
+    const name = ['K','Э','L',' ','♛',' ','P','H','A','N','T','O','M'];
+    const colors = ['#3B6FE8','#0EA5E9','#10B981','#F59E0B','#FFD700','#F59E0B','#EF4444','#8B5CF6','#EC4899','#3B6FE8','#0EA5E9','#10B981','#F59E0B'];
+    const cols = 5, rows = 3;
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const idx = (r*cols+c) % name.length;
+        if(name[idx]===' ') continue;
+        const el=document.createElement('div'); el.className='phantom-letter';
+        el.textContent = name[idx];
+        const left=5+c*(90/cols)+Math.random()*8;
+        const top=10+r*(75/rows)+Math.random()*8;
+        const dur=3+Math.random()*4, delay=Math.random()*-6;
+        const size=24+Math.random()*32;
+        el.style.cssText=`left:${left}%;top:${top}%;font-size:${size}px;color:${colors[idx]};animation-duration:${dur}s;animation-delay:${delay}s;text-shadow:0 0 20px ${colors[idx]}44;`;
+        bg.appendChild(el);
+      }
+    }
+    // orbs
+    for(let i=0;i<5;i++){
+      const orb=document.createElement('div'); orb.className='orb';
+      const size=150+Math.random()*200, left=Math.random()*85, top=Math.random()*85, dur=7+Math.random()*8, delay=Math.random()*-10;
+      orb.style.cssText=`width:${size}px;height:${size}px;left:${left}%;top:${top}%;background:${colors[i*2]}18;animation-duration:${dur}s;animation-delay:${delay}s;`;
+      bg.appendChild(orb);
+    }
+
+  } else if(theme === 'docs'){
+    const docIcons=['📄','📋','📊','📈','🕐','🕑','🕒','🕓','🕔','🕕','📁','🗂️','📑','🗒️','⏰','🕰️'];
+    for(let i=0;i<24;i++){
+      const el=document.createElement('div'); el.className='doc-item';
+      el.textContent=docIcons[Math.floor(Math.random()*docIcons.length)];
+      const left=2+Math.random()*95, top=2+Math.random()*95, dur=4+Math.random()*7, delay=Math.random()*-8, size=18+Math.random()*24;
+      el.style.cssText=`left:${left}%;top:${top}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;`;
+      bg.appendChild(el);
+    }
+    for(let i=0;i<4;i++){
+      const orb=document.createElement('div'); orb.className='orb';
+      const size=180+Math.random()*220, left=Math.random()*85, top=Math.random()*85, dur=9+Math.random()*7, delay=Math.random()*-10;
+      orb.style.cssText=`width:${size}px;height:${size}px;left:${left}%;top:${top}%;background:rgba(59,111,232,0.06);animation-duration:${dur}s;animation-delay:${delay}s;`;
+      bg.appendChild(orb);
+    }
   }
+}
 
-  // 2. Soft glowing orbs
-  const orbColors = [
-    'rgba(59,111,232,0.07)',
-    'rgba(14,165,233,0.06)',
-    'rgba(16,185,129,0.05)',
-    'rgba(245,158,11,0.05)',
-    'rgba(139,92,246,0.05)'
-  ];
-  for(let i = 0; i < 6; i++){
-    const orb = document.createElement('div');
-    orb.className = 'orb';
-    const size  = 200 + Math.random() * 300;
-    const left  = Math.random() * 90;
-    const top   = Math.random() * 90;
-    const dur   = 8 + Math.random() * 10;
-    const delay = Math.random() * -12;
-    orb.style.cssText = `width:${size}px;height:${size}px;left:${left}%;top:${top}%;background:${orbColors[i%orbColors.length]};animation-duration:${dur}s;animation-delay:${delay}s;`;
-    bg.appendChild(orb);
-  }
-
-  // 3. Twinkling stars
-  const starColors = ['var(--blue)','var(--cyan)','var(--green)','var(--gold)'];
-  for(let i = 0; i < 35; i++){
-    const star = document.createElement('div');
-    star.className = 'star';
-    const left  = Math.random() * 100;
-    const top   = Math.random() * 100;
-    const dur   = 2 + Math.random() * 4;
-    const delay = Math.random() * -6;
-    const size  = 2 + Math.random() * 3;
-    star.style.cssText = `left:${left}%;top:${top}%;width:${size}px;height:${size}px;background:${starColors[i%starColors.length]};animation-duration:${dur}s;animation-delay:${delay}s;`;
-    bg.appendChild(star);
-  }
-})();
+buildBg(_currentBgTheme);
 
 /* ── BOOT ── */
 init();
