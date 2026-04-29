@@ -2127,7 +2127,8 @@ async function loadAdminList(){
         <div style="display:flex;gap:5px;flex-wrap:wrap;">
           <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑 Reset PIN</button>
           <button class="btn btn-gold btn-xs" onclick="superPdfAllSessions('${a.username}','${a.name}')">📄 All PDFs</button>
-          <button class="btn btn-red btn-xs" onclick="superDelAllSessions('${a.username}','${a.name}')">🗑 Delete All</button>
+          <button class="btn btn-red btn-xs" onclick="superDelAllSessions('${a.username}','${a.name}')">🗑 Del Sessions</button>
+          <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')">❌ Remove</button>
           <button class="btn ${a.blocked?'btn-green':'btn-red'} btn-xs" onclick="toggleBlock('${a.username}',${a.blocked})">
             ${a.blocked?'✓ Unblock':'⛔ Block'}
           </button>
@@ -2209,6 +2210,19 @@ async function toggleBlock(username, currentlyBlocked){
     {blocked:!currentlyBlocked},{merge:true});
   toast(username+(currentlyBlocked?' unblocked':' blocked'),'ok');
   loadAdminList();
+}
+
+/* ── DELETE ADMIN ── */
+async function deleteAdmin(username, name){
+  showConf('❌','Remove Admin?',
+    `Permanently remove "${name}" (@${username}). Their sessions will NOT be deleted — only the account is removed.`,
+    async()=>{
+      await waitForFirebase();
+      await window._fsDeleteDoc(window._fsDoc(window._db,'admins',username));
+      toast('@'+username+' removed','ok');
+      loadAdminList();
+    }
+  );
 }
 
 /* ── RESET PIN ── */
