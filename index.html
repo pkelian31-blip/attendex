@@ -1175,8 +1175,9 @@ body::after { content: none; }
     <div class="login-card a-scalein" id="loginStepRegister" style="display:none;">
       <div class="login-lock">➕</div>
       <div class="login-title">Register Admin</div>
-      <div class="login-sub">Enter your name to create an account. Your default PIN will be <strong>1234</strong> — you can change it after login.</div>
+      <div class="login-sub">Enter your details. Default PIN is <strong>1234</strong> — change it after login.</div>
       <div class="field" style="margin-top:12px;"><label>Full Name</label><input id="regName" placeholder="e.g. Dr. Jean Mbarga"/></div>
+      <div class="field"><label>WhatsApp Phone Number</label><input id="regPhone" type="tel" placeholder="e.g. +237 6XX XXX XXX"/><div class="hint">Used by super admin to contact you via WhatsApp.</div></div>
       <div class="alert" id="regAlert"></div>
       <button class="btn btn-primary btn-full" style="margin-top:6px;" onclick="registerAdmin()">Create Account</button>
       <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="showLoginStep('step1')">← Back</button>
@@ -1208,6 +1209,7 @@ body::after { content: none; }
       </div>
       <div class="dash-btns">
         <button class="btn btn-gold btn-sm" onclick="superGoToDash()">📊 Create Session</button>
+        <button class="btn btn-green btn-sm" onclick="openSuperSessModal()">📲 Super Session</button>
         <button class="btn btn-ghost btn-sm" onclick="superOut()">Sign Out</button>
       </div>
     </div>
@@ -1239,6 +1241,36 @@ body::after { content: none; }
     <div class="confirm-acts" style="margin-top:12px;">
       <button class="btn btn-ghost btn-full" onclick="closeResetPin()">Cancel</button>
       <button class="btn btn-primary btn-full" onclick="confirmResetPin()">Reset PIN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─────── MODAL: Super Session (WhatsApp Broadcast) ─────── -->
+<div class="overlay" id="superSessModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-top">
+      <div class="modal-title">📲 Super Session — WhatsApp Message</div>
+      <div class="modal-close" onclick="closeSuperSessModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">Select one or more admins and compose a message. Each selected admin will receive it on WhatsApp.</div>
+      <div class="field">
+        <label>Select Admins</label>
+        <div id="superSessAdminList" style="display:flex;flex-direction:column;gap:7px;max-height:220px;overflow-y:auto;padding:4px 0;"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button class="btn btn-ghost btn-sm" onclick="superSessSelectAll()">Select All</button>
+        <button class="btn btn-ghost btn-sm" onclick="superSessSelectNone()">Clear</button>
+      </div>
+      <div class="field">
+        <label>Message</label>
+        <textarea id="superSessMsg" style="width:100%;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 13px;font-size:13px;font-family:var(--body);color:var(--text);outline:none;resize:vertical;min-height:100px;" placeholder="Type your message here…"></textarea>
+      </div>
+      <div class="alert" id="superSessAlert"></div>
+      <button class="btn btn-green btn-full btn-lg" onclick="sendSuperSess()" style="margin-top:4px;">
+        📲 Send via WhatsApp
+      </button>
+      <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center;font-family:var(--mono);">WhatsApp will open for each selected admin. Allow popups if prompted.</div>
     </div>
   </div>
 </div>
@@ -1938,14 +1970,14 @@ async function tryLogin() {
 
 /* ── REGISTER NEW ADMIN ── */
 async function registerAdmin(){
-  const name = document.getElementById('regName').value.trim();
+  const name  = document.getElementById('regName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
   if(!name){ showAlert('regAlert','err','Please enter your full name.'); return; }
+  if(!phone){ showAlert('regAlert','err','Please enter your WhatsApp number.'); return; }
 
   showAlert('regAlert','info','⏳ Creating account…');
-
   try {
     await waitForFirebase();
-    // Check max 10 admins
     const allSnap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
     if(allSnap.size >= 10){
       showAlert('regAlert','err','Maximum of 10 admin accounts reached. Contact the super admin.');
@@ -1953,7 +1985,7 @@ async function registerAdmin(){
     }
     const username = name.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,20)+'_'+Date.now().toString().slice(-4);
     await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
-      name, username, pin:'1234', blocked:false, createdAt:Date.now(), lastLogin:null
+      name, username, phone, pin:'1234', blocked:false, createdAt:Date.now(), lastLogin:null
     });
     showAlert('regAlert','ok','✓ Account created!\nUsername: '+username+'\nDefault PIN: 1234\n\nSave your username — you need it to login.');
     setTimeout(()=>{
@@ -2011,6 +2043,62 @@ function superGoToDash(){
 
 function backToSuperPanel(){
   showPage('super'); loadAdminList(); loadSuperSessions();
+}
+
+/* ── SUPER SESSION (WhatsApp Broadcast) ── */
+async function openSuperSessModal(){
+  await waitForFirebase();
+  const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
+  const admins = snap.docs.map(d=>d.data()).filter(a=>!a.blocked && a.phone);
+  const list = document.getElementById('superSessAdminList');
+  if(!admins.length){
+    list.innerHTML='<div style="font-size:12px;color:var(--text3);font-family:var(--mono);">No admins with phone numbers found.</div>';
+  } else {
+    list.innerHTML = admins.map(a=>`
+      <label style="display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 13px;cursor:pointer;transition:border-color 0.2s;">
+        <input type="checkbox" class="super-sess-chk" data-phone="${a.phone}" data-name="${a.name}" style="width:16px;height:16px;cursor:pointer;accent-color:var(--green);">
+        <div>
+          <div style="font-size:13px;font-weight:700;">${a.name}</div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">${a.phone}</div>
+        </div>
+      </label>
+    `).join('');
+  }
+  document.getElementById('superSessMsg').value = '';
+  document.getElementById('superSessAlert').classList.remove('show');
+  document.getElementById('superSessModal').classList.add('show');
+}
+
+function closeSuperSessModal(){
+  document.getElementById('superSessModal').classList.remove('show');
+}
+
+function superSessSelectAll(){
+  document.querySelectorAll('.super-sess-chk').forEach(c=>c.checked=true);
+}
+function superSessSelectNone(){
+  document.querySelectorAll('.super-sess-chk').forEach(c=>c.checked=false);
+}
+
+function sendSuperSess(){
+  const selected = [...document.querySelectorAll('.super-sess-chk:checked')];
+  const msg = document.getElementById('superSessMsg').value.trim();
+  if(!selected.length){ showAlert('superSessAlert','err','Please select at least one admin.'); return; }
+  if(!msg){ showAlert('superSessAlert','err','Please type a message.'); return; }
+
+  const encoded = encodeURIComponent(msg);
+  let delay = 0;
+  selected.forEach(chk => {
+    // Clean phone number — remove spaces, dashes, parentheses
+    const phone = chk.dataset.phone.replace(/[\s\-\(\)]/g,'');
+    setTimeout(()=>{
+      window.open('https://wa.me/'+phone+'?text='+encoded, '_blank');
+    }, delay);
+    delay += 800; // stagger opens so browser doesn't block them
+  });
+
+  toast('Opening WhatsApp for '+selected.length+' admin'+(selected.length>1?'s':''),'ok');
+  closeSuperSessModal();
 }
 
 /* ── LOAD ADMIN LIST ── */
@@ -3209,7 +3297,7 @@ function toast(msg,type='info'){
 }
 
 /* ── CLOSE MODALS ON BACKDROP ── */
-['sessModal','settModal','confModal','pdfThemeModal','resetPinModal'].forEach(id=>{
+['sessModal','settModal','confModal','pdfThemeModal','resetPinModal','superSessModal'].forEach(id=>{
   document.getElementById(id)?.addEventListener('click',e=>{
     if(e.target===document.getElementById(id)){
       if(id==='sessModal')closeModal();
@@ -3217,6 +3305,7 @@ function toast(msg,type='info'){
       if(id==='confModal')closeConf();
       if(id==='pdfThemeModal')closePdfThemeModal();
       if(id==='resetPinModal')closeResetPin();
+      if(id==='superSessModal')closeSuperSessModal();
     }
   });
 });
