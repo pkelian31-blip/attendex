@@ -386,15 +386,6 @@ body::after { content: none; }
   color:var(--cyan); text-transform:uppercase;
   margin-bottom:26px;
 }
-.landing-chip .dot {
-  width:6px; height:6px; border-radius:50%;
-  background:var(--green); box-shadow:0 0 8px var(--green);
-  animation:blink 2s infinite; position:relative;
-}
-.landing-chip .dot::after {
-  content:''; position:absolute; inset:-3px; border-radius:50%;
-  background:var(--green); animation:ping 1.5s ease-out infinite;
-}
 .landing-h1 {
   font-family:var(--head);
   font-size: clamp(40px,7vw,74px);
@@ -1269,7 +1260,12 @@ body::after { content: none; }
       <div class="login-title">Register Admin</div>
       <div class="login-sub">Enter your details. Default PIN is <strong>1234</strong> — change it after login.</div>
       <div class="field" style="margin-top:12px;"><label>Full Name</label><input id="regName" placeholder="e.g. Dr. Jean Mbarga"/></div>
-      <div class="field"><label>WhatsApp Phone Number</label><input id="regPhone" type="tel" placeholder="e.g. +237 6XX XXX XXX"/><div class="hint">Used by super admin to contact you via WhatsApp.</div></div>
+      <div class="field">
+        <label>WhatsApp Phone Number</label>
+        <input id="regPhone" type="tel" placeholder="e.g. +237 6XX XXX XXX" oninput="detectCountry(this)"/>
+        <div id="countryDetect" style="font-size:11px;color:var(--blue);margin-top:4px;font-family:var(--mono);min-height:16px;"></div>
+        <div class="hint">Used by super admin to contact you via WhatsApp.</div>
+      </div>
       <div class="alert" id="regAlert"></div>
       <button class="btn btn-primary btn-full" style="margin-top:6px;" onclick="registerAdmin()">Create Account</button>
       <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="showLoginStep('step1')">← Back</button>
@@ -2212,6 +2208,46 @@ function closeSuperSessModal(){
 /* ── CONTACT ── */
 function openContact(){ document.getElementById('contactModal').classList.add('show'); }
 function closeContact(){ document.getElementById('contactModal').classList.remove('show'); }
+
+/* ── COUNTRY DETECTION ── */
+const COUNTRY_CODES = {
+  '+237':'🇨🇲 Cameroon','+1':'🇺🇸 USA / Canada','+44':'🇬🇧 United Kingdom',
+  '+33':'🇫🇷 France','+49':'🇩🇪 Germany','+39':'🇮🇹 Italy','+34':'🇪🇸 Spain',
+  '+351':'🇵🇹 Portugal','+32':'🇧🇪 Belgium','+41':'🇨🇭 Switzerland',
+  '+212':'🇲🇦 Morocco','+213':'🇩🇿 Algeria','+216':'🇹🇳 Tunisia',
+  '+221':'🇸🇳 Senegal','+225':'🇨🇮 Côte d\'Ivoire','+226':'🇧🇫 Burkina Faso',
+  '+227':'🇳🇪 Niger','+228':'🇹🇬 Togo','+229':'🇧🇯 Benin',
+  '+234':'🇳🇬 Nigeria','+235':'🇹🇩 Chad','+236':'🇨🇫 Central African Republic',
+  '+238':'🇨🇻 Cape Verde','+240':'🇬🇶 Equatorial Guinea','+241':'🇬🇦 Gabon',
+  '+242':'🇨🇬 Congo','+243':'🇨🇩 DR Congo','+244':'🇦🇴 Angola',
+  '+245':'🇬🇼 Guinea-Bissau','+248':'🇸🇨 Seychelles','+249':'🇸🇩 Sudan',
+  '+250':'🇷🇼 Rwanda','+251':'🇪🇹 Ethiopia','+252':'🇸🇴 Somalia',
+  '+253':'🇩🇯 Djibouti','+254':'🇰🇪 Kenya','+255':'🇹🇿 Tanzania',
+  '+256':'🇺🇬 Uganda','+257':'🇧🇮 Burundi','+258':'🇲🇿 Mozambique',
+  '+260':'🇿🇲 Zambia','+261':'🇲🇬 Madagascar','+263':'🇿🇼 Zimbabwe',
+  '+264':'🇳🇦 Namibia','+265':'🇲🇼 Malawi','+266':'🇱🇸 Lesotho',
+  '+267':'🇧🇼 Botswana','+268':'🇸🇿 Eswatini','+27':'🇿🇦 South Africa',
+  '+20':'🇪🇬 Egypt','+91':'🇮🇳 India','+86':'🇨🇳 China',
+  '+81':'🇯🇵 Japan','+82':'🇰🇷 South Korea','+55':'🇧🇷 Brazil',
+  '+52':'🇲🇽 Mexico','+54':'🇦🇷 Argentina','+57':'🇨🇴 Colombia',
+  '+58':'🇻🇪 Venezuela','+51':'🇵🇪 Peru','+56':'🇨🇱 Chile',
+  '+61':'🇦🇺 Australia','+64':'🇳🇿 New Zealand','+7':'🇷🇺 Russia',
+  '+90':'🇹🇷 Turkey','+966':'🇸🇦 Saudi Arabia','+971':'🇦🇪 UAE',
+  '+234':'🇳🇬 Nigeria','+233':'🇬🇭 Ghana','+232':'🇸🇱 Sierra Leone',
+  '+231':'🇱🇷 Liberia','+230':'🇲🇺 Mauritius','+224':'🇬🇳 Guinea',
+  '+223':'🇲🇱 Mali','+222':'🇲🇷 Mauritania','+220':'🇬🇲 Gambia',
+  '+218':'🇱🇾 Libya'
+};
+function detectCountry(input){
+  const val = input.value.trim();
+  const box = document.getElementById('countryDetect');
+  if(!box) return;
+  if(!val.startsWith('+')){ box.textContent=''; return; }
+  // Try longest match first (e.g. +237 before +2)
+  const sorted = Object.keys(COUNTRY_CODES).sort((a,b)=>b.length-a.length);
+  const match = sorted.find(code=>val.startsWith(code));
+  box.textContent = match ? COUNTRY_CODES[match] : '🌍 Unknown country code';
+}
 
 function superSessSelectAll(){
   document.querySelectorAll('.super-sess-chk').forEach(c=>c.checked=true);
