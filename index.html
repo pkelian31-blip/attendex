@@ -1743,27 +1743,68 @@ body::after { content: none; }
 
 <!-- ══════════ MODAL: Contact ══════════ -->
 <div class="overlay" id="contactModal">
-  <div class="confirm-box" style="max-width:420px;text-align:left;">
-    <div style="text-align:center;margin-bottom:18px;">
-      <div style="font-size:40px;margin-bottom:8px;">👋</div>
-      <div style="font-family:var(--head);font-size:20px;font-weight:800;">Contact Us</div>
-      <div style="font-size:12px;color:var(--text3);margin-top:4px;">Need access or have a question? Reach out directly.</div>
+  <div class="modal" style="max-width:480px;">
+    <div style="position:relative;overflow:hidden;border-radius:var(--r5) var(--r5) 0 0;">
+      <!-- Animated header banner -->
+      <div style="background:linear-gradient(135deg,#3B6FE8,#0EA5E9,#10B981);background-size:200% 200%;animation:gradShift 4s ease infinite;padding:36px 28px 28px;text-align:center;position:relative;">
+        <div style="position:absolute;inset:0;opacity:0.08;background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:24px 24px;"></div>
+        <div style="font-size:52px;margin-bottom:10px;animation:floatY 3s ease-in-out infinite;">👋</div>
+        <div style="font-family:var(--head);font-size:24px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-0.5px;">Let's Talk!</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.85);line-height:1.6;max-width:300px;margin:0 auto;">Need admin access, have a question, or want to partner with us? We're always happy to hear from you.</div>
+        <div class="modal-close" onclick="closeContact()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:#fff;">✕</div>
+      </div>
     </div>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
-      <a href="https://wa.me/237651908060" target="_blank" style="display:flex;align-items:center;gap:12px;background:#25D366;color:#fff;border-radius:var(--r2);padding:13px 16px;text-decoration:none;font-weight:700;font-size:14px;transition:opacity 0.2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-        <span style="font-size:22px;">💬</span>
-        <div><div>WhatsApp</div><div style="font-size:11px;font-weight:400;opacity:0.9;">+237 651 908 060</div></div>
-      </a>
-      <a href="mailto:pkelian31@gmail.com" style="display:flex;align-items:center;gap:12px;background:var(--blue3);border:1px solid var(--line2);color:var(--blue);border-radius:var(--r2);padding:13px 16px;text-decoration:none;font-weight:700;font-size:14px;transition:opacity 0.2s;" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
-        <span style="font-size:22px;">✉️</span>
-        <div><div>Email (Primary)</div><div style="font-size:11px;font-weight:400;opacity:0.8;">pkelian31@gmail.com</div></div>
-      </a>
-      <a href="mailto:validekelian@gmail.com" style="display:flex;align-items:center;gap:12px;background:var(--blue3);border:1px solid var(--line2);color:var(--blue);border-radius:var(--r2);padding:13px 16px;text-decoration:none;font-weight:700;font-size:14px;transition:opacity 0.2s;" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'">
-        <span style="font-size:22px;">✉️</span>
-        <div><div>Email (Secondary)</div><div style="font-size:11px;font-weight:400;opacity:0.8;">validekelian@gmail.com</div></div>
-      </a>
+    <div class="modal-body" style="padding:24px;">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+
+        <!-- WhatsApp -->
+        <a href="https://wa.me/237651908060" target="_blank"
+           style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;border-radius:var(--r3);padding:16px 18px;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 4px 16px rgba(37,211,102,0.3);"
+           onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(37,211,102,0.45)'"
+           onmouseout="this.style.transform='';this.style.boxShadow='0 4px 16px rgba(37,211,102,0.3)'">
+          <div style="width:44px;height:44px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">💬</div>
+          <div style="flex:1;">
+            <div style="font-weight:800;font-size:14px;font-family:var(--head);">Chat on WhatsApp</div>
+            <div style="font-size:12px;opacity:0.9;margin-top:2px;">+237 651 908 060 · Fastest response</div>
+          </div>
+          <div style="font-size:18px;opacity:0.7;">→</div>
+        </a>
+
+        <!-- Email Primary -->
+        <a href="mailto:pkelian31@gmail.com"
+           style="display:flex;align-items:center;gap:14px;background:var(--s1);border:1.5px solid var(--line2);color:var(--text);border-radius:var(--r3);padding:16px 18px;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;"
+           onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 24px rgba(59,111,232,0.12)';this.style.borderColor='var(--blue)'"
+           onmouseout="this.style.transform='';this.style.boxShadow='';this.style.borderColor='var(--line2)'">
+          <div style="width:44px;height:44px;background:var(--blue3);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">✉️</div>
+          <div style="flex:1;">
+            <div style="font-weight:800;font-size:14px;font-family:var(--head);color:var(--text);">Primary Email</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px;">pkelian31@gmail.com</div>
+          </div>
+          <div style="font-size:18px;color:var(--text3);">→</div>
+        </a>
+
+        <!-- Email Secondary -->
+        <a href="mailto:validekelian@gmail.com"
+           style="display:flex;align-items:center;gap:14px;background:var(--s1);border:1.5px solid var(--line2);color:var(--text);border-radius:var(--r3);padding:16px 18px;text-decoration:none;transition:transform 0.2s,box-shadow 0.2s,border-color 0.2s;"
+           onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 24px rgba(59,111,232,0.12)';this.style.borderColor='var(--blue)'"
+           onmouseout="this.style.transform='';this.style.boxShadow='';this.style.borderColor='var(--line2)'">
+          <div style="width:44px;height:44px;background:var(--cyan2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">📧</div>
+          <div style="flex:1;">
+            <div style="font-weight:800;font-size:14px;font-family:var(--head);color:var(--text);">Secondary Email</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:2px;">validekelian@gmail.com</div>
+          </div>
+          <div style="font-size:18px;color:var(--text3);">→</div>
+        </a>
+
+      </div>
+
+      <div style="margin-top:18px;padding:14px;background:var(--gold2);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r2);display:flex;align-items:center;gap:10px;">
+        <span style="font-size:18px;">⏰</span>
+        <div style="font-size:12px;color:var(--gold);line-height:1.5;"><strong>Response time:</strong> Usually within a few hours on WhatsApp. Emails answered within 24h.</div>
+      </div>
+
+      <button class="btn btn-ghost btn-full" onclick="closeContact()" style="margin-top:14px;">Maybe Later</button>
     </div>
-    <button class="btn btn-ghost btn-full" onclick="closeContact()">Close</button>
   </div>
 </div>
 
