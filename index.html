@@ -1821,7 +1821,11 @@ function showPage(name) {
 
   if (name === 'dash' || name === 'qr') {
     navTabs.style.display = 'flex';
-    navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showSettings()">⚙</button><button class="nav-btn nav-btn-ghost" onclick="adminOut()">Sign Out</button>`;
+    if(S.currentAdmin === '__super__'){
+      navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showSettings()">⚙</button><button class="nav-btn" style="background:var(--gold);color:#fff;border:none;padding:6px 14px;border-radius:var(--r1);font-weight:700;cursor:pointer;" onclick="backToSuperPanel()">🛡 Super Panel</button>`;
+    } else {
+      navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showSettings()">⚙</button><button class="nav-btn nav-btn-ghost" onclick="adminOut()">Sign Out</button>`;
+    }
     ntDash.classList.toggle('active', name==='dash');
     ntQR.classList.toggle('active',  name==='qr');
   } else if (name === 'super') {
@@ -2003,6 +2007,10 @@ function superGoToDash(){
   S.loggedIn = true;
   S.currentAdmin = '__super__';
   showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
+}
+
+function backToSuperPanel(){
+  showPage('super'); loadAdminList(); loadSuperSessions();
 }
 
 /* ── LOAD ADMIN LIST ── */
