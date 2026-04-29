@@ -392,12 +392,13 @@ body::after { content: none; }
   font-weight: 900;
   letter-spacing: -2px;
   line-height: 1.05;
-  color: var(--text);
+  background: linear-gradient(135deg, #1E2A4A 30%, var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   margin-bottom: 8px;
 }
 .landing-h1 em {
   font-style: italic;
-  background: linear-gradient(90deg, var(--blue), var(--cyan));
+  background: linear-gradient(90deg, var(--blue), var(--green));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 }
@@ -1149,7 +1150,7 @@ body::after { content: none; }
       SMART ATTENDANCE PLATFORM
     </div>
     <h1 class="landing-h1 a-fadeup d1">
-      Precision<br/><em>Attendance.</em><br/>Zero Friction.
+      <em>Attendance.</em><br/>Zero Friction.
     </h1>
     <p class="landing-sub a-fadeup d2">
       Create timed sessions, verify students by class, generate scannable QR codes, and export professional PDF reports — all in one platform.
