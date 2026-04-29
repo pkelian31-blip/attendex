@@ -1142,7 +1142,33 @@ body::after { content: none; }
         <div class="nk w2" onclick="nkPress('0')">0</div><div class="nk del" onclick="nkDel()">⌫</div>
       </div>
       <div class="alert" id="loginAlert"></div>
-      <button class="btn btn-ghost btn-full" style="margin-top:10px;" onclick="showLoginStep('step1')">← Back</button>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-ghost btn-full" onclick="showLoginStep('step1')">← Back</button>
+        <button class="btn btn-ghost btn-full" onclick="showLoginStep('recover')" style="color:var(--gold);border-color:var(--gold2);">Forgot PIN?</button>
+      </div>
+    </div>
+
+    <!-- Step 2d: Recover PIN -->
+    <div class="login-card a-scalein" id="loginStepRecover" style="display:none;">
+      <div class="login-lock" style="background:var(--gold2);">🔓</div>
+      <div class="login-title">Recover Access</div>
+      <div class="login-sub">Enter your username and set a new PIN. Your data will not be lost.</div>
+      <div class="field" style="margin-top:8px;"><label>Username</label><input id="recoverUsername" placeholder="Your username"/></div>
+      <div class="field"><label>New 4-digit PIN</label>
+        <div class="pin-dots" style="justify-content:flex-start;gap:8px;margin:6px 0;">
+          <div class="pin-dot" id="rv0"></div><div class="pin-dot" id="rv1"></div>
+          <div class="pin-dot" id="rv2"></div><div class="pin-dot" id="rv3"></div>
+        </div>
+        <div class="numpad">
+          <div class="nk" onclick="nkPressRec('1')">1</div><div class="nk" onclick="nkPressRec('2')">2</div><div class="nk" onclick="nkPressRec('3')">3</div>
+          <div class="nk" onclick="nkPressRec('4')">4</div><div class="nk" onclick="nkPressRec('5')">5</div><div class="nk" onclick="nkPressRec('6')">6</div>
+          <div class="nk" onclick="nkPressRec('7')">7</div><div class="nk" onclick="nkPressRec('8')">8</div><div class="nk" onclick="nkPressRec('9')">9</div>
+          <div class="nk w2" onclick="nkPressRec('0')">0</div><div class="nk del" onclick="nkDelRec()">⌫</div>
+        </div>
+      </div>
+      <div class="alert" id="recoverAlert"></div>
+      <button class="btn btn-primary btn-full" style="margin-top:6px;" onclick="recoverPin()">Set New PIN & Login</button>
+      <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="showLoginStep('admin')">← Back</button>
     </div>
 
     <!-- Step 2b: Register new admin -->
@@ -1180,12 +1206,15 @@ body::after { content: none; }
         <div class="dash-title" style="color:var(--gold);">🛡 Super Admin Panel</div>
         <div class="dash-sub">Full access — all admins and all sessions</div>
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="superOut()">Sign Out</button>
+      <div class="dash-btns">
+        <button class="btn btn-gold btn-sm" onclick="superGoToDash()">📊 Create Session</button>
+        <button class="btn btn-ghost btn-sm" onclick="superOut()">Sign Out</button>
+      </div>
     </div>
     <div class="panel-block a-fadeup d1" style="margin-bottom:18px;">
       <div class="pb-head">
         <div class="pb-title"><div class="pb-icon" style="background:var(--gold2);">👥</div>Registered Admins</div>
-        <span id="adminCount" style="font-size:10px;color:var(--text3);font-family:var(--mono);">0 admins</span>
+        <span id="adminCount" style="font-size:10px;color:var(--text3);font-family:var(--mono);">0 / 10 admins</span>
       </div>
       <div class="pb-body" id="adminList"></div>
     </div>
@@ -1816,16 +1845,18 @@ function adminOut()    { S.loggedIn=false; S.currentAdmin=null; if(S.liveInt)cle
 /* ── LOGIN FLOW ── */
 const SUPER_PWD = 'AttendX@2025';
 let S_regPin = '';
+let S_recPin = '';
 
-function showLogin(){ S.pinInput=''; S_regPin=''; showLoginStep('step1'); showPage('login'); }
+function showLogin(){ S.pinInput=''; S_regPin=''; S_recPin=''; showLoginStep('step1'); showPage('login'); }
 function showLoginStep(step){
-  ['loginStep1','loginStepAdmin','loginStepRegister','loginStepSuper'].forEach(id=>{
-    document.getElementById(id).style.display='none';
+  ['loginStep1','loginStepAdmin','loginStepRegister','loginStepSuper','loginStepRecover'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display='none';
   });
-  const map = {step1:'loginStep1',admin:'loginStepAdmin',register:'loginStepRegister',super:'loginStepSuper'};
+  const map = {step1:'loginStep1',admin:'loginStepAdmin',register:'loginStepRegister',super:'loginStepSuper',recover:'loginStepRecover'};
   if(map[step]) document.getElementById(map[step]).style.display='block';
-  S.pinInput=''; S_regPin='';
-  updateDots(); updateRegDots();
+  S.pinInput=''; S_regPin=''; S_recPin='';
+  updateDots(); updateRegDots(); updateRecDots();
 }
 
 /* ── ADMIN PIN NUMPAD ── */
@@ -1855,6 +1886,17 @@ function updateRegDots(){
     const d=document.getElementById('rp'+i);
     if(!d) continue;
     d.classList.toggle('on', i < S_regPin.length);
+  }
+}
+
+/* ── RECOVERY PIN NUMPAD ── */
+function nkPressRec(d){ if(S_recPin.length>=4) return; S_recPin+=d; updateRecDots(); }
+function nkDelRec(){ S_recPin=S_recPin.slice(0,-1); updateRecDots(); }
+function updateRecDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('rv'+i);
+    if(!d) continue;
+    d.classList.toggle('on', i < S_recPin.length);
   }
 }
 
@@ -1899,7 +1941,12 @@ async function registerAdmin(){
 
   try {
     await waitForFirebase();
-    // Generate unique username from name
+    // Check max 10 admins
+    const allSnap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
+    if(allSnap.size >= 10){
+      showAlert('regAlert','err','Maximum of 10 admin accounts reached. Contact the super admin.');
+      return;
+    }
     const username = name.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,20)+'_'+Date.now().toString().slice(-4);
     await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
       name, username, pin:'1234', blocked:false, createdAt:Date.now(), lastLogin:null
@@ -1914,17 +1961,49 @@ async function registerAdmin(){
   }
 }
 
+/* ── RECOVER PIN ── */
+async function recoverPin(){
+  const username = document.getElementById('recoverUsername').value.trim().toLowerCase();
+  if(!username){ showAlert('recoverAlert','err','Please enter your username.'); return; }
+  if(S_recPin.length < 4){ showAlert('recoverAlert','err','Please enter a new 4-digit PIN.'); return; }
+
+  showAlert('recoverAlert','info','⏳ Recovering access…');
+  try {
+    await waitForFirebase();
+    const snap = await window._fsGetDoc(window._fsDoc(window._db,'admins',username));
+    if(!snap.exists()){ showAlert('recoverAlert','err','Username not found.'); return; }
+    const admin = snap.data();
+    // Update PIN only — all data stays intact
+    await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
+      {...admin, pin: S_recPin, lastLogin: Date.now()});
+    showAlert('recoverAlert','ok','✓ PIN reset! Logging you in…');
+    setTimeout(()=>{
+      S.loggedIn = true;
+      S.currentAdmin = username;
+      showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
+    }, 1500);
+  } catch(e){
+    showAlert('recoverAlert','err','Recovery failed: '+e.message);
+  }
+}
+
 /* ── SUPER ADMIN LOGIN ── */
 function trySuperLogin(){
   const pwd = document.getElementById('superPwd').value;
   if(pwd === SUPER_PWD){
-    showPage('super'); loadAdminList();
+    showPage('super'); loadAdminList(); loadSuperSessions();
   } else {
     showAlert('superAlert','err','Incorrect password.');
     document.getElementById('superPwd').value='';
   }
 }
-function superOut(){ showPage('landing'); }
+function superOut(){ S.loggedIn=false; S.currentAdmin=null; showPage('landing'); }
+
+function superGoToDash(){
+  S.loggedIn = true;
+  S.currentAdmin = '__super__';
+  showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
+}
 
 /* ── LOAD ADMIN LIST ── */
 async function loadAdminList(){
@@ -1932,35 +2011,104 @@ async function loadAdminList(){
   const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
   const admins = snap.docs.map(d=>d.data());
   const list = document.getElementById('adminList');
-  document.getElementById('adminCount').textContent = admins.length+' admin'+(admins.length!==1?'s':'');
+  document.getElementById('adminCount').textContent = admins.length+' / 10 admins';
   if(!admins.length){
     list.innerHTML='<div class="empty-st"><div class="ei">👥</div><div class="et">No admins registered yet.</div></div>';
     return;
   }
   list.innerHTML = admins.map(a=>`
-    <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <div>
-        <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;">
-          ${a.name}
-          ${a.blocked?'<span class="badge" style="background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,0.2);">BLOCKED</span>':'<span class="badge" style="background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,0.2);">ACTIVE</span>'}
+    <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;">
+            ${a.name}
+            ${a.blocked?'<span class="badge" style="background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,0.2);">BLOCKED</span>':'<span class="badge" style="background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,0.2);">ACTIVE</span>'}
+          </div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px;">
+            @${a.username} · Last login: ${a.lastLogin?new Date(a.lastLogin).toLocaleString():'Never'}
+          </div>
         </div>
-        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px;">
-          @${a.username} · Last login: ${a.lastLogin?new Date(a.lastLogin).toLocaleString():'Never'}
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑 Reset PIN</button>
+          <button class="btn btn-gold btn-xs" onclick="superPdfAllSessions('${a.username}','${a.name}')">📄 All PDFs</button>
+          <button class="btn btn-red btn-xs" onclick="superDelAllSessions('${a.username}','${a.name}')">🗑 Delete All</button>
+          <button class="btn ${a.blocked?'btn-green':'btn-red'} btn-xs" onclick="toggleBlock('${a.username}',${a.blocked})">
+            ${a.blocked?'✓ Unblock':'⛔ Block'}
+          </button>
         </div>
-      </div>
-      <div style="display:flex;gap:6px;flex-shrink:0;">
-        <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑 Reset PIN</button>
-        <button class="btn ${a.blocked?'btn-green':'btn-red'} btn-xs" onclick="toggleBlock('${a.username}',${a.blocked})">
-          ${a.blocked?'✓ Unblock':'⛔ Block'}
-        </button>
       </div>
     </div>
   `).join('');
 }
 
+/* ── SUPER: ALL SESSIONS ── */
+async function loadSuperSessions(){
+  await waitForFirebase();
+  const today = new Date().toDateString();
+  const snap  = await window._fsGetDocs(window._fsColl(window._db,'sessions'));
+  const all   = snap.docs.map(d=>d.data())
+    .filter(s=>new Date(s.start).toDateString()===today)
+    .sort((a,b)=>b.start-a.start);
+  const list  = document.getElementById('superSessList');
+  document.getElementById('superSessCount').textContent = all.length+' session'+(all.length!==1?'s':'');
+  if(!all.length){
+    list.innerHTML='<div class="empty-st"><div class="ei">📋</div><div class="et">No sessions today.</div></div>';
+    return;
+  }
+  Promise.all(all.map(s=>getRec(s.id).then(r=>({s,r})))).then(items=>{
+    list.innerHTML = items.map(({s,r})=>{
+      const live = Date.now()<s.expiry;
+      return `<div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:12px 14px;margin-bottom:7px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:7px;">${s.sub}<span class="badge ${live?'badge-live':'badge-end'}">${live?'LIVE':'ENDED'}</span></div>
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">${s.cls}${s.dept?' · '+s.dept:''} · ${r.length} present · ${s.time}</div>
+            <div style="font-size:10px;color:var(--gold);font-family:var(--mono);margin-top:2px;">Admin: @${s.adminId||'unknown'}</div>
+          </div>
+          <div style="display:flex;gap:5px;flex-shrink:0;">
+            <button class="btn btn-gold btn-xs" onclick="superDlPDF('${s.id}')">⬇ PDF</button>
+            <button class="btn btn-red btn-xs" onclick="superDelSession('${s.id}')">🗑</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+
+async function superDlPDF(sid){
+  _pdfPendingSid = sid; _pdfPendingType = 'session'; openPdfThemeModal();
+}
+async function superDelSession(sid){
+  showConf('🗑','Delete Session?','Permanently remove this session and all its records.',async()=>{
+    await deleteSess(sid); toast('Session deleted','ok'); loadSuperSessions();
+  });
+}
+async function superDelAllSessions(adminId, adminName){
+  showConf('🗑','Delete ALL Sessions?',`Delete all sessions by ${adminName}? This cannot be undone.`,async()=>{
+    await waitForFirebase();
+    const snap = await window._fsGetDocs(window._fsColl(window._db,'sessions'));
+    for(const d of snap.docs.filter(d=>d.data().adminId===adminId)) await deleteSess(d.id);
+    toast('All sessions deleted for @'+adminId,'warn'); loadSuperSessions();
+  });
+}
+async function superPdfAllSessions(adminId, adminName){
+  const prev = S.currentAdmin;
+  S.currentAdmin = adminId;
+  _pdfPendingType = 'daily';
+  openPdfThemeModal();
+  // restore after modal closes
+  const orig = confirmPdfTheme;
+  confirmPdfTheme = async function(){
+    await orig();
+    S.currentAdmin = prev;
+    confirmPdfTheme = orig;
+  };
+}
+
 /* ── BLOCK / UNBLOCK ── */
 async function toggleBlock(username, currentlyBlocked){
   await waitForFirebase();
+  // Only update blocked flag — all sessions and data stay intact
   await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
     {blocked:!currentlyBlocked},{merge:true});
   toast(username+(currentlyBlocked?' unblocked':' blocked'),'ok');
@@ -3000,7 +3148,7 @@ async function todaySessions(){
   return snap.docs.map(d=>d.data())
     .filter(s=>{
       if(new Date(s.start).toDateString()!==today) return false;
-      // each admin only sees their own sessions
+      if(S.currentAdmin === '__super__') return true; // super sees all
       const owner = s.adminId || 'default';
       return owner === (S.currentAdmin||'default');
     })
