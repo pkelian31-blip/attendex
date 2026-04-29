@@ -119,25 +119,56 @@ body::before {
 
 body::after { content: none; }
 
-/* ── Floating school icons ── */
+/* ── Animated school background ── */
 .school-bg {
   position: fixed; inset: 0;
   pointer-events: none; z-index: 0;
   overflow: hidden;
 }
-.school-bg .icon {
+
+/* Rising particles from bottom */
+.school-bg .particle {
   position: absolute;
-  font-size: 28px;
-  opacity: 0.13;
-  animation: floatIcon linear infinite;
+  bottom: -50px;
+  font-size: 24px;
+  opacity: 0;
+  animation: riseUp linear infinite;
   user-select: none;
+  filter: blur(0.3px);
 }
-@keyframes floatIcon {
-  0%   { transform: translateY(0px) rotate(0deg);   opacity: 0.10; }
-  25%  { transform: translateY(-18px) rotate(4deg);  opacity: 0.16; }
-  50%  { transform: translateY(-8px) rotate(-3deg);  opacity: 0.12; }
-  75%  { transform: translateY(-22px) rotate(5deg);  opacity: 0.17; }
-  100% { transform: translateY(0px) rotate(0deg);   opacity: 0.10; }
+@keyframes riseUp {
+  0%   { transform: translateY(0) rotate(0deg) scale(0.8); opacity: 0; }
+  10%  { opacity: 0.15; }
+  50%  { opacity: 0.12; }
+  90%  { opacity: 0.08; }
+  100% { transform: translateY(-110vh) rotate(360deg) scale(1.1); opacity: 0; }
+}
+
+/* Glowing orbs */
+.school-bg .orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  animation: driftOrb ease-in-out infinite;
+}
+@keyframes driftOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(30px, -40px) scale(1.1); }
+  66%      { transform: translate(-25px, 30px) scale(0.95); }
+}
+
+/* Twinkling stars */
+.school-bg .star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: var(--blue);
+  border-radius: 50%;
+  animation: twinkle ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50%      { opacity: 0.8; transform: scale(1.4); }
 }
 
 /* ════════════════════════════════
@@ -3398,22 +3429,58 @@ function toast(msg,type='info'){
   });
 });
 
-/* ── FLOATING SCHOOL ICONS ── */
-(function spawnIcons(){
-  const icons = ['📚','📖','✏️','📝','🎓','📐','📏','🔬','📓','🖊️','📌','🏫'];
+/* ── ANIMATED SCHOOL BACKGROUND ── */
+(function buildSchoolBg(){
   const bg = document.getElementById('schoolBg');
-  const count = 18;
-  for(let i = 0; i < count; i++){
+  if(!bg) return;
+
+  const icons = ['📚','📖','✏️','📝','🎓','📐','📏','🔬','📓','🖊️','📌','🏫','🧪','🧮','🖍️','📊','🔭','🧲','💡','🏆'];
+
+  // 1. Rising particles from bottom
+  for(let i = 0; i < 22; i++){
     const el = document.createElement('div');
-    el.className = 'icon';
-    el.textContent = icons[i % icons.length];
-    const left = Math.random() * 96;
-    const top  = Math.random() * 96;
-    const dur  = 4 + Math.random() * 6;   // 4s – 10s
-    const delay= Math.random() * -10;      // stagger start
-    const size = 22 + Math.random() * 20;  // 22px – 42px
-    el.style.cssText = `left:${left}%;top:${top}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;`;
+    el.className = 'particle';
+    el.textContent = icons[Math.floor(Math.random() * icons.length)];
+    const left  = 2 + Math.random() * 96;
+    const dur   = 10 + Math.random() * 18;   // 10s–28s slow rise
+    const delay = Math.random() * -25;
+    const size  = 16 + Math.random() * 22;
+    el.style.cssText = `left:${left}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;`;
     bg.appendChild(el);
+  }
+
+  // 2. Soft glowing orbs
+  const orbColors = [
+    'rgba(59,111,232,0.07)',
+    'rgba(14,165,233,0.06)',
+    'rgba(16,185,129,0.05)',
+    'rgba(245,158,11,0.05)',
+    'rgba(139,92,246,0.05)'
+  ];
+  for(let i = 0; i < 6; i++){
+    const orb = document.createElement('div');
+    orb.className = 'orb';
+    const size  = 200 + Math.random() * 300;
+    const left  = Math.random() * 90;
+    const top   = Math.random() * 90;
+    const dur   = 8 + Math.random() * 10;
+    const delay = Math.random() * -12;
+    orb.style.cssText = `width:${size}px;height:${size}px;left:${left}%;top:${top}%;background:${orbColors[i%orbColors.length]};animation-duration:${dur}s;animation-delay:${delay}s;`;
+    bg.appendChild(orb);
+  }
+
+  // 3. Twinkling stars
+  const starColors = ['var(--blue)','var(--cyan)','var(--green)','var(--gold)'];
+  for(let i = 0; i < 35; i++){
+    const star = document.createElement('div');
+    star.className = 'star';
+    const left  = Math.random() * 100;
+    const top   = Math.random() * 100;
+    const dur   = 2 + Math.random() * 4;
+    const delay = Math.random() * -6;
+    const size  = 2 + Math.random() * 3;
+    star.style.cssText = `left:${left}%;top:${top}%;width:${size}px;height:${size}px;background:${starColors[i%starColors.length]};animation-duration:${dur}s;animation-delay:${delay}s;`;
+    bg.appendChild(star);
   }
 })();
 
