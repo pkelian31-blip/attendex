@@ -1,4 +1,4 @@
-but you understand <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -1085,6 +1085,79 @@ body::after { content: none; }
 .toast-item.info { border-color:rgba(79,158,255,0.2); }
 
 /* ════════════════════════════════
+/* ── Language Toggle — Animated & Welcoming ── */
+@keyframes langWelcome { 0%{opacity:0;transform:scale(0.8) translateY(-4px)} 60%{transform:scale(1.06) translateY(0)} 100%{opacity:1;transform:scale(1)} }
+@keyframes langPulseGlow { 0%,100%{box-shadow:0 0 0 0 rgba(59,111,232,0.25),0 2px 12px rgba(59,111,232,0.2)} 50%{box-shadow:0 0 0 5px rgba(59,111,232,0.08),0 4px 20px rgba(59,111,232,0.35)} }
+@keyframes langFlagBounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2) rotate(-5deg)} }
+@keyframes sliderSwing { 0%{transform:scaleX(1)} 40%{transform:scaleX(0.88)} 100%{transform:scaleX(1)} }
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.9);
+  border: 1.5px solid rgba(59,111,232,0.18);
+  border-radius: 100px;
+  padding: 3px;
+  gap: 0;
+  position: relative;
+  margin-right: 8px;
+  animation: langWelcome 0.7s cubic-bezier(0.34,1.56,0.64,1) both, langPulseGlow 3.5s ease-in-out 1s infinite;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 12px rgba(59,111,232,0.15), inset 0 1px 0 rgba(255,255,255,0.6);
+  transition: box-shadow 0.3s, border-color 0.3s;
+  overflow: visible;
+}
+.lang-toggle:hover { border-color: rgba(59,111,232,0.35); box-shadow: 0 4px 20px rgba(59,111,232,0.25), inset 0 1px 0 rgba(255,255,255,0.6); animation: none; }
+.lang-btn {
+  position: relative; z-index: 1;
+  padding: 5px 11px;
+  border-radius: 100px;
+  font-family: var(--head); font-size: 11px; font-weight: 800;
+  cursor: pointer; border: none; background: transparent;
+  color: var(--text3);
+  transition: color 0.28s, transform 0.2s;
+  letter-spacing: 0.8px;
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap;
+}
+.lang-btn .lang-flag { font-size: 13px; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+.lang-btn:hover .lang-flag { animation: langFlagBounce 0.5s ease; }
+.lang-btn.active { color: #fff; }
+.lang-btn.active .lang-flag { transform: scale(1.15); }
+.lang-btn:not(.active):hover { color: var(--blue); transform: scale(1.04); }
+.lang-slider {
+  position: absolute;
+  top: 3px; left: 3px;
+  height: calc(100% - 6px);
+  border-radius: 100px;
+  background: linear-gradient(135deg, var(--blue) 0%, var(--cyan) 60%, #7c3aed 100%);
+  background-size: 200% auto;
+  box-shadow: 0 3px 12px rgba(59,111,232,0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1), width 0.35s cubic-bezier(0.34,1.56,0.64,1), background-position 0.5s;
+  pointer-events: none;
+  animation: gradShift 4s ease infinite;
+}
+/* Welcome tooltip */
+.lang-toggle::after {
+  content: '🌍 Choose language';
+  position: absolute;
+  bottom: -28px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: #fff;
+  font-size: 10px;
+  font-family: var(--body);
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 100;
+}
+.lang-toggle:hover::after { opacity: 1; }
+
    FOOTER
 ════════════════════════════════ */
 .site-footer {
@@ -1144,9 +1217,10 @@ body::after { content: none; }
     <button class="nav-ptab"        id="ntQR"      onclick="navTo('qr')">QR Tool</button>
   </div>
 
-  <div style="display:flex;align-items:center;gap:6px;margin-right:4px;">
-    <button id="langEN" onclick="setLang('en')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--line);background:var(--blue);color:#fff;font-family:var(--head);">EN</button>
-    <button id="langFR" onclick="setLang('fr')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--text3);font-family:var(--head);">FR</button>
+  <div class="lang-toggle" id="langToggle">
+    <div class="lang-slider" id="langSlider"></div>
+    <button class="lang-btn active" id="langEN" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span> EN</button>
+    <button class="lang-btn" id="langFR" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span> FR</button>
   </div>
   <div class="nav-right" id="navRight">
     <button class="nav-btn nav-btn-ghost" onclick="showLogin()">Admin Login</button>
@@ -1360,8 +1434,11 @@ body::after { content: none; }
     <div class="modal-body">
       <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">Select one or more admins and compose a message. Each selected admin will receive it on WhatsApp.</div>
       <div class="field">
-        <label>Select Admins</label>
-        <div id="superSessAdminList" style="display:flex;flex-direction:column;gap:7px;max-height:220px;overflow-y:auto;padding:4px 0;"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <label style="margin-bottom:0;">Select Admins</label>
+          <div id="superSessSelectedCount" style="font-size:11px;font-family:var(--mono);color:var(--text3);font-weight:600;background:var(--s2);border:1px solid var(--line);border-radius:100px;padding:3px 10px;transition:color 0.3s;">No admin selected</div>
+        </div>
+        <div id="superSessAdminList" style="display:flex;flex-direction:column;gap:7px;max-height:240px;overflow-y:auto;padding:4px 0;"></div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <button class="btn btn-ghost btn-sm" onclick="superSessSelectAll()">Select All</button>
@@ -1369,7 +1446,7 @@ body::after { content: none; }
       </div>
       <div class="field">
         <label>Message</label>
-        <textarea id="superSessMsg" style="width:100%;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 13px;font-size:13px;font-family:var(--body);color:var(--text);outline:none;resize:vertical;min-height:100px;" placeholder="Type your message here…"></textarea>
+        <textarea id="superSessMsg" style="width:100%;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 13px;font-size:13px;font-family:var(--body);color:var(--text);outline:none;resize:vertical;min-height:100px;transition:border-color 0.2s;" placeholder="Type your message here…" onfocus="this.style.borderColor='var(--line2)'" onblur="this.style.borderColor='var(--line)'"></textarea>
       </div>
       <div class="alert" id="superSessAlert"></div>
       <button class="btn btn-green btn-full btn-lg" onclick="sendSuperSess()" style="margin-top:4px;">
@@ -2269,21 +2346,34 @@ async function openSuperSessModal(){
   const admins = snap.docs.map(d=>d.data()).filter(a=>!a.blocked && a.phone);
   const list = document.getElementById('superSessAdminList');
   if(!admins.length){
-    list.innerHTML='<div style="font-size:12px;color:var(--text3);font-family:var(--mono);">No admins with phone numbers found.</div>';
+    list.innerHTML='<div style="font-size:12px;color:var(--text3);font-family:var(--mono);padding:12px 0;">'+(_lang==='fr'?'Aucun admin avec numéro de téléphone trouvé.':'No admins with phone numbers found.')+'</div>';
   } else {
-    list.innerHTML = admins.map(a=>`
-      <label style="display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 13px;cursor:pointer;transition:border-color 0.2s;">
-        <input type="checkbox" class="super-sess-chk" data-phone="${a.phone}" data-name="${a.name}" style="width:16px;height:16px;cursor:pointer;accent-color:var(--green);">
-        <div>
-          <div style="font-size:13px;font-weight:700;">${a.name}</div>
+    list.innerHTML = admins.map((a,i)=>`
+      <label id="superAdminLabel_${i}" style="display:flex;align-items:center;gap:12px;background:var(--s2);border:2px solid var(--line);border-radius:var(--r2);padding:12px 14px;cursor:pointer;transition:all 0.22s;position:relative;overflow:hidden;" onclick="toggleSuperAdmin(${i})">
+        <input type="checkbox" class="super-sess-chk" id="superChk_${i}" data-phone="${a.phone}" data-name="${a.name}" style="width:16px;height:16px;cursor:pointer;accent-color:var(--green);flex-shrink:0;" onchange="onSuperAdminChange(${i})">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">${a.name}</div>
           <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">${a.phone}</div>
         </div>
+        <div id="superAdminCheck_${i}" style="width:22px;height:22px;border-radius:50%;background:var(--green2);border:2px solid rgba(16,185,129,0.25);display:none;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all 0.2s;animation:popIn 0.3s ease both;">✓</div>
       </label>
     `).join('');
   }
   document.getElementById('superSessMsg').value = '';
   document.getElementById('superSessAlert').classList.remove('show');
   document.getElementById('superSessModal').classList.add('show');
+  updateSuperSessCount();
+}
+
+function updateSuperSessCount(){
+  const checked = document.querySelectorAll('.super-sess-chk:checked').length;
+  const total = document.querySelectorAll('.super-sess-chk').length;
+  const countEl = document.getElementById('superSessSelectedCount');
+  if(countEl){
+    if(checked===0) countEl.textContent = _lang==='fr'?'Aucun admin sélectionné':'No admin selected';
+    else countEl.textContent = checked+' '+(_lang==='fr'?'admin'+(checked>1?'s':'')+' sélectionné'+(checked>1?'s':''):'admin'+(checked>1?'s':'')+' selected');
+    countEl.style.color = checked>0 ? 'var(--green)' : 'var(--text3)';
+  }
 }
 
 function closeSuperSessModal(){
@@ -2334,11 +2424,35 @@ function detectCountry(input){
   box.textContent = match ? COUNTRY_CODES[match] : '🌍 Unknown country code';
 }
 
+function toggleSuperAdmin(i){
+  const chk = document.getElementById('superChk_'+i);
+  if(!chk) return;
+  chk.checked = !chk.checked;
+  onSuperAdminChange(i);
+}
+function onSuperAdminChange(i){
+  const chk = document.getElementById('superChk_'+i);
+  const label = document.getElementById('superAdminLabel_'+i);
+  const checkIcon = document.getElementById('superAdminCheck_'+i);
+  if(!chk||!label||!checkIcon) return;
+  if(chk.checked){
+    label.style.borderColor = 'var(--green)';
+    label.style.background = 'rgba(16,185,129,0.06)';
+    label.style.boxShadow = '0 0 0 2px rgba(16,185,129,0.12)';
+    checkIcon.style.display = 'flex';
+  } else {
+    label.style.borderColor = 'var(--line)';
+    label.style.background = 'var(--s2)';
+    label.style.boxShadow = 'none';
+    checkIcon.style.display = 'none';
+  }
+  updateSuperSessCount();
+}
 function superSessSelectAll(){
-  document.querySelectorAll('.super-sess-chk').forEach(c=>c.checked=true);
+  document.querySelectorAll('.super-sess-chk').forEach((c,i)=>{ c.checked=true; onSuperAdminChange(i); });
 }
 function superSessSelectNone(){
-  document.querySelectorAll('.super-sess-chk').forEach(c=>c.checked=false);
+  document.querySelectorAll('.super-sess-chk').forEach((c,i)=>{ c.checked=false; onSuperAdminChange(i); });
 }
 
 function sendSuperSess(){
@@ -3273,49 +3387,168 @@ function _buildPDF(s, recs){
   const theme = localStorage.getItem('ax_pdf_theme') || 'blue';
   const themes = {
     blue:   {bg:[255,255,255],headerBg:[59,111,232],headerText:[255,255,255],titleText:[30,42,74],metaText:[74,88,120],tableFill:[245,248,255],tableAlt:[235,240,255],tableHead:[59,111,232],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[216,226,248],firstRow:[245,158,11]},
-    school: {bg:[230,240,255],headerBg:[100,149,237],headerText:[255,255,255],titleText:[30,42,74],metaText:[74,88,120],tableFill:[255,255,255],tableAlt:[240,248,255],tableHead:[100,149,237],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[180,200,230],firstRow:[255,140,0]},
-    peach:  {bg:[255,250,240],headerBg:[255,200,150],headerText:[80,40,20],titleText:[80,40,20],metaText:[120,80,60],tableFill:[255,245,235],tableAlt:[255,235,220],tableHead:[255,180,120],tableHeadText:[80,40,20],tableText:[80,40,20],tableBorder:[255,220,180],firstRow:[255,140,80]},
-    green:  {bg:[240,255,240],headerBg:[76,175,80],headerText:[255,255,255],titleText:[30,60,30],metaText:[80,120,80],tableFill:[250,255,250],tableAlt:[240,250,240],tableHead:[76,175,80],tableHeadText:[255,255,255],tableText:[30,60,30],tableBorder:[200,230,200],firstRow:[255,193,7]}
+    school: {bg:[220,235,255],headerBg:[100,149,237],headerText:[255,255,255],titleText:[30,42,74],metaText:[74,88,120],tableFill:[255,255,255],tableAlt:[240,248,255],tableHead:[100,149,237],tableHeadText:[255,255,255],tableText:[30,42,74],tableBorder:[180,200,230],firstRow:[255,140,0]},
+    peach:  {bg:[255,248,230],headerBg:[255,180,100],headerText:[80,40,10],titleText:[80,40,10],metaText:[120,80,40],tableFill:[255,245,225],tableAlt:[255,235,210],tableHead:[255,180,100],tableHeadText:[80,40,10],tableText:[80,40,10],tableBorder:[255,210,160],firstRow:[220,100,50]},
+    green:  {bg:[235,255,230],headerBg:[60,140,60],headerText:[255,255,255],titleText:[30,70,30],metaText:[60,110,60],tableFill:[245,255,240],tableAlt:[230,250,225],tableHead:[60,140,60],tableHeadText:[255,255,255],tableText:[30,70,30],tableBorder:[180,220,170],firstRow:[200,80,30]}
   };
   const t = themes[theme];
+
+  // ── Background ──
   doc.setFillColor(...t.bg); doc.rect(0,0,W,297,'F');
-  doc.setFillColor(...t.headerBg); doc.rect(0,0,W,50,'F');
+
+  // ── Theme-specific decorations ──
+  if(theme === 'blue'){
+    // Top gradient bar + corner accent
+    doc.setFillColor(...t.headerBg); doc.rect(0,0,W,2,'F');
+    doc.setFillColor(...t.headerBg); doc.rect(0,295,W,2,'F');
+    // Decorative corner circles (like web radial gradients)
+    doc.setFillColor(225,235,255); doc.circle(-10, -10, 50, 'F');
+    doc.setFillColor(220,240,255); doc.circle(W+10, 297+10, 50, 'F');
+    doc.setFillColor(235,245,255); doc.circle(W+5, -5, 30, 'F');
+    // Dot grid pattern (matches web background)
+    doc.setFillColor(210,225,250);
+    for(let gx=0;gx<=W;gx+=10){ for(let gy=0;gy<=297;gy+=10){ doc.circle(gx,gy,0.4,'F'); } }
+    // Light blue info bar
+    doc.setFillColor(235,242,255); doc.rect(0,52,W,30,'F');
+    // Thin diagonal accent line top-right
+    doc.setDrawColor(200,220,255); doc.setLineWidth(0.5);
+    doc.line(W-40, 0, W, 40);
+    doc.line(W-25, 0, W, 25);
+
+  } else if(theme === 'school'){
+    // Light blue background already set
+    // Big blobs like web orbs
+    doc.setFillColor(180,210,255); doc.circle(15,15,22,'F');
+    doc.setFillColor(160,200,255); doc.circle(195,282,24,'F');
+    doc.setFillColor(200,220,255); doc.circle(198,18,16,'F');
+    doc.setFillColor(190,215,255); doc.circle(12,284,18,'F');
+    // Twinkling dots scattered (stars)
+    doc.setFillColor(120,160,230);
+    const starPos=[[30,40],[80,25],[140,35],[170,50],[50,200],[160,180],[100,260],[190,150],[20,150],[70,280]];
+    starPos.forEach(([x,y])=>doc.circle(x,y,1.2,'F'));
+    // Pencil shape top-left
+    doc.setFillColor(255,220,80); doc.rect(5,58,4,32,'F');
+    doc.setFillColor(255,180,60); doc.rect(5,90,4,6,'F');
+    doc.setFillColor(240,200,120); doc.triangle(5,96,9,96,7,103,'F');
+    // Apple top-right
+    doc.setFillColor(220,50,50); doc.circle(196,72,9,'F');
+    doc.setFillColor(60,140,60); doc.rect(194,61,3,7,'F');
+    doc.setFillColor(40,120,40); doc.ellipse(197,63,5,3,'F');
+    // Book bottom-left
+    doc.setFillColor(100,149,237); doc.rect(3,240,22,28,'F');
+    doc.setFillColor(255,255,255); doc.rect(5,242,18,24,'F');
+    doc.setFillColor(180,210,255); doc.rect(5,244,18,2,'F');
+    doc.setFillColor(180,210,255); doc.rect(5,248,18,2,'F');
+    doc.setFillColor(180,210,255); doc.rect(5,252,12,2,'F');
+    // Graduation cap bottom-right
+    doc.setFillColor(50,80,180); doc.rect(185,248,22,4,'F');
+    doc.setFillColor(50,80,180); doc.triangle(183,252,207,252,195,264,'F');
+    doc.setFillColor(255,180,0); doc.rect(204,250,3,8,'F');
+    doc.setFillColor(255,180,0); doc.circle(205,260,3,'F');
+
+  } else if(theme === 'peach'){
+    // Big blob top-right
+    doc.setFillColor(255,200,160); doc.ellipse(198,22,35,28,'F');
+    doc.setFillColor(255,160,100); doc.circle(188,8,10,'F');
+    // Bottom-left blob
+    doc.setFillColor(255,210,170); doc.ellipse(12,279,28,22,'F');
+    doc.setFillColor(255,220,180); doc.circle(25,292,12,'F');
+    // Leaf decoration bottom-left
+    doc.setFillColor(240,180,40); doc.ellipse(10,287,9,14,'F');
+    doc.setFillColor(220,160,30); doc.ellipse(18,281,7,11,'F');
+    doc.setFillColor(200,140,20); doc.line(10,290,10,275);
+    // Small warm accent dots scattered
+    doc.setFillColor(255,180,120);
+    [[40,15],[160,8],[30,280],[175,288],[100,295],[200,140],[15,120]].forEach(([x,y])=>doc.circle(x,y,1.8,'F'));
+    // Subtle wavy horizontal lines (warmth texture)
+    doc.setDrawColor(255,220,190); doc.setLineWidth(0.3);
+    for(let y=55;y<297;y+=18){ doc.line(0,y,W,y); }
+
+  } else if(theme === 'green'){
+    // Dark green border frame
+    doc.setFillColor(40,100,40);
+    doc.rect(0,0,8,297,'F');   // left
+    doc.rect(202,0,8,297,'F'); // right
+    doc.rect(0,0,W,6,'F');     // top
+    doc.rect(0,291,W,6,'F');   // bottom
+    // Corner leaf clusters
+    doc.setFillColor(60,160,60); doc.ellipse(20,20,13,20,'F');
+    doc.setFillColor(80,180,80); doc.ellipse(29,13,9,13,'F');
+    doc.setFillColor(100,200,80); doc.ellipse(14,30,7,11,'F');
+    // Bottom-right fruit
+    doc.setFillColor(200,80,30); doc.circle(190,286,12,'F');
+    doc.setFillColor(220,120,40); doc.circle(185,279,7,'F');
+    doc.setFillColor(40,140,40); doc.ellipse(190,273,5,8,'F');
+    // Small leaf accents
+    doc.setFillColor(120,200,100);
+    [[50,8],[100,4],[155,7],[30,290],[90,293],[150,291],[195,60],[200,200]].forEach(([x,y])=>doc.circle(x,y,2.5,'F'));
+    // Yellow-green inner bg
+    doc.setFillColor(245,255,235); doc.rect(8,6,194,285,'F');
+    // Inner thin border
+    doc.setDrawColor(180,220,160); doc.setLineWidth(0.4);
+    doc.rect(10,8,190,281);
+  }
+
+  // ── Header bar ──
+  doc.setFillColor(...t.headerBg); doc.rect(theme==='green'?8:0, theme==='green'?6:0, theme==='green'?194:W, 50,'F');
+
+  // ── Header text ──
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...t.headerText);
-  doc.text('ATTENDANCE REGISTER — OFFICIAL DOCUMENT',M,12);
+  doc.text((_lang==='fr'?'REGISTRE DE PRÉSENCE — DOCUMENT OFFICIEL':'ATTENDANCE REGISTER — OFFICIAL DOCUMENT'),M,12);
   doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.setTextColor(...t.headerText);
   doc.text(s.sub.toUpperCase(),M,24);
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...t.headerText);
-  const meta=[s.cls?'Class: '+s.cls:null,s.dept?'Dept: '+s.dept:null,s.lec?'Lecturer: '+s.lec:null,'Time: '+s.time,s.room?'Room: '+s.room:null,'Duration: '+s.dur+' min'].filter(Boolean).join('   |   ');
+  const classLbl=_lang==='fr'?'Classe:':'Class:';
+  const deptLbl=_lang==='fr'?'Dept:':'Dept:';
+  const lecLbl=_lang==='fr'?'Enseignant:':'Lecturer:';
+  const timeLbl=_lang==='fr'?'Heure:':'Time:';
+  const roomLbl=_lang==='fr'?'Salle:':'Room:';
+  const durLbl=_lang==='fr'?'Durée:':'Duration:';
+  const meta=[s.cls?classLbl+' '+s.cls:null,s.dept?deptLbl+' '+s.dept:null,s.lec?lecLbl+' '+s.lec:null,timeLbl+' '+s.time,s.room?roomLbl+' '+s.room:null,durLbl+' '+s.dur+' min'].filter(Boolean).join('   |   ');
   doc.text(meta,M,33);
   doc.setFontSize(7.5); doc.setTextColor(...t.headerText);
-  doc.text('Date: '+new Date(s.start).toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),M,41);
-  doc.text('Generated: '+new Date().toLocaleString(),M,47);
+  const dateLoc=_lang==='fr'?'fr-FR':'en-GB';
+  const dateLabel=_lang==='fr'?'Date :':'Date:';
+  const genLabel=_lang==='fr'?'Généré le :':'Generated:';
+  doc.text(dateLabel+' '+new Date(s.start).toLocaleDateString(dateLoc,{weekday:'long',year:'numeric',month:'long',day:'numeric'}),M,41);
+  doc.text(genLabel+' '+new Date().toLocaleString(dateLoc),M,47);
+
+  // ── Stats pills ──
   doc.setFillColor(...t.tableFill);
-  [[String(recs.length),'PRESENT'],[new Date(s.start).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),'OPENED'],[new Date(s.expiry).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),'CLOSED'],[s.dur+'m','DURATION']].forEach((st,i)=>{
+  const presLbl=_lang==='fr'?'PRÉSENTS':'PRESENT';
+  const openLbl=_lang==='fr'?'OUVERT':'OPENED';
+  const closLbl=_lang==='fr'?'FERMÉ':'CLOSED';
+  const durPill=_lang==='fr'?'DURÉE':'DURATION';
+  [[String(recs.length),presLbl],[new Date(s.start).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),openLbl],[new Date(s.expiry).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),closLbl],[s.dur+'m',durPill]].forEach((st,i)=>{
     const x=M+i*45; doc.roundedRect(x,58,43,17,2,2,'F');
     doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(...t.titleText);
     doc.text(st[0],x+21.5,65,{align:'center'});
     doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.setTextColor(...t.metaText);
     doc.text(st[1],x+21.5,71,{align:'center'});
   });
+
+  // ── Table ──
   if(!recs.length){
     doc.setFont('helvetica','italic'); doc.setFontSize(10); doc.setTextColor(...t.metaText);
-    doc.text('No attendance records for this session.',W/2,95,{align:'center'});
+    doc.text(_lang==='fr'?'Aucune présence enregistrée pour cette session.':'No attendance records for this session.',W/2,95,{align:'center'});
   } else {
+    const colHdrs=_lang==='fr'?['#','Prénom','Nom','Matricule','Classe','Département','Heure']:['#','First Name','Last Name','Matricule','Class','Department','Time'];
     doc.autoTable({startY:80,margin:{left:M,right:M},
-      head:[['#','First Name','Last Name','Matricule','Class','Department','Time']],
+      head:[colHdrs],
       body:recs.map((r,i)=>[i+1,r.fN,r.lN,r.mat,r.cls||'—',r.dept||'—',r.time]),
-      styles:{font:'helvetica',fontSize:9,textColor:t.tableText,fillColor:t.tableFill,lineColor:t.tableBorder,lineWidth:0.25,cellPadding:3.5,valign:'middle'},
+      styles:{font:'helvetica',fontSize:9,textColor:t.tableText,fillColor:t.tableFill,lineColor:t.tableBorder,lineWidth:0.3,cellPadding:3.5,valign:'middle'},
       headStyles:{fillColor:t.tableHead,textColor:t.tableHeadText,fontStyle:'bold',fontSize:8,halign:'left'},
       alternateRowStyles:{fillColor:t.tableAlt},
       columnStyles:{0:{cellWidth:9,halign:'center',textColor:t.metaText},3:{fontStyle:'bold'},6:{cellWidth:22}},
       didParseCell(d){if(d.section==='body'&&d.row.index===0)d.cell.styles.textColor=t.firstRow;}
     });
   }
+
+  // ── Footer ──
   const schoolName = localStorage.getItem('ax_school') || 'AttendX PRO';
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...t.metaText);
-  doc.text(schoolName+' · Created by KЭL ♛ PHANTOM',M,285);
-  doc.text('Official Attendance Record',W-M,285,{align:'right'});
+  doc.text(schoolName+' · '+(_lang==='fr'?'Créé par':'Created by')+' KЭL ♛ PHANTOM',M,285);
+  doc.text(_lang==='fr'?'Registre de Présence Officiel':'Official Attendance Record',W-M,285,{align:'right'});
   mobileSavePDF(doc, s.sub.replace(/[^a-z0-9]/gi,'_')+'_'+s.cls.replace(/[^a-z0-9]/gi,'_')+'_Attendance.pdf');
   toast('PDF saved: '+s.sub,'ok');
 }
@@ -3340,31 +3573,49 @@ function downloadDailyPDF(){
       // Cover
       doc.setFillColor(...t.bg);doc.rect(0,0,W,297,'F');
       doc.setFillColor(...t.headerBg);doc.rect(0,0,W,2,'F');doc.rect(0,295,W,2,'F');
+      // Cover decorations matching single PDF theme
+      doc.setFillColor(t.bg[0]-15||240,t.bg[1]-10||245,t.bg[2]-5||255);
+      doc.circle(-15,-15,55,'F'); doc.circle(W+15,297+15,55,'F');
+      doc.setFillColor(t.tableFill[0],t.tableFill[1],t.tableFill[2]);
+      doc.rect(0,90,W,100,'F');
       doc.setFont('helvetica','bold');doc.setFontSize(34);doc.setTextColor(...t.headerBg);
-      doc.text('FULL DAY',W/2,108,{align:'center'});doc.text('ATTENDANCE REPORT',W/2,125,{align:'center'});
+      const fullDayLbl=_lang==='fr'?'JOURNÉE COMPLÈTE':'FULL DAY';
+      const repLbl=_lang==='fr'?'RAPPORT DE PRÉSENCE':'ATTENDANCE REPORT';
+      doc.text(fullDayLbl,W/2,108,{align:'center'});doc.text(repLbl,W/2,125,{align:'center'});
+      const dateLoc2=_lang==='fr'?'fr-FR':'en-GB';
       doc.setFont('helvetica','normal');doc.setFontSize(12);doc.setTextColor(...t.metaText);
-      doc.text(new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),W/2,141,{align:'center'});
+      doc.text(new Date().toLocaleDateString(dateLoc2,{weekday:'long',year:'numeric',month:'long',day:'numeric'}),W/2,141,{align:'center'});
       doc.setFontSize(10);
-      doc.text('Total Sessions: '+ss.length,W/2,157,{align:'center'});
-      doc.text('Total Attendances: '+tp,W/2,167,{align:'center'});
-      doc.text('Generated: '+new Date().toLocaleString(),W/2,177,{align:'center'});
+      const totSessLbl=_lang==='fr'?'Total Sessions :':'Total Sessions:';
+      const totAttLbl=_lang==='fr'?'Total Présences :':'Total Attendances:';
+      const genLbl2=_lang==='fr'?'Généré le :':'Generated:';
+      doc.text(totSessLbl+' '+ss.length,W/2,157,{align:'center'});
+      doc.text(totAttLbl+' '+tp,W/2,167,{align:'center'});
+      doc.text(genLbl2+' '+new Date().toLocaleString(dateLoc2),W/2,177,{align:'center'});
       const schoolN = localStorage.getItem('ax_school') || 'AttendX PRO';
       doc.setFontSize(8);doc.setTextColor(...t.metaText);
-      doc.text(schoolN+' · Created by KЭL ♛ PHANTOM',W/2,285,{align:'center'});
+      doc.text(schoolN+' · '+(_lang==='fr'?'Créé par':'Created by')+' KЭL ♛ PHANTOM',W/2,285,{align:'center'});
       items.forEach(({s,r:recs},idx)=>{
         doc.addPage();
         doc.setFillColor(...t.bg);doc.rect(0,0,W,297,'F');
         doc.setFillColor(...t.headerBg);doc.rect(0,0,W,48,'F');
         doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...t.headerText);
-        doc.text('SESSION '+(idx+1)+' OF '+ss.length,M,11);
+        const sessOfLbl=(_lang==='fr'?'SESSION ':'SESSION ')+(idx+1)+(_lang==='fr'?' SUR ':' OF ')+ss.length;
+        doc.text(sessOfLbl,M,11);
         doc.setFontSize(17);doc.text(s.sub.toUpperCase(),M,22);
         doc.setFont('helvetica','normal');doc.setFontSize(8.5);
-        doc.text([s.cls?'Class: '+s.cls:null,s.dept?s.dept:null,s.lec?s.lec:null,'Time: '+s.time].filter(Boolean).join('   |   '),M,31);
-        doc.setFontSize(7.5);doc.text('Present: '+recs.length+'   |   Duration: '+s.dur+' min',M,39);
-        if(!recs.length){doc.setFont('helvetica','italic');doc.setFontSize(10);doc.setTextColor(...t.metaText);doc.text('No records.',W/2,62,{align:'center'});}
+        const cLbl=_lang==='fr'?'Classe:':'Class:';
+        const lLbl=_lang==='fr'?'Enseignant:':'Lecturer:';
+        const tLbl=_lang==='fr'?'Heure:':'Time:';
+        doc.text([s.cls?cLbl+' '+s.cls:null,s.dept?s.dept:null,s.lec?lLbl+' '+s.lec:null,tLbl+' '+s.time].filter(Boolean).join('   |   '),M,31);
+        const prLbl=_lang==='fr'?'Présents:':'Present:';
+        const duLbl=_lang==='fr'?'Durée:':'Duration:';
+        doc.setFontSize(7.5);doc.text(prLbl+' '+recs.length+'   |   '+duLbl+' '+s.dur+' min',M,39);
+        if(!recs.length){doc.setFont('helvetica','italic');doc.setFontSize(10);doc.setTextColor(...t.metaText);doc.text(_lang==='fr'?'Aucun enregistrement.':'No records.',W/2,62,{align:'center'});}
         else {
+          const colHdrs2=_lang==='fr'?['#','Prénom','Nom','Matricule','Classe','Département','Heure']:['#','First Name','Last Name','Matricule','Class','Department','Time'];
           doc.autoTable({startY:53,margin:{left:M,right:M},
-            head:[['#','First Name','Last Name','Matricule','Class','Department','Time']],
+            head:[colHdrs2],
             body:recs.map((r,i)=>[i+1,r.fN,r.lN,r.mat,r.cls||'—',r.dept||'—',r.time]),
             styles:{font:'helvetica',fontSize:9,textColor:t.tableText,fillColor:t.tableFill,lineColor:t.tableBorder,lineWidth:0.25,cellPadding:3.5},
             headStyles:{fillColor:t.tableHead,textColor:t.tableHeadText,fontStyle:'bold',fontSize:8},
@@ -3375,7 +3626,8 @@ function downloadDailyPDF(){
         }
         doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...t.metaText);
         doc.text((localStorage.getItem('ax_school')||'AttendX PRO')+' · KЭL ♛ PHANTOM',M,285);
-        doc.text('Official Attendance Record · Page '+(idx+2),W-M,285,{align:'right'});
+        const pgLbl=_lang==='fr'?'Registre Officiel · Page ':' Official Attendance Record · Page ';
+        doc.text(pgLbl+(idx+2),W-M,285,{align:'right'});
       });
       mobileSavePDF(doc, 'AttendX_FullDay_'+new Date().toLocaleDateString('en-GB').replace(/\//g,'-')+'.pdf');
       toast('Full Day PDF saved','ok');
@@ -3855,9 +4107,134 @@ const TRANSLATIONS = {
     pdf_theme:'PDF Report Theme', choose_pdf:'Choose PDF Design',
     data_mgmt:'Data Management', clear_data:'🗑 Clear All Session Data',
     clear_hint:'Permanently removes all session and attendance records.',
+    // About section
     about:'About',
     // Footer
     created_by:'Created by',
+    // Super Admin
+    super_panel_title:'🛡 Super Admin Panel',
+    super_panel_sub:'Full access — all admins and all sessions',
+    create_session_btn:'📊 Create Session',
+    super_session_btn:'📲 Super Session',
+    set_max_admins_btn:'👥 Set Max Admins',
+    sign_out_btn_super:'Sign Out',
+    registered_admins:'Registered Admins',
+    all_sessions_today:'All Sessions (Today)',
+    // Super Session Modal
+    super_sess_title:'📲 Super Session — WhatsApp Message',
+    super_sess_desc:'Select one or more admins and compose a message. Each selected admin will receive it on WhatsApp.',
+    select_admins:'Select Admins',
+    select_all:'Select All',
+    clear_sel:'Clear',
+    message_lbl:'Message',
+    message_ph:'Type your message here…',
+    send_whatsapp:'📲 Send via WhatsApp',
+    whatsapp_hint:'WhatsApp will open for each selected admin. Allow popups if prompted.',
+    no_admins_found:'No admins with phone numbers found.',
+    admin_selected:'✓ Admin selected',
+    // Session modal
+    session_details:'Session Details',
+    present_lbl:'Present', started_lbl:'Started', closes_lbl:'Closes',
+    no_records:'No attendance records yet.',
+    col_no:'#', col_fname:'First Name', col_lname:'Last Name', col_mat:'Matricule',
+    col_class:'Class', col_dept:'Department', col_time:'Time',
+    // PDF text
+    pdf_header:'ATTENDANCE REGISTER — OFFICIAL DOCUMENT',
+    pdf_no_records:'No attendance records for this session.',
+    pdf_footer_official:'Official Attendance Record',
+    pdf_created_by:'Created by',
+    pdf_full_day:'FULL DAY', pdf_attendance_report:'ATTENDANCE REPORT',
+    pdf_total_sessions:'Total Sessions:', pdf_total_attendances:'Total Attendances:',
+    pdf_generated:'Generated:',
+    pdf_session_of:'SESSION',
+    pdf_of:'OF',
+    pdf_class:'Class:', pdf_dept:'Dept:', pdf_lecturer:'Lecturer:',
+    pdf_time:'Time:', pdf_room:'Room:', pdf_duration:'Duration:',
+    pdf_date:'Date:',
+    pdf_present_stat:'PRESENT', pdf_opened_stat:'OPENED', pdf_closed_stat:'CLOSED', pdf_duration_stat:'DURATION',
+    pdf_no_records_short:'No records.',
+    // Confirm modal
+    confirm_title:'Confirmer',
+    confirm_sub:'Êtes-vous sûr ?',
+    cancel_btn:'Annuler',
+    confirm_btn:'Confirmer',
+    // Max admins modal
+    max_admins_title:'Définir le Max Admins',
+    current_limit:'Limite actuelle :',
+    new_maximum:'Nouveau Maximum',
+    max_hint:'Minimum 1 · Maximum 100',
+    // Settings modal (hardcoded)
+    settings_modal_title:'Paramètres',
+    // Get in Touch
+    get_in_touch:'Get in Touch',
+    quick_response:'Quick response guaranteed',
+    // QR Tool
+    qr_generator:'QR Code Generator',
+    qr_h1:'Generate & Share QR Codes',
+    qr_sub:'Create scannable QR codes for session links, emails or websites. Download PNG/SVG — ready for print, Canva or projector.',
+    qr_config:'Configuration',
+    qr_session_link:'🔗 Session Link',
+    qr_email:'✉ Email',
+    qr_website:'🌐 Website',
+    qr_paste_link:'Paste Session Link',
+    qr_paste_ph:'Paste attendance link here…',
+    qr_paste_hint:'Paste a session link to generate a scannable QR for students.',
+    qr_label_opt:'Label (optional)',
+    qr_label_ph:'e.g. Mathematics Level 1',
+    qr_expiry:'QR Expiry',
+    qr_no_expiry:'No expiry — permanent',
+    qr_expiry_hint:'After this time the QR link will show "Expired" to anyone who opens it.',
+    qr_email_addr:'Email Address *',
+    qr_subject_opt:'Subject (optional)',
+    qr_body_opt:'Pre-filled Body (optional)',
+    qr_email_hint:'Email app opens with this text pre-filled.',
+    qr_website_url:'Website / URL *',
+    qr_url_label:'Label (for history)',
+    qr_appearance:'Appearance',
+    qr_size:'QR Size',
+    qr_ecl:'Error Correction Level',
+    qr_ecl_hint:'Higher = more robust, slightly denser pattern.',
+    qr_generate:'⚡ Generate QR Code',
+    qr_empty_msg:'Configure and click Generate to create your QR code',
+    qr_dl_png:'↓ PNG Image',
+    qr_dl_svg:'↓ SVG Vector',
+    qr_copy_link:'Copy Link',
+    qr_print:'Print',
+    qr_recent:'Recent QR Codes',
+    qr_generated:'Generated',
+    qr_session_qrs:'Session QRs',
+    qr_email_qrs:'Email QRs',
+    qr_downloads:'Downloads',
+    qr_howto_title:'How to use QR codes with attendance',
+    qr_step1:'Create a session on the Dashboard. Copy the generated link.',
+    qr_step2:'Come to the QR Tool tab, paste the link in the Session Link panel.',
+    qr_step3:'Click Generate QR Code and download as PNG or SVG.',
+    qr_step4:'Project or print the QR code — students scan and fill the form.',
+    qr_step5:'When time is up, attendance auto-closes and PDF is generated.',
+    qr_tip:'Use SVG format for large prints — stays crisp at any scale.',
+    // Dashboard quick guide
+    guide_create:'Create — Fill subject, class, duration.',
+    guide_share:'Share — Copy link or scan/print the QR code.',
+    guide_report:'Report — Download PDF when session ends.',
+    no_active_sessions:'No active sessions',
+    no_sessions_today:'No sessions today.',
+    today_sessions_title:"Today's Sessions",
+    live_activity:'Live Activity',
+    quick_guide:'Quick Guide',
+    session_reports:'Session Reports',
+    // Dashboard meta
+    dash_created_today:'Created today',
+    dash_from_sessions:'from sessions',
+    dash_running:'Running',
+    dash_completed:'Completed',
+    // Search
+    search_ph:'Search subject, class, dept...',
+    // Live panel
+    remaining_lbl:'remaining',
+    // Footer
+    footer_platform:'Smart Attendance Platform',
+    footer_privacy:'Privacy',
+    footer_contact:'Contact',
   },
   fr: {
     // Nav
@@ -3950,9 +4327,134 @@ const TRANSLATIONS = {
     pdf_theme:'Thème du Rapport PDF', choose_pdf:'Choisir le Design PDF',
     data_mgmt:'Gestion des Données', clear_data:'🗑 Effacer Toutes les Sessions',
     clear_hint:'Supprime définitivement toutes les sessions et présences.',
+    // About section
     about:'À Propos',
     // Footer
     created_by:'Créé par',
+    // Super Admin
+    super_panel_title:'🛡 Panneau Super Admin',
+    super_panel_sub:'Accès complet — tous les admins et toutes les sessions',
+    create_session_btn:'📊 Créer une Session',
+    super_session_btn:'📲 Super Session',
+    set_max_admins_btn:'👥 Définir le Max',
+    sign_out_btn_super:'Déconnexion',
+    registered_admins:'Admins Enregistrés',
+    all_sessions_today:'Toutes les Sessions (Aujourd\'hui)',
+    // Super Session Modal
+    super_sess_title:'📲 Super Session — Message WhatsApp',
+    super_sess_desc:'Sélectionnez un ou plusieurs admins et rédigez un message. Chaque admin sélectionné le recevra sur WhatsApp.',
+    select_admins:'Sélectionner les Admins',
+    select_all:'Tout Sélectionner',
+    clear_sel:'Effacer',
+    message_lbl:'Message',
+    message_ph:'Tapez votre message ici…',
+    send_whatsapp:'📲 Envoyer via WhatsApp',
+    whatsapp_hint:'WhatsApp s\'ouvrira pour chaque admin sélectionné. Autorisez les popups si demandé.',
+    no_admins_found:'Aucun admin avec numéro de téléphone trouvé.',
+    admin_selected:'✓ Admin sélectionné',
+    // Session modal
+    session_details:'Détails de la Session',
+    present_lbl:'Présents', started_lbl:'Commencé', closes_lbl:'Ferme',
+    no_records:'Aucune présence enregistrée.',
+    col_no:'#', col_fname:'Prénom', col_lname:'Nom', col_mat:'Matricule',
+    col_class:'Classe', col_dept:'Département', col_time:'Heure',
+    // PDF text
+    pdf_header:'REGISTRE DE PRÉSENCE — DOCUMENT OFFICIEL',
+    pdf_no_records:'Aucune présence enregistrée pour cette session.',
+    pdf_footer_official:'Registre de Présence Officiel',
+    pdf_created_by:'Créé par',
+    pdf_full_day:'JOURNÉE', pdf_attendance_report:'RAPPORT DE PRÉSENCE',
+    pdf_total_sessions:'Total Sessions :', pdf_total_attendances:'Total Présences :',
+    pdf_generated:'Généré le :',
+    pdf_session_of:'SESSION',
+    pdf_of:'SUR',
+    pdf_class:'Classe :', pdf_dept:'Dept :', pdf_lecturer:'Enseignant :',
+    pdf_time:'Heure :', pdf_room:'Salle :', pdf_duration:'Durée :',
+    pdf_date:'Date :',
+    pdf_present_stat:'PRÉSENTS', pdf_opened_stat:'OUVERT', pdf_closed_stat:'FERMÉ', pdf_duration_stat:'DURÉE',
+    pdf_no_records_short:'Aucun enregistrement.',
+    // Confirm modal
+    confirm_title:'Confirmer',
+    confirm_sub:'Êtes-vous sûr ?',
+    cancel_btn:'Annuler',
+    confirm_btn:'Confirmer',
+    // Max admins modal
+    max_admins_title:'Définir le Max Admins',
+    current_limit:'Limite actuelle :',
+    new_maximum:'Nouveau Maximum',
+    max_hint:'Minimum 1 · Maximum 100',
+    // Settings modal
+    settings_modal_title:'Paramètres',
+    // Get in Touch
+    get_in_touch:'Nous Contacter',
+    quick_response:'Réponse rapide garantie',
+    // QR Tool
+    qr_generator:'Générateur de QR Code',
+    qr_h1:'Générez et Partagez des QR Codes',
+    qr_sub:'Créez des QR codes scannables pour les liens de session, emails ou sites web. Téléchargez PNG/SVG — prêts pour impression, Canva ou projecteur.',
+    qr_config:'Configuration',
+    qr_session_link:'🔗 Lien Session',
+    qr_email:'✉ Email',
+    qr_website:'🌐 Site Web',
+    qr_paste_link:'Coller le Lien de Session',
+    qr_paste_ph:'Collez le lien de présence ici…',
+    qr_paste_hint:'Collez un lien de session pour générer un QR scannable pour les étudiants.',
+    qr_label_opt:'Étiquette (optionnel)',
+    qr_label_ph:'ex. Mathématiques Niveau 1',
+    qr_expiry:'Expiration du QR',
+    qr_no_expiry:'Sans expiration — permanent',
+    qr_expiry_hint:'Après ce délai, le lien QR affichera "Expiré" à quiconque l\'ouvre.',
+    qr_email_addr:'Adresse Email *',
+    qr_subject_opt:'Sujet (optionnel)',
+    qr_body_opt:'Corps pré-rempli (optionnel)',
+    qr_email_hint:'L\'application email s\'ouvre avec ce texte pré-rempli.',
+    qr_website_url:'Site Web / URL *',
+    qr_url_label:'Étiquette (pour l\'historique)',
+    qr_appearance:'Apparence',
+    qr_size:'Taille du QR',
+    qr_ecl:'Niveau de Correction d\'Erreur',
+    qr_ecl_hint:'Plus élevé = plus robuste, motif légèrement plus dense.',
+    qr_generate:'⚡ Générer le QR Code',
+    qr_empty_msg:'Configurez puis cliquez sur Générer pour créer votre QR code',
+    qr_dl_png:'↓ Image PNG',
+    qr_dl_svg:'↓ Vecteur SVG',
+    qr_copy_link:'Copier le Lien',
+    qr_print:'Imprimer',
+    qr_recent:'QR Codes Récents',
+    qr_generated:'Générés',
+    qr_session_qrs:'QR Sessions',
+    qr_email_qrs:'QR Email',
+    qr_downloads:'Téléchargements',
+    qr_howto_title:'Comment utiliser les QR codes avec la présence',
+    qr_step1:'Créez une session sur le Tableau de bord. Copiez le lien généré.',
+    qr_step2:'Allez dans l\'onglet Outil QR, collez le lien dans le panneau Lien Session.',
+    qr_step3:'Cliquez sur Générer le QR Code et téléchargez en PNG ou SVG.',
+    qr_step4:'Projetez ou imprimez le QR code — les étudiants scannent et remplissent le formulaire.',
+    qr_step5:'Quand le temps est écoulé, la présence se ferme automatiquement et le PDF est généré.',
+    qr_tip:'Utilisez le format SVG pour les grandes impressions — reste net à toute échelle.',
+    // Dashboard quick guide
+    guide_create:'Créer — Remplissez matière, classe, durée.',
+    guide_share:'Partager — Copiez le lien ou scannez/imprimez le QR code.',
+    guide_report:'Rapport — Téléchargez le PDF quand la session se termine.',
+    no_active_sessions:'Aucune session active',
+    no_sessions_today:'Aucune session aujourd\'hui.',
+    today_sessions_title:"Sessions d'Aujourd'hui",
+    live_activity:'Activité en Direct',
+    quick_guide:'Guide Rapide',
+    session_reports:'Rapports de Sessions',
+    // Dashboard meta
+    dash_created_today:'Créées aujourd\'hui',
+    dash_from_sessions:'des sessions',
+    dash_running:'En cours',
+    dash_completed:'Terminées',
+    // Search
+    search_ph:'Rechercher matière, classe, dept...',
+    // Live panel
+    remaining_lbl:'restant',
+    // Footer
+    footer_platform:'Plateforme de Présence Intelligente',
+    footer_privacy:'Confidentialité',
+    footer_contact:'Contact',
   }
 };
 
@@ -3963,42 +4465,340 @@ function t(key){ return (TRANSLATIONS[_lang]||TRANSLATIONS.en)[key] || TRANSLATI
 function setLang(lang){
   _lang = lang;
   localStorage.setItem('ax_lang', lang);
-  // Update toggle buttons
-  document.getElementById('langEN').style.background = lang==='en' ? 'var(--blue)' : 'transparent';
-  document.getElementById('langEN').style.color      = lang==='en' ? '#fff' : 'var(--text3)';
-  document.getElementById('langFR').style.background = lang==='fr' ? 'var(--blue)' : 'transparent';
-  document.getElementById('langFR').style.color      = lang==='fr' ? '#fff' : 'var(--text3)';
+  // Animate the slider pill
+  const enBtn = document.getElementById('langEN');
+  const frBtn = document.getElementById('langFR');
+  const slider = document.getElementById('langSlider');
+  if(enBtn && frBtn && slider){
+    const activeBtn = lang==='en' ? enBtn : frBtn;
+    slider.style.width  = activeBtn.offsetWidth + 'px';
+    slider.style.transform = lang==='en' ? 'translateX(0)' : `translateX(${enBtn.offsetWidth + 2}px)`;
+    enBtn.classList.toggle('active', lang==='en');
+    frBtn.classList.toggle('active', lang==='fr');
+  }
   applyTranslations();
 }
 
+function qs(sel){ return document.querySelector(sel); }
+function qsa(sel){ return document.querySelectorAll(sel); }
+function setText(sel, key){ const el=qs(sel); if(el) el.textContent=t(key); }
+function setHTML(sel, html){ const el=qs(sel); if(el) el.innerHTML=html; }
+function setAttr(sel, attr, key){ const el=qs(sel); if(el) el.setAttribute(attr, t(key)); }
+function setId(id, key){ const el=document.getElementById(id); if(el) el.textContent=t(key); }
+function setIdHTML(id, html){ const el=document.getElementById(id); if(el) el.innerHTML=html; }
+function setIdAttr(id, attr, key){ const el=document.getElementById(id); if(el) el.setAttribute(attr, t(key)); }
+
 function applyTranslations(){
-  // Landing
-  const chip = document.querySelector('.landing-chip');
-  if(chip) chip.textContent = t('chip');
-  const sub = document.querySelector('.landing-sub');
-  if(sub) sub.textContent = t('sub');
-  const ctaBtns = document.querySelectorAll('.landing-cta .cta-btn');
-  if(ctaBtns[0]) ctaBtns[0].textContent = t('btn_admin');
-  if(ctaBtns[1]) ctaBtns[1].textContent = t('btn_demo');
-  if(ctaBtns[2]) ctaBtns[2].textContent = t('btn_contact');
-  // Nav right (if on landing)
+  // ── NAV ──
   const navRight = document.getElementById('navRight');
   if(navRight && navRight.querySelector('.nav-btn-ghost')){
     const btns = navRight.querySelectorAll('.nav-btn');
     if(btns[0]) btns[0].textContent = t('admin_login');
     if(btns[1]) btns[1].textContent = t('get_started');
   }
-  // Login steps
-  const loginSub = document.querySelector('#loginStep1 .login-sub');
-  if(loginSub) loginSub.textContent = t('how_access');
-  const loginTitle = document.querySelector('#loginStep1 .login-title');
+  const ntDash = document.getElementById('ntDash');
+  if(ntDash) ntDash.textContent = t('dashboard');
+  const ntQR = document.getElementById('ntQR');
+  if(ntQR) ntQR.textContent = t('qr_tool');
+
+  // ── LANDING ──
+  setText('.landing-chip', 'chip');
+  setText('.landing-sub', 'sub');
+  const ctaBtns = qsa('.landing-cta .cta-btn');
+  if(ctaBtns[0]) ctaBtns[0].textContent = t('btn_admin');
+  if(ctaBtns[1]) ctaBtns[1].textContent = t('btn_demo');
+  if(ctaBtns[2]) ctaBtns[2].textContent = t('btn_contact');
+  // Feature cards
+  const featTitles = qsa('.feat-title');
+  const featDescs  = qsa('.feat-desc');
+  const featData = [
+    ['feat_timed_title','feat_timed_desc'],['feat_class_title','feat_class_desc'],
+    ['feat_pdf_title','feat_pdf_desc'],['feat_qr_title','feat_qr_desc'],
+    ['feat_admin_title','feat_admin_desc'],['feat_live_title','feat_live_desc']
+  ];
+  // Only translate if keys exist (graceful)
+  featTitles.forEach((el,i)=>{ if(t('feat_timed_title')!=='feat_timed_title' && featData[i]) el.textContent=t(featData[i][0]); });
+  featDescs.forEach((el,i)=>{ if(t('feat_timed_desc')!=='feat_timed_desc' && featData[i]) el.textContent=t(featData[i][1]); });
+
+  // ── LOGIN ──
+  const loginTitle = qs('#loginStep1 .login-title');
   if(loginTitle) loginTitle.textContent = t('welcome');
-  // Student page submit button
+  const loginSub = qs('#loginStep1 .login-sub');
+  if(loginSub) loginSub.textContent = t('how_access');
+  const step1Btns = qsa('#loginStep1 .btn');
+  if(step1Btns[0]) step1Btns[0].textContent = t('admin_login_btn');
+  if(step1Btns[1]) step1Btns[1].textContent = t('register_btn');
+  if(step1Btns[2]) step1Btns[2].textContent = t('super_btn');
+  // Admin login step
+  const adminLoginTitle = qs('#loginStepAdmin .login-title');
+  if(adminLoginTitle) adminLoginTitle.textContent = t('admin_access');
+  const adminLoginSub = qs('#loginStepAdmin .login-sub');
+  if(adminLoginSub) adminLoginSub.textContent = t('enter_user_pin');
+  const usernameLabel = qs('#loginStepAdmin label');
+  if(usernameLabel) usernameLabel.textContent = t('username_lbl');
+  setIdAttr('loginUser','placeholder','username_ph');
+  // Register step
+  const regTitle = qs('#loginStepRegister .login-title');
+  if(regTitle) regTitle.textContent = t('register_title');
+  const regSub = qs('#loginStepRegister .login-sub');
+  if(regSub) regSub.textContent = t('register_sub');
+  setIdAttr('regName','placeholder','full_name');
+  // Recover step
+  const recTitle = qs('#loginStepRecover .login-title');
+  if(recTitle) recTitle.textContent = t('recover_title');
+  const recSub = qs('#loginStepRecover .login-sub');
+  if(recSub) recSub.textContent = t('recover_sub');
+  // Super step
+  const superTitle2 = qs('#loginStepSuper .login-title');
+  if(superTitle2) superTitle2.textContent = t('super_title');
+  const superSub2 = qs('#loginStepSuper .login-sub');
+  if(superSub2) superSub2.textContent = t('super_sub');
+  const superPwdLabel = qs('#loginStepSuper label');
+  if(superPwdLabel) superPwdLabel.textContent = t('password_lbl');
+
+  // ── DASHBOARD ──
+  setText('.dash-title', 'dashboard_title');
+  const dashBtns = qsa('#pgDash .dash-btns .btn');
+  if(dashBtns[0]) dashBtns[0].textContent = t('settings');
+  if(dashBtns[1]) dashBtns[1].textContent = t('full_day_pdf');
+  if(dashBtns[2]) dashBtns[2].textContent = t('sign_out_btn');
+  // Stat cards
+  const scards = qsa('#pgDash .scard');
+  if(scards[0]){ const sl=scards[0].querySelector('.sl'); const sm=scards[0].querySelector('.sm'); if(sl)sl.textContent=t('today_sessions'); if(sm)sm.textContent=t('dash_created_today'); }
+  if(scards[1]){ const sl=scards[1].querySelector('.sl'); if(sl)sl.textContent=t('total_present'); }
+  if(scards[2]){ const sl=scards[2].querySelector('.sl'); if(sl)sl.textContent=t('live_now'); }
+  if(scards[3]){ const sl=scards[3].querySelector('.sl'); if(sl)sl.textContent=t('ended'); }
+  // Dash tabs
+  const dashTabs = qsa('#pgDash .tabs .tab');
+  if(dashTabs[0]) dashTabs[0].textContent = t('new_session');
+  if(dashTabs[1]) dashTabs[1].textContent = t('sessions');
+  if(dashTabs[2]) dashTabs[2].textContent = t('reports');
+  // Create session form
+  const createTitle = qs('#pgDash .pb-title');
+  if(createTitle){ const txt=createTitle.childNodes[createTitle.childNodes.length-1]; if(txt&&txt.nodeType===3) txt.textContent=' '+t('create_session_title'); }
+  // Form labels
+  const formLabels = qsa('#pgDash .panel-block label');
+  const labelMap = {
+    'inSubj': 'subject', 'inCls': 'class_lbl', 'inDept': 'department',
+    'inLec': 'lecturer', 'inTime': 'start_time', 'inDur': 'duration',
+    'inRoom': 'room', 'inRadius': 'geo_radius'
+  };
+  qsa('#pgDash .field').forEach(field => {
+    const inp = field.querySelector('input,select');
+    if(!inp) return;
+    const lbl = field.querySelector('label');
+    if(inp.id && labelMap[inp.id] && lbl) lbl.textContent = t(labelMap[inp.id]);
+  });
+  setIdAttr('inSubj','placeholder','subject_ph');
+  setIdAttr('inCls','placeholder','class_ph');
+  setIdAttr('inLec','placeholder','lecturer_ph');
+  setIdAttr('inRoom','placeholder','room_ph');
+  // Generate button
+  const genBtn = qs('#pgDash .btn-gen');
+  if(genBtn) genBtn.textContent = t('generate_btn');
+  // Link output
+  const linkLbl = qs('.link-lbl');
+  if(linkLbl) linkLbl.textContent = t('student_link');
+  const lCopyBtn = document.getElementById('lCopyBtn');
+  if(lCopyBtn && lCopyBtn.textContent!==t('copied')) lCopyBtn.textContent = t('copy');
+  const shareHint = qs('.link-out .hint');
+  if(shareHint) shareHint.textContent = t('share_hint');
+  // Live monitor chips
+  const lchips = qsa('.lchip .ll');
+  if(lchips[0]) lchips[0].textContent = t('present');
+  if(lchips[1]) lchips[1].textContent = t('remaining');
+  if(lchips[2]) lchips[2].textContent = t('duration_lbl');
+  // Session search
+  setIdAttr('sessSearch','placeholder','search_ph');
+  // Live panel title
+  const liveTitle = qs('#pgDash .panel-block:last-child .pb-title');
+  // Quick guide steps
+  const guideSteps = qsa('#pgDash .pb-body div[style*="gap:11px"] > div > div:last-child');
+  if(guideSteps[0]) guideSteps[0].innerHTML = `<strong style="color:var(--text)">${t('new_session').replace(/[✦📊]/g,'').trim().split(' ')[0]}</strong> — ${t('guide_create').split('—')[1]||t('guide_create')}`;
+  if(guideSteps[1]) guideSteps[1].innerHTML = `<strong style="color:var(--text)">${t('sessions').replace('📋','').trim()}</strong> — ${t('guide_share').split('—')[1]||t('guide_share')}`;
+  if(guideSteps[2]) guideSteps[2].innerHTML = `<strong style="color:var(--text)">${t('reports').replace('📊','').trim()}</strong> — ${t('guide_report').split('—')[1]||t('guide_report')}`;
+
+  // ── STUDENT PAGE ──
   const stuBtn = document.getElementById('stuSubmitBtn');
   if(stuBtn && !stuBtn.disabled) stuBtn.textContent = t('submit_btn');
-  // Timer label
-  const timerRow = document.querySelector('.timer-row span');
+  const timerRow = qs('.timer-row span');
   if(timerRow) timerRow.textContent = t('session_closes');
+  const attendHead = qs('.attend-head');
+  if(attendHead){ attendHead.innerHTML = '<span>📝</span> '+t('mark_attendance').replace('📍','').trim(); }
+  // Student form labels
+  const stuLabelMap = {
+    'stuFirst':'first_name','stuLast':'last_name','stuMat':'matricule',
+    'stuCls':'your_class','stuDept':'dept_lbl','stuPhone':'phone_opt'
+  };
+  Object.entries(stuLabelMap).forEach(([id, key]) => {
+    const inp = document.getElementById(id);
+    if(!inp) return;
+    const lbl = inp.closest('.field')?.querySelector('label');
+    if(lbl) lbl.textContent = t(key);
+  });
+  setIdAttr('stuMat','placeholder','matricule_ph');
+  setIdAttr('stuCls','placeholder','class_must_match');
+  setIdAttr('stuDept','placeholder','dept_ph');
+  // Expired state
+  const expiredTitle = qs('.expired-title');
+  if(expiredTitle) expiredTitle.textContent = t('time_elapsed');
+  const expiredBody = qs('.expired-body');
+  if(expiredBody) expiredBody.innerHTML = t('session_ended')+'<br/>'+t('recorded_absent').replace('absent',`<strong style="color:var(--red)">${_lang==='fr'?'absent':'absent'}</strong>`);
+
+  // ── SUPER ADMIN PAGE ──
+  const superDashTitle = qs('#pgSuper .dash-title');
+  if(superDashTitle) superDashTitle.textContent = t('super_panel_title');
+  const superDashSub = qs('#pgSuper .dash-sub');
+  if(superDashSub) superDashSub.textContent = t('super_panel_sub');
+  const superBtns = qsa('#pgSuper .dash-btns .btn');
+  if(superBtns[0]) superBtns[0].textContent = t('create_session_btn');
+  if(superBtns[1]) superBtns[1].textContent = t('super_session_btn');
+  if(superBtns[2]) superBtns[2].textContent = t('set_max_admins_btn');
+  if(superBtns[3]) superBtns[3].textContent = t('sign_out_btn_super');
+  // Super panel block titles
+  const superPBTitles = qsa('#pgSuper .pb-title');
+  if(superPBTitles[0]){ const txt=superPBTitles[0].childNodes[superPBTitles[0].childNodes.length-1]; if(txt&&txt.nodeType===3) txt.textContent=' '+t('registered_admins'); }
+  if(superPBTitles[1]){ const txt=superPBTitles[1].childNodes[superPBTitles[1].childNodes.length-1]; if(txt&&txt.nodeType===3) txt.textContent=' '+t('all_sessions_today'); }
+
+  // ── SUPER SESSION MODAL ──
+  const ssmTitle = qs('#superSessModal .modal-title');
+  if(ssmTitle) ssmTitle.textContent = t('super_sess_title');
+  const ssmDesc = qs('#superSessModal .modal-body > div:first-child');
+  if(ssmDesc && ssmDesc.tagName!=='DIV') ssmDesc.textContent = t('super_sess_desc');
+  else {
+    const descDiv = qs('#superSessModal .modal-body div[style*="font-size:12px"]');
+    if(descDiv) descDiv.textContent = t('super_sess_desc');
+  }
+  const ssmLabel = qs('#superSessModal .field label');
+  if(ssmLabel) ssmLabel.textContent = t('select_admins');
+  const ssmBtns = qsa('#superSessModal .btn-ghost');
+  if(ssmBtns[0]) ssmBtns[0].textContent = t('select_all');
+  if(ssmBtns[1]) ssmBtns[1].textContent = t('clear_sel');
+  const ssmMsgLabel = qs('#superSessModal .field:last-of-type label');
+  if(ssmMsgLabel) ssmMsgLabel.textContent = t('message_lbl');
+  setIdAttr('superSessMsg','placeholder','message_ph');
+  const ssmSendBtn = qs('#superSessModal .btn-green');
+  if(ssmSendBtn) ssmSendBtn.textContent = t('send_whatsapp');
+  const ssmHintDiv = qs('#superSessModal .modal-body > div:last-child');
+  if(ssmHintDiv && ssmHintDiv.style && ssmHintDiv.style.textAlign==='center') ssmHintDiv.textContent = t('whatsapp_hint');
+
+  // ── SETTINGS MODAL ──
+  const settTitle = qs('#settModal .modal-title');
+  if(settTitle) settTitle.textContent = t('settings_title');
+  const setTitles = qsa('#settModal .set-sec-title');
+  const setTitleKeys = ['school_info','bg_theme','security','pdf_theme','data_mgmt','about'];
+  setTitles.forEach((el,i)=>{ if(setTitleKeys[i]) el.textContent=t(setTitleKeys[i]); });
+  const setLabels = qsa('#settModal .field label');
+  if(setLabels[0]) setLabels[0].textContent = t('school_name_lbl');
+  if(setLabels[1]) setLabels[1].textContent = t('choose_bg');
+  if(setLabels[2]) setLabels[2].textContent = t('new_pin_lbl');
+  if(setLabels[3]) setLabels[3].textContent = t('confirm_pin_lbl');
+  if(setLabels[4]) setLabels[4].textContent = t('choose_pdf');
+  setIdAttr('schoolName','placeholder','school_name_ph');
+  const setHints = qsa('#settModal .hint');
+  if(setHints[0]) setHints[0].textContent = t('school_name_hint');
+  const setSaveBtns = qsa('#settModal .btn-primary');
+  if(setSaveBtns[0]) setSaveBtns[0].textContent = t('save');
+  if(setSaveBtns[1]) setSaveBtns[1].textContent = t('update_pin');
+  const setClearBtn = qs('#settModal .btn-red');
+  if(setClearBtn) setClearBtn.textContent = t('clear_data');
+  const setClearHint = qs('#settModal .set-sec:nth-child(5) > div:last-child');
+  if(setClearHint) setClearHint.textContent = t('clear_hint');
+
+  // ── CONFIRM MODAL ──
+  const confCancelBtn = qs('#confModal .btn-ghost');
+  if(confCancelBtn) confCancelBtn.textContent = t('cancel_btn');
+
+  // ── CONTACT MODAL ──
+  const ctTitle = qs('#contactModal div[style*="font-size:20px"]');
+  if(ctTitle) ctTitle.textContent = t('get_in_touch');
+  const ctSub = qs('#contactModal div[style*="font-size:11px"]');
+  if(ctSub) ctSub.textContent = t('quick_response');
+  const ctCloseBtn = qs('#contactModal .btn-ghost');
+  if(ctCloseBtn) ctCloseBtn.textContent = t('cancel_btn').replace('Annuler','Fermer').replace('Cancel','Close');
+
+  // ── FOOTER ──
+  const footerCreated = qs('.site-footer .footer-brand > div > div:first-child');
+  if(footerCreated) footerCreated.textContent = t('created_by');
+  const footerPlatform = qs('.site-footer > div:nth-child(2)');
+  if(footerPlatform && footerPlatform.tagName==='DIV'){
+    const lines = footerPlatform.innerHTML.split('<br>');
+    if(lines.length>=1) footerPlatform.innerHTML = 'AttendX PRO &nbsp;·&nbsp; '+t('footer_platform')+(lines[1]?'<br>'+lines[1]:'');
+  }
+  const footerLinks = qsa('.footer-links a');
+  if(footerLinks[0]) footerLinks[0].textContent = t('footer_privacy');
+  if(footerLinks[1]) footerLinks[1].textContent = t('footer_contact');
+
+  // ── QR TOOL PAGE ──
+  const qrChip = qs('#pgQR .qr-chip');
+  if(qrChip) qrChip.innerHTML = '<span class="dot"></span>'+t('qr_generator');
+  const qrH1 = qs('#pgQR .qr-h1');
+  if(qrH1) qrH1.innerHTML = t('qr_h1').replace(' & ','&<br/>');
+  const qrSub = qs('#pgQR .qr-sub');
+  if(qrSub) qrSub.textContent = t('qr_sub');
+  // QR tabs
+  const qrTabs = qsa('#pgQR .tabs .tab');
+  if(qrTabs[0]) qrTabs[0].textContent = t('qr_session_link');
+  if(qrTabs[1]) qrTabs[1].textContent = t('qr_email');
+  if(qrTabs[2]) qrTabs[2].textContent = t('qr_website');
+  // QR panels
+  const qrLinkLabel = qs('#qrp-link .field label');
+  if(qrLinkLabel) qrLinkLabel.textContent = t('qr_paste_link');
+  setIdAttr('qr-link-url','placeholder','qr_paste_ph');
+  const qrLinkHint = qs('#qrp-link .hint');
+  if(qrLinkHint) qrLinkHint.textContent = t('qr_paste_hint');
+  const qrLabelLabel = qs('#qrp-link .field:nth-child(2) label');
+  if(qrLabelLabel) qrLabelLabel.textContent = t('qr_label_opt');
+  setIdAttr('qr-link-label','placeholder','qr_label_ph');
+  const qrExpiryLabel = qs('#qrp-link .field:nth-child(3) label');
+  if(qrExpiryLabel) qrExpiryLabel.textContent = t('qr_expiry');
+  const qrExpiryOpt0 = qs('#qr-link-expiry option[value="0"]');
+  if(qrExpiryOpt0) qrExpiryOpt0.textContent = t('qr_no_expiry');
+  const qrExpiryHint = qs('#qrp-link .hint:last-child');
+  if(qrExpiryHint) qrExpiryHint.textContent = t('qr_expiry_hint');
+  // QR generate button
+  const qrGenBtn = qs('#pgQR .btn-gen');
+  if(qrGenBtn) qrGenBtn.textContent = t('qr_generate');
+  // QR empty msg
+  const qrEmptyP = qs('#qrEmpty p');
+  if(qrEmptyP) qrEmptyP.textContent = t('qr_empty_msg');
+  // QR download buttons
+  const qrDlBtns = qsa('.btn-dl-png');
+  qrDlBtns.forEach(b=>b.textContent=t('qr_dl_png'));
+  const qrDlSvgBtns = qsa('.btn-dl-svg');
+  qrDlSvgBtns.forEach(b=>b.textContent=t('qr_dl_svg'));
+  // QR share buttons
+  const qrShareBtns = qsa('.btn-share');
+  if(qrShareBtns[0]) qrShareBtns[0].innerHTML = '<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> '+t('qr_copy_link');
+  if(qrShareBtns[1]) qrShareBtns[1].innerHTML = '<svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> '+t('qr_print');
+  // QR stats bar
+  const qsls = qsa('.qsl');
+  if(qsls[0]) qsls[0].textContent=t('qr_generated');
+  if(qsls[1]) qsls[1].textContent=t('qr_session_qrs');
+  if(qsls[2]) qsls[2].textContent=t('qr_email_qrs');
+  if(qsls[3]) qsls[3].textContent=t('qr_downloads');
+  // QR howto
+  const howtoTitle = qs('.howto-title');
+  if(howtoTitle) howtoTitle.textContent = t('qr_howto_title');
+  const stepTexts = qsa('.step-text');
+  const stepKeys = ['qr_step1','qr_step2','qr_step3','qr_step4','qr_step5','qr_tip'];
+  stepTexts.forEach((el,i)=>{ if(stepKeys[i]) el.innerHTML=t(stepKeys[i]).replace(/(Dashboard|Tableau de bord|QR Tool|Outil QR)/g,'<strong>$1</strong>'); });
+
+  // ── SESSION MODAL title ──
+  const sessModalTitle = qs('#sessModal .modal-title');
+  // only reset if no session loaded
+  if(sessModalTitle && !sessModalTitle.textContent.includes(' — ')) sessModalTitle.textContent = t('session_details');
+
+  // ── MODAL: Max Admins ──
+  const maTitle = qs('#maxAdminsModal div[style*="font-size:18px"]');
+  if(maTitle) maTitle.textContent = t('max_admins_title');
+  const maLabel = qs('#maxAdminsModal .field label');
+  if(maLabel) maLabel.textContent = t('new_maximum');
+  const maHint = qs('#maxAdminsModal .hint');
+  if(maHint) maHint.textContent = t('max_hint');
+  const maBtns = qsa('#maxAdminsModal .confirm-acts .btn');
+  if(maBtns[0]) maBtns[0].textContent = t('cancel_btn');
+  if(maBtns[1]) maBtns[1].textContent = t('save');
 }
 
 /* ── BOOT ── */
