@@ -1144,6 +1144,10 @@ body::after { content: none; }
     <button class="nav-ptab"        id="ntQR"      onclick="navTo('qr')">QR Tool</button>
   </div>
 
+  <div style="display:flex;align-items:center;gap:6px;margin-right:4px;">
+    <button id="langEN" onclick="setLang('en')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--line);background:var(--blue);color:#fff;font-family:var(--head);">EN</button>
+    <button id="langFR" onclick="setLang('fr')" style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--text3);font-family:var(--head);">FR</button>
+  </div>
   <div class="nav-right" id="navRight">
     <button class="nav-btn nav-btn-ghost" onclick="showLogin()">Admin Login</button>
     <button class="nav-btn nav-btn-solid" onclick="showLogin()">Get Started →</button>
@@ -3015,36 +3019,56 @@ function checkStudentGeo(s) {
   const box = document.getElementById('stuGeoStatus');
   const btn = document.getElementById('stuSubmitBtn');
 
-  function setBox(bg, border, color, text) {
+  function setBox(bg, border, color, html) {
     box.style.display='block'; box.style.background=bg;
-    box.style.border=border; box.style.color=color; box.textContent=text;
+    box.style.border=border; box.style.color=color; box.innerHTML=html;
   }
   function setBtnState(waiting, label) {
     if (!btn) return;
     btn.disabled = waiting;
     btn.style.opacity = waiting ? '0.5' : '1';
     btn.style.cursor  = waiting ? 'not-allowed' : 'pointer';
-    btn.textContent   = label || '✓ Submit My Attendance';
+    btn.textContent   = label || t('submit_btn');
   }
 
   if (!navigator.geolocation) {
     setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
-      '❌ Your browser does not support location — cannot verify presence.');
+      '❌ '+t('geo_no_support'));
     S.geoBlocked = true; return;
   }
 
   S.geoBlocked = true;
-  setBtnState(true, '⏳ Getting your location — please stand still…');
+  setBtnState(true, '⏳ '+t('geo_getting'));
   setBox('var(--blue3)','1px solid rgba(79,158,255,0.2)','var(--blue)',
-    '📡 Please STAND STILL and do not move — getting your precise location. This takes up to 30 seconds…');
+    `<div style="margin-bottom:6px;">📡 <strong>${t('geo_stand_still')}</strong></div>
+     <div style="font-size:11px;opacity:0.85;">${t('geo_wait_msg')}</div>
+     <div id="gpsQualityBar" style="margin-top:8px;height:6px;background:rgba(0,0,0,0.1);border-radius:3px;overflow:hidden;">
+       <div id="gpsQualityFill" style="height:100%;width:0%;background:var(--gold);border-radius:3px;transition:width 0.5s,background 0.5s;"></div>
+     </div>
+     <div id="gpsQualityLabel" style="font-size:10px;margin-top:4px;opacity:0.8;">⏳ ${t('geo_searching')}</div>`);
 
-  // Collect multiple readings and pick the most accurate one
   const readings = [];
   let watchId = null;
   let settled = false;
-  const GPS_BUFFER = 30; // extra metres added to radius to account for GPS error
-  const MIN_READINGS = 3; // collect at least 3 readings before deciding
-  const MAX_WAIT = 30000; // 30 seconds max
+  const GPS_BUFFER = 20;
+  const MIN_READINGS = 5;       // more readings for better precision
+  const TARGET_ACCURACY = 10;   // aim for ±10m or better
+  const MAX_ACCURACY = 50;      // reject if worse than ±50m
+  const MAX_WAIT = 60000;       // 60 seconds max
+
+  function updateQualityBar(acc){
+    const fill = document.getElementById('gpsQualityFill');
+    const label = document.getElementById('gpsQualityLabel');
+    if(!fill||!label) return;
+    let pct, color, txt;
+    if(acc <= 5)       { pct=100; color='#10B981'; txt='🟢 '+t('geo_excellent')+' (±'+acc+'m)'; }
+    else if(acc <= 10) { pct=85;  color='#10B981'; txt='🟢 '+t('geo_very_good')+' (±'+acc+'m)'; }
+    else if(acc <= 20) { pct=65;  color='#3B6FE8'; txt='🔵 '+t('geo_good')+' (±'+acc+'m)'; }
+    else if(acc <= 35) { pct=40;  color='#F59E0B'; txt='🟡 '+t('geo_fair')+' (±'+acc+'m)'; }
+    else               { pct=15;  color='#EF4444'; txt='🔴 '+t('geo_poor')+' (±'+acc+'m)'; }
+    fill.style.width=pct+'%'; fill.style.background=color;
+    label.textContent=txt;
+  }
 
   const timeout = setTimeout(()=>{
     if(settled) return;
@@ -3054,7 +3078,8 @@ function checkStudentGeo(s) {
       S.geoBlocked = true;
       setBtnState(false);
       setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
-        '❌ Could not get your location. Make sure GPS is on, stand in open area, and reload.');
+        '❌ '+t('geo_failed')+
+        `<br/><button onclick="checkStudentGeo(S.currentSession)" style="margin-top:8px;padding:6px 14px;background:var(--red2);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:6px;cursor:pointer;font-size:12px;">🔄 ${t('geo_retry')}</button>`);
       return;
     }
     processReadings();
@@ -3064,13 +3089,24 @@ function checkStudentGeo(s) {
     pos => {
       if(settled) return;
       readings.push(pos);
-      const count = readings.length;
       const acc = Math.round(pos.coords.accuracy);
-      setBox('var(--blue3)','1px solid rgba(79,158,255,0.2)','var(--blue)',
-        `📡 STAND STILL — Reading ${count}/${MIN_READINGS} (±${acc}m accuracy)… do not move.`);
+      updateQualityBar(acc);
 
-      // Once we have enough readings OR accuracy is very good, process
-      if(count >= MIN_READINGS || acc <= 20){
+      const best = readings.reduce((a,b)=>a.coords.accuracy<b.coords.accuracy?a:b);
+      const bestAcc = Math.round(best.coords.accuracy);
+
+      // Update progress message
+      const label = document.getElementById('gpsQualityLabel');
+      if(label) label.textContent += ` · ${t('geo_reading')} ${readings.length}`;
+
+      // Accept if: enough readings AND good accuracy, OR excellent accuracy
+      if((readings.length >= MIN_READINGS && bestAcc <= TARGET_ACCURACY) || bestAcc <= 5){
+        settled = true;
+        clearTimeout(timeout);
+        navigator.geolocation.clearWatch(watchId);
+        processReadings();
+      } else if(readings.length >= MIN_READINGS * 2){
+        // Took too many readings — use best we have
         settled = true;
         clearTimeout(timeout);
         navigator.geolocation.clearWatch(watchId);
@@ -3085,39 +3121,51 @@ function checkStudentGeo(s) {
       S.geoBlocked = true;
       setBtnState(false);
       const msgs = {
-        1:'Location access denied. Go to browser Settings → allow location for this site → reload.',
-        2:'Could not get your position. Move to open area, ensure GPS is on, and reload.',
-        3:'Location timed out. Move to open area and reload.'
+        1: t('geo_denied'),
+        2: t('geo_unavailable'),
+        3: t('geo_timeout')
       };
       setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
-        '❌ '+(msgs[err.code]||'Location error.'));
+        '❌ '+(msgs[err.code]||t('geo_error'))+
+        `<br/><button onclick="checkStudentGeo(S.currentSession)" style="margin-top:8px;padding:6px 14px;background:var(--red2);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:6px;cursor:pointer;font-size:12px;">🔄 ${t('geo_retry')}</button>`);
     },
-    { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+    { enableHighAccuracy: true, timeout: 60000, maximumAge: 0 }
   );
 
   function processReadings(){
-    // Pick the reading with best (lowest) accuracy value
-    const best = readings.reduce((a,b) => a.coords.accuracy < b.coords.accuracy ? a : b);
+    const best = readings.reduce((a,b)=>a.coords.accuracy<b.coords.accuracy?a:b);
     const stuLat = best.coords.latitude;
     const stuLng = best.coords.longitude;
     const acc    = Math.round(best.coords.accuracy);
     const dist   = Math.round(haversine(s.geoLat, s.geoLng, stuLat, stuLng));
     S.studentDist = dist;
 
-    // Apply GPS buffer to be fair to students
     const effectiveRadius = s.geoRadius + GPS_BUFFER;
-    const coordInfo = `Your GPS: ${stuLat.toFixed(5)}, ${stuLng.toFixed(5)} · Accuracy: ±${acc}m · Distance: ${dist}m`;
+    const coordInfo = `${t('geo_your_pos')}: ${stuLat.toFixed(6)}, ${stuLng.toFixed(6)} · ±${acc}m · ${dist}m ${t('geo_from_class')}`;
+
+    // Warn if accuracy is too poor
+    if(acc > MAX_ACCURACY){
+      S.geoBlocked = true;
+      setBtnState(false);
+      setBox('var(--gold2)','1px solid rgba(245,158,11,0.2)','var(--gold)',
+        `⚠️ ${t('geo_low_accuracy')} (±${acc}m). ${t('geo_go_outside')}<br/>
+         <button onclick="checkStudentGeo(S.currentSession)" style="margin-top:8px;padding:6px 14px;background:var(--gold2);border:1px solid rgba(245,158,11,0.3);color:var(--gold);border-radius:6px;cursor:pointer;font-size:12px;">🔄 ${t('geo_retry')}</button>`);
+      return;
+    }
 
     if(dist <= effectiveRadius){
       S.geoBlocked = false;
       setBtnState(false);
-      setBox('var(--green2)','1px solid rgba(79,255,160,0.2)','var(--green)',
-        `✅ You are within range (${dist}m from classroom, limit: ${s.geoRadius}m). ${coordInfo}`);
+      setBox('var(--green2)','1px solid rgba(16,185,129,0.2)','var(--green)',
+        `✅ <strong>${t('geo_in_range')}</strong> — ${dist}m ${t('geo_from_class')} (${t('geo_limit')}: ${s.geoRadius}m)<br/>
+         <span style="font-size:10px;opacity:0.8;">${coordInfo}</span>`);
     } else {
       S.geoBlocked = true;
       setBtnState(false);
-      setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
-        `❌ Too far away (${dist}m, limit: ${s.geoRadius}m). If you are physically present, ask your teacher to increase the radius. ${coordInfo}`);
+      setBox('var(--red2)','1px solid rgba(239,68,68,0.2)','var(--red)',
+        `❌ <strong>${t('geo_too_far')}</strong> — ${dist}m (${t('geo_limit')}: ${s.geoRadius}m)<br/>
+         <span style="font-size:10px;opacity:0.8;">${coordInfo}</span><br/>
+         <button onclick="checkStudentGeo(S.currentSession)" style="margin-top:8px;padding:6px 14px;background:var(--red2);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:6px;cursor:pointer;font-size:12px;">🔄 ${t('geo_retry')}</button>`);
     }
   }
 }
@@ -3714,10 +3762,249 @@ function buildBg(theme){
   }
 }
 
-buildBg(_currentBgTheme);
+/* ── BILINGUAL SYSTEM (EN / FR) ── */
+const TRANSLATIONS = {
+  en: {
+    // Nav
+    admin_login:'Admin Login', get_started:'Get Started →',
+    dashboard:'Dashboard', qr_tool:'QR Tool', sign_out:'Sign Out',
+    // Landing
+    chip:'Smart Attendance Platform',
+    hero1:'Attendance.', hero2:'Zero Friction.',
+    sub:'Create timed sessions, verify students by class, generate scannable QR codes, and export professional PDF reports — all in one platform.',
+    btn_admin:'Open Admin Panel →', btn_demo:'View Demo', btn_contact:'✦ Contact Us',
+    // Login
+    welcome:'Welcome to AttendX', how_access:'How are you accessing today?',
+    admin_login_btn:'👨‍🏫 Admin Login', register_btn:'➕ Register as New Admin', super_btn:'🛡 Super Admin',
+    admin_access:'Admin Login', enter_user_pin:'Enter your username and PIN.',
+    username_lbl:'Username', username_ph:'Your username',
+    forgot_pin:'Forgot PIN?', back:'← Back',
+    register_title:'Register Admin', register_sub:'Enter your details. Default PIN is 1234 — change it after login.',
+    full_name:'Full Name', whatsapp_num:'WhatsApp Phone Number',
+    create_account:'Create Account',
+    recover_title:'Recover Access', recover_sub:'Enter your username and set a new PIN. Your data will not be lost.',
+    new_pin:'New 4-digit PIN', set_pin_login:'Set New PIN & Login',
+    super_title:'Super Admin', super_sub:'Enter the super admin password.',
+    password_lbl:'Password', enter_super:'Enter Super Admin',
+    // Dashboard
+    dashboard_title:'Dashboard', settings:'⚙ Settings', full_day_pdf:'📄 Full Day PDF', sign_out_btn:'Sign Out',
+    today_sessions:"Today's Sessions", total_present:'Total Present', live_now:'Live Now', ended:'Ended',
+    new_session:'✦ New Session', sessions:'📋 Sessions', reports:'📊 Reports',
+    create_session_title:'Create Attendance Session',
+    subject:'Subject / Course', subject_ph:'e.g. Mathematics',
+    class_lbl:'Class / Level', class_ph:'e.g. Level 1',
+    department:'Department', select_dept:'— Select Department —',
+    lecturer:'Lecturer', lecturer_ph:'Dr. Name',
+    start_time:'Start Time', duration:'Duration (min)',
+    room:'Room / Location (optional)', room_ph:'e.g. Amphi B',
+    geo_radius:'Geo-fence Radius (metres)', geo_hint:'Students outside this radius cannot mark attendance.',
+    retry_location:'⟳ Retry Location',
+    generate_btn:'⚡ Generate Attendance Link',
+    student_link:'Student attendance link', copy:'Copy', copied:'✓ Copied!',
+    share_hint:'→ Share via WhatsApp, Telegram, or project on screen.',
+    present:'Present', remaining:'Remaining', duration_lbl:'Duration',
+    // Student page
+    session_closes:'Session closes in',
+    mark_attendance:'📍 Mark Your Attendance',
+    first_name:'First Name', last_name:'Last Name / Surname',
+    matricule:'Matriculation Number', matricule_ph:'e.g. 21B0045',
+    your_class:'Your Class / Level', class_must_match:'Must match session class',
+    dept_lbl:'Department', dept_ph:'e.g. Computer Science',
+    phone_opt:'Phone Number (optional)',
+    submit_btn:'✓ Submit My Attendance',
+    already_registered:'Already Registered',
+    already_registered_msg:'You have already marked your attendance for this session.',
+    // Expired
+    time_elapsed:'Time Elapsed', session_ended:'This session has ended.',
+    recorded_absent:'You are recorded as absent.',
+    // Geo strings
+    geo_no_support:'Your browser does not support location — cannot verify presence.',
+    geo_getting:'Getting your location — please stand still…',
+    geo_stand_still:'STAND STILL — Do not move',
+    geo_wait_msg:'Getting your most precise location. This may take up to 60 seconds.',
+    geo_searching:'Searching for GPS signal…',
+    geo_reading:'reading',
+    geo_excellent:'Excellent precision',
+    geo_very_good:'Very good precision',
+    geo_good:'Good precision',
+    geo_fair:'Fair precision',
+    geo_poor:'Poor signal — please wait',
+    geo_failed:'Could not get your location. Make sure GPS is on and stand in open area.',
+    geo_retry:'🔄 Retry Location',
+    geo_denied:'Location access denied. Go to browser Settings → allow location → reload.',
+    geo_unavailable:'Could not get your position. Move to open area and ensure GPS is on.',
+    geo_timeout:'Location timed out. Move to open area and reload.',
+    geo_error:'Location error.',
+    geo_low_accuracy:'GPS accuracy is too low',
+    geo_go_outside:'Please move to an open area and retry.',
+    geo_in_range:'You are within range',
+    geo_too_far:'You are too far away',
+    geo_from_class:'from classroom',
+    geo_limit:'limit',
+    geo_your_pos:'Your GPS',
+    // Settings
+    settings_title:'Settings',
+    school_info:'School Information',
+    school_name_lbl:'School Name', school_name_ph:'e.g. University of Yaoundé I',
+    school_name_hint:'Appears in the footer of all PDF reports.',
+    save:'Save',
+    bg_theme:'Background Theme', choose_bg:'Choose Animated Background',
+    security:'Security — Change PIN',
+    new_pin_lbl:'New PIN', confirm_pin_lbl:'Confirm PIN',
+    update_pin:'Update PIN',
+    pdf_theme:'PDF Report Theme', choose_pdf:'Choose PDF Design',
+    data_mgmt:'Data Management', clear_data:'🗑 Clear All Session Data',
+    clear_hint:'Permanently removes all session and attendance records.',
+    about:'About',
+    // Footer
+    created_by:'Created by',
+  },
+  fr: {
+    // Nav
+    admin_login:'Connexion Admin', get_started:'Commencer →',
+    dashboard:'Tableau de bord', qr_tool:'Outil QR', sign_out:'Déconnexion',
+    // Landing
+    chip:'Plateforme de Présence Intelligente',
+    hero1:'Présence.', hero2:'Zéro Friction.',
+    sub:'Créez des sessions minutées, vérifiez les étudiants par classe, générez des QR codes et exportez des rapports PDF professionnels — tout en un.',
+    btn_admin:'Ouvrir le Panneau Admin →', btn_demo:'Voir la Démo', btn_contact:'✦ Nous Contacter',
+    // Login
+    welcome:'Bienvenue sur AttendX', how_access:'Comment accédez-vous aujourd\'hui ?',
+    admin_login_btn:'👨‍🏫 Connexion Admin', register_btn:'➕ Créer un Compte Admin', super_btn:'🛡 Super Admin',
+    admin_access:'Connexion Admin', enter_user_pin:'Entrez votre nom d\'utilisateur et PIN.',
+    username_lbl:'Nom d\'utilisateur', username_ph:'Votre nom d\'utilisateur',
+    forgot_pin:'PIN oublié ?', back:'← Retour',
+    register_title:'Créer un Compte Admin', register_sub:'Entrez vos informations. Le PIN par défaut est 1234 — changez-le après connexion.',
+    full_name:'Nom Complet', whatsapp_num:'Numéro WhatsApp',
+    create_account:'Créer le Compte',
+    recover_title:'Récupérer l\'Accès', recover_sub:'Entrez votre nom d\'utilisateur et définissez un nouveau PIN. Vos données ne seront pas perdues.',
+    new_pin:'Nouveau PIN à 4 chiffres', set_pin_login:'Définir le PIN et Se Connecter',
+    super_title:'Super Admin', super_sub:'Entrez le mot de passe super admin.',
+    password_lbl:'Mot de passe', enter_super:'Accéder au Super Admin',
+    // Dashboard
+    dashboard_title:'Tableau de Bord', settings:'⚙ Paramètres', full_day_pdf:'📄 PDF Journée Complète', sign_out_btn:'Déconnexion',
+    today_sessions:"Sessions d'Aujourd'hui", total_present:'Total Présents', live_now:'En Direct', ended:'Terminées',
+    new_session:'✦ Nouvelle Session', sessions:'📋 Sessions', reports:'📊 Rapports',
+    create_session_title:'Créer une Session de Présence',
+    subject:'Matière / Cours', subject_ph:'ex. Mathématiques',
+    class_lbl:'Classe / Niveau', class_ph:'ex. Niveau 1',
+    department:'Département', select_dept:'— Sélectionner le Département —',
+    lecturer:'Enseignant', lecturer_ph:'Dr. Nom',
+    start_time:'Heure de Début', duration:'Durée (min)',
+    room:'Salle / Lieu (optionnel)', room_ph:'ex. Amphi B',
+    geo_radius:'Rayon Géo-clôture (mètres)', geo_hint:'Les étudiants hors de ce rayon ne peuvent pas marquer leur présence.',
+    retry_location:'⟳ Relancer la Localisation',
+    generate_btn:'⚡ Générer le Lien de Présence',
+    student_link:'Lien de présence étudiant', copy:'Copier', copied:'✓ Copié !',
+    share_hint:'→ Partagez via WhatsApp, Telegram ou projetez à l\'écran.',
+    present:'Présents', remaining:'Restant', duration_lbl:'Durée',
+    // Student page
+    session_closes:'La session se ferme dans',
+    mark_attendance:'📍 Marquer ma Présence',
+    first_name:'Prénom', last_name:'Nom / Patronyme',
+    matricule:'Numéro de Matricule', matricule_ph:'ex. 21B0045',
+    your_class:'Votre Classe / Niveau', class_must_match:'Doit correspondre à la classe de la session',
+    dept_lbl:'Département', dept_ph:'ex. Informatique',
+    phone_opt:'Numéro de Téléphone (optionnel)',
+    submit_btn:'✓ Soumettre ma Présence',
+    already_registered:'Déjà Enregistré',
+    already_registered_msg:'Vous avez déjà marqué votre présence pour cette session.',
+    // Expired
+    time_elapsed:'Temps Écoulé', session_ended:'Cette session est terminée.',
+    recorded_absent:'Vous êtes enregistré comme absent.',
+    // Geo strings
+    geo_no_support:'Votre navigateur ne supporte pas la localisation.',
+    geo_getting:'Obtention de votre position — restez immobile…',
+    geo_stand_still:'RESTEZ IMMOBILE — Ne bougez pas',
+    geo_wait_msg:'Obtention de votre position la plus précise. Cela peut prendre jusqu\'à 60 secondes.',
+    geo_searching:'Recherche du signal GPS…',
+    geo_reading:'lecture',
+    geo_excellent:'Précision excellente',
+    geo_very_good:'Très bonne précision',
+    geo_good:'Bonne précision',
+    geo_fair:'Précision correcte',
+    geo_poor:'Signal faible — veuillez patienter',
+    geo_failed:'Impossible d\'obtenir votre position. Activez le GPS et placez-vous en espace ouvert.',
+    geo_retry:'🔄 Relancer la Localisation',
+    geo_denied:'Accès à la localisation refusé. Allez dans les Paramètres → autoriser la localisation → rechargez.',
+    geo_unavailable:'Position indisponible. Déplacez-vous en espace ouvert.',
+    geo_timeout:'Délai dépassé. Déplacez-vous en espace ouvert et rechargez.',
+    geo_error:'Erreur de localisation.',
+    geo_low_accuracy:'Précision GPS insuffisante',
+    geo_go_outside:'Déplacez-vous en espace ouvert et réessayez.',
+    geo_in_range:'Vous êtes dans la zone',
+    geo_too_far:'Vous êtes trop loin',
+    geo_from_class:'de la salle de classe',
+    geo_limit:'limite',
+    geo_your_pos:'Votre GPS',
+    // Settings
+    settings_title:'Paramètres',
+    school_info:'Informations de l\'École',
+    school_name_lbl:'Nom de l\'École', school_name_ph:'ex. Université de Yaoundé I',
+    school_name_hint:'Apparaît dans le pied de page de tous les rapports PDF.',
+    save:'Enregistrer',
+    bg_theme:'Thème d\'Arrière-plan', choose_bg:'Choisir l\'Arrière-plan Animé',
+    security:'Sécurité — Changer le PIN',
+    new_pin_lbl:'Nouveau PIN', confirm_pin_lbl:'Confirmer le PIN',
+    update_pin:'Mettre à Jour le PIN',
+    pdf_theme:'Thème du Rapport PDF', choose_pdf:'Choisir le Design PDF',
+    data_mgmt:'Gestion des Données', clear_data:'🗑 Effacer Toutes les Sessions',
+    clear_hint:'Supprime définitivement toutes les sessions et présences.',
+    about:'À Propos',
+    // Footer
+    created_by:'Créé par',
+  }
+};
+
+let _lang = localStorage.getItem('ax_lang') || 'en';
+
+function t(key){ return (TRANSLATIONS[_lang]||TRANSLATIONS.en)[key] || TRANSLATIONS.en[key] || key; }
+
+function setLang(lang){
+  _lang = lang;
+  localStorage.setItem('ax_lang', lang);
+  // Update toggle buttons
+  document.getElementById('langEN').style.background = lang==='en' ? 'var(--blue)' : 'transparent';
+  document.getElementById('langEN').style.color      = lang==='en' ? '#fff' : 'var(--text3)';
+  document.getElementById('langFR').style.background = lang==='fr' ? 'var(--blue)' : 'transparent';
+  document.getElementById('langFR').style.color      = lang==='fr' ? '#fff' : 'var(--text3)';
+  applyTranslations();
+}
+
+function applyTranslations(){
+  // Landing
+  const chip = document.querySelector('.landing-chip');
+  if(chip) chip.textContent = t('chip');
+  const sub = document.querySelector('.landing-sub');
+  if(sub) sub.textContent = t('sub');
+  const ctaBtns = document.querySelectorAll('.landing-cta .cta-btn');
+  if(ctaBtns[0]) ctaBtns[0].textContent = t('btn_admin');
+  if(ctaBtns[1]) ctaBtns[1].textContent = t('btn_demo');
+  if(ctaBtns[2]) ctaBtns[2].textContent = t('btn_contact');
+  // Nav right (if on landing)
+  const navRight = document.getElementById('navRight');
+  if(navRight && navRight.querySelector('.nav-btn-ghost')){
+    const btns = navRight.querySelectorAll('.nav-btn');
+    if(btns[0]) btns[0].textContent = t('admin_login');
+    if(btns[1]) btns[1].textContent = t('get_started');
+  }
+  // Login steps
+  const loginSub = document.querySelector('#loginStep1 .login-sub');
+  if(loginSub) loginSub.textContent = t('how_access');
+  const loginTitle = document.querySelector('#loginStep1 .login-title');
+  if(loginTitle) loginTitle.textContent = t('welcome');
+  // Student page submit button
+  const stuBtn = document.getElementById('stuSubmitBtn');
+  if(stuBtn && !stuBtn.disabled) stuBtn.textContent = t('submit_btn');
+  // Timer label
+  const timerRow = document.querySelector('.timer-row span');
+  if(timerRow) timerRow.textContent = t('session_closes');
+}
 
 /* ── BOOT ── */
+buildBg(_currentBgTheme);
 init();
+setLang(_lang);
 </script>
 </body>
 </html>
