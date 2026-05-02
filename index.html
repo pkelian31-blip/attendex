@@ -1160,21 +1160,81 @@ body::after { content: none; }
 
    FOOTER
 ════════════════════════════════ */
+/* ════════════════════════════════
+   FOOTER — redesigned
+════════════════════════════════ */
 .site-footer {
-  padding:26px 28px; border-top:1px solid var(--line);
-  display:flex; align-items:center; justify-content:space-between;
-  flex-wrap:wrap; gap:12px; font-size:11px; color:var(--text3);
-  position:relative; z-index:1;
+  border-top: 1px solid var(--line);
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(12px);
+  position: relative; z-index: 1;
 }
-.footer-brand { display:flex; align-items:center; gap:9px; }
-.footer-name {
-  font-family:var(--head); font-weight:800; font-size:13px;
+.footer-inner {
+  max-width: 1100px; margin: 0 auto;
+  padding: 40px 28px 0;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 32px;
+}
+.footer-col-brand .footer-logo {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.footer-col-brand .footer-name {
+  font-family:var(--head); font-weight:800; font-size:16px;
   background:linear-gradient(90deg,var(--blue),var(--cyan));
   -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
 }
-.footer-links { display:flex; gap:14px; }
-.footer-links a { color:var(--text3); text-decoration:none; transition:color 0.2s; font-family:var(--mono); font-size:11px; }
-.footer-links a:hover { color:var(--blue); }
+.footer-col-brand p {
+  font-size: 12px; color: var(--text3); line-height: 1.7; max-width: 240px;
+  font-family: var(--body);
+}
+.footer-col-brand .footer-creator {
+  margin-top: 14px; font-size: 10px; color: var(--text3);
+  font-family: var(--mono); letter-spacing: 0.5px;
+}
+.footer-col-brand .footer-creator strong {
+  font-family: var(--head); font-weight: 800; font-size: 12px;
+  background: linear-gradient(90deg, var(--blue), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.footer-col h4 {
+  font-family: var(--head); font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.5px; color: var(--text2);
+  margin-bottom: 14px;
+}
+.footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+.footer-col ul li a {
+  color: var(--text3); text-decoration: none;
+  font-size: 12px; font-family: var(--body);
+  transition: color 0.2s;
+}
+.footer-col ul li a:hover { color: var(--blue); }
+.footer-col ul li span {
+  color: var(--text3); font-size: 12px; font-family: var(--body);
+}
+.footer-bottom {
+  max-width: 1100px; margin: 0 auto;
+  padding: 18px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--line); flex-wrap: wrap; gap: 10px;
+}
+.footer-bottom-left {
+  font-size: 11px; color: var(--text3); font-family: var(--mono);
+}
+.footer-bottom-links { display: flex; gap: 16px; }
+.footer-bottom-links a {
+  color: var(--text3); font-size: 11px; text-decoration: none;
+  font-family: var(--mono); transition: color 0.2s;
+}
+.footer-bottom-links a:hover { color: var(--blue); }
+@media(max-width:820px) {
+  .footer-inner { grid-template-columns: 1fr 1fr; }
+  .footer-col-brand { grid-column: 1/-1; }
+}
+@media(max-width:500px) {
+  .footer-inner { grid-template-columns: 1fr; padding: 28px 18px 0; }
+  .footer-bottom { padding: 14px 18px; }
+}
 
 /* Divider */
 .divider { height:1px; background:var(--line); margin:16px 0; }
@@ -1284,8 +1344,9 @@ body::after { content: none; }
 </div>
 
 <!-- ─────── LOGIN ─────── -->
-<div class="page" id="pgLogin">
-  <div class="login-wrap">
+<!-- ═══════════════ LOGIN MODAL OVERLAY ═══════════════ -->
+<div class="overlay" id="loginModal" onclick="loginModalOutsideClick(event)">
+  <div id="loginModalInner" onclick="event.stopPropagation()">
     <!-- Step 1: choose role -->
     <div class="login-card a-scalein" id="loginStep1">
       <div class="login-lock">🔐</div>
@@ -1296,6 +1357,7 @@ body::after { content: none; }
         <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('register')">➕ Register as New Admin</button>
         <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('super')" style="border-color:var(--gold);color:var(--gold);">🛡 Super Admin</button>
       </div>
+      <button class="btn btn-ghost btn-full" style="margin-top:14px;font-size:11px;" onclick="closeLoginModal()">✕ Close</button>
     </div>
 
     <!-- Step 2a: Admin login -->
@@ -1354,7 +1416,7 @@ body::after { content: none; }
         <label>WhatsApp Phone Number</label>
         <input id="regPhone" type="tel" placeholder="e.g. +237 6XX XXX XXX" oninput="detectCountry(this)"/>
         <div id="countryDetect" style="font-size:11px;color:var(--blue);margin-top:4px;font-family:var(--mono);min-height:16px;"></div>
-        <div class="hint">Used by super admin to contact you via WhatsApp.</div>
+        <div class="hint">Used by super admin to contact you via the platform.</div>
       </div>
       <div class="alert" id="regAlert"></div>
       <button class="btn btn-primary btn-full" style="margin-top:6px;" onclick="registerAdmin()">Create Account</button>
@@ -1986,24 +2048,91 @@ body::after { content: none; }
 
 <!-- ══════════ FOOTER ══════════ -->
 <footer class="site-footer" id="siteFooter">
-  <div class="footer-brand">
-    <div class="nav-logomark" style="width:28px;height:28px;font-size:12px;">✦</div>
-    <div>
-      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">Created by</div>
-      <div class="footer-name">KЭL ♛ PHANTOM</div>
+  <div class="footer-inner">
+    <!-- Brand col -->
+    <div class="footer-col footer-col-brand">
+      <div class="footer-logo">
+        <div class="nav-logomark" style="width:32px;height:32px;font-size:13px;flex-shrink:0;">✦</div>
+        <span class="footer-name">AttendX PRO</span>
+      </div>
+      <p>A smart, real-time attendance management platform built for educators and institutions. Timed sessions, QR codes, live tracking and automated PDF reports — all in one place.</p>
+      <div class="footer-creator">Created by <strong>KЭL ♛ PHANTOM</strong></div>
+    </div>
+
+    <!-- Platform col -->
+    <div class="footer-col">
+      <h4>Platform</h4>
+      <ul>
+        <li><a href="#" onclick="goHome();return false;">Home</a></li>
+        <li><a href="#" onclick="showLogin();return false;">Admin Panel</a></li>
+        <li><a href="#" onclick="navTo('qr');return false;">QR Generator</a></li>
+        <li><a href="#" onclick="showLogin();return false;">View Demo</a></li>
+      </ul>
+    </div>
+
+    <!-- Features col -->
+    <div class="footer-col">
+      <h4>Features</h4>
+      <ul>
+        <li><span>Timed Sessions</span></li>
+        <li><span>Live Tracking</span></li>
+        <li><span>PDF Reports</span></li>
+        <li><span>Class Verification</span></li>
+        <li><span>In-App Messaging</span></li>
+      </ul>
+    </div>
+
+    <!-- Contact col -->
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="#" onclick="openContact();return false;">Contact Us</a></li>
+        <li><a href="#" onclick="openContact();return false;">Help Center</a></li>
+        <li><a href="#" onclick="return false;">Privacy Policy</a></li>
+        <li><a href="#" onclick="return false;">Terms of Use</a></li>
+      </ul>
     </div>
   </div>
-  <div style="font-size:11px;color:var(--text3);text-align:center;font-family:var(--mono);">
-    AttendX PRO &nbsp;·&nbsp; Smart Attendance Platform<br/>
-    <span id="fyear"></span>
-  </div>
-  <div class="footer-links">
-    <a href="#" onclick="navTo('dash')">Dashboard</a>
-    <a href="#" onclick="navTo('qr')">QR Tool</a>
-    <a href="#" onclick="goHome()">Home</a>
-    <a href="#" onclick="openContact()">Contact</a>
+
+  <!-- Bottom bar -->
+  <div class="footer-bottom">
+    <div class="footer-bottom-left">
+      AttendX PRO &nbsp;·&nbsp; Smart Attendance Platform &nbsp;·&nbsp; © <span id="fyear"></span>
+    </div>
+    <div class="footer-bottom-links">
+      <a href="#" onclick="return false;">Privacy</a>
+      <a href="#" onclick="openContact();return false;">Contact</a>
+      <a href="#" onclick="goHome();return false;">Home</a>
+    </div>
   </div>
 </footer>
+
+<!-- ═══════════════ NOTIFICATION PANEL ═══════════════ -->
+<div class="overlay" id="notifPanel" onclick="if(event.target===this)closeNotifPanel()" style="align-items:flex-start;justify-content:flex-end;padding:72px 16px 0;">
+  <div style="width:100%;max-width:400px;background:var(--s1);border:1px solid var(--line);border-radius:var(--r4);box-shadow:0 24px 80px rgba(0,0,0,0.35);max-height:80vh;display:flex;flex-direction:column;animation:slideIn 0.28s ease both;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line);">
+      <div style="font-family:var(--head);font-size:16px;font-weight:700;">🔔 Notifications</div>
+      <button onclick="closeNotifPanel()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text3);padding:2px 6px;">✕</button>
+    </div>
+    <div id="notifList" style="flex:1;overflow-y:auto;padding:0 20px;"></div>
+    <!-- Super admin compose -->
+    <div id="notifCompose" style="display:none;border-top:1px solid var(--line);padding:16px 20px;">
+      <div style="font-family:var(--head);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-bottom:10px;">📢 Send to Admin</div>
+      <select id="notifTargetAdmin" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-family:var(--body);font-size:12px;color:var(--text);margin-bottom:8px;">
+        <option value="__all__">📢 All Admins</option>
+      </select>
+      <textarea id="notifMsgInput" placeholder="Type your message to admin(s)…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-family:var(--body);font-size:12px;color:var(--text);resize:none;height:80px;margin-bottom:8px;"></textarea>
+      <button onclick="superSendNotif()" style="width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r2);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;">Send Notification</button>
+    </div>
+    <!-- Admin → Super compose (max 3/month) -->
+    <div id="notifAdminMsg" style="display:none;border-top:1px solid var(--line);padding:16px 20px;">
+      <div style="font-family:var(--head);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-bottom:6px;">✉️ Message Super Admin</div>
+      <div id="adminMsgQuota" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">3 messages remaining this month</div>
+      <textarea id="adminMsgInput" placeholder="Write your message to the super admin…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-family:var(--body);font-size:12px;color:var(--text);resize:none;height:72px;margin-bottom:8px;"></textarea>
+      <button id="adminMsgSendBtn" onclick="adminSendToSuper()" style="width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r2);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;">Send Message</button>
+    </div>
+  </div>
+</div>
 
 <!-- ════════════════════════════════════════════════════════
      APPLICATION LOGIC
@@ -2086,7 +2215,7 @@ function showQRExpired(){
 
 /* ── PAGE SYSTEM ── */
 function showPage(name) {
-  const map = {landing:'pgLanding',login:'pgLogin',dash:'pgDash',student:'pgStudent',qr:'pgQR',super:'pgSuper'};
+  const map = {landing:'pgLanding',dash:'pgDash',student:'pgStudent',qr:'pgQR',super:'pgSuper'};
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const el = document.getElementById(map[name]);
   if (el) el.classList.add('active');
@@ -2099,15 +2228,15 @@ function showPage(name) {
   if (name === 'dash' || name === 'qr') {
     navTabs.style.display = 'flex';
     if(S.currentAdmin === '__super__'){
-      navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showSettings()">⚙</button><button class="nav-btn" style="background:var(--gold);color:#fff;border:none;padding:6px 14px;border-radius:var(--r1);font-weight:700;cursor:pointer;" onclick="backToSuperPanel()">🛡 Super Panel</button>`;
+      navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showSettings()">⚙</button><button class="nav-btn nav-btn-ghost" id="notifBtnNav" onclick="openNotifPanel()" style="position:relative;">🔔<span id="notifBadgeNav" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-family:var(--mono);border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;display:none;"></span></button><button class="nav-btn" style="background:var(--gold);color:#fff;border:none;padding:6px 14px;border-radius:var(--r1);font-weight:700;cursor:pointer;" onclick="backToSuperPanel()">🛡 Super Panel</button>`;
     } else {
-      navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showSettings()">⚙</button><button class="nav-btn nav-btn-ghost" onclick="adminOut()">Sign Out</button>`;
+      navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showSettings()">⚙</button><button class="nav-btn nav-btn-ghost" id="notifBtnNav" onclick="openNotifPanel()" style="position:relative;">🔔<span id="notifBadgeNav" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-family:var(--mono);border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;display:none;"></span></button><button class="nav-btn nav-btn-ghost" onclick="adminOut()">Sign Out</button>`;
     }
     ntDash.classList.toggle('active', name==='dash');
     ntQR.classList.toggle('active',  name==='qr');
   } else if (name === 'super') {
     navTabs.style.display = 'none';
-    navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="superOut()">Sign Out</button>`;
+    navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" id="notifBtnNav" onclick="openNotifPanel()" style="position:relative;">🔔<span id="notifBadgeNav" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-family:var(--mono);border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;display:none;"></span></button><button class="nav-btn nav-btn-ghost" onclick="superOut()">Sign Out</button>`;
   } else if (name === 'student') {
     navTabs.style.display = 'none';
     navRight.innerHTML = '';
@@ -2115,20 +2244,35 @@ function showPage(name) {
     navTabs.style.display = 'none';
     navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showLogin()">Admin Login</button><button class="nav-btn nav-btn-solid" onclick="showLogin()">Get Started →</button>`;
   }
-  document.getElementById('siteFooter').style.display = name === 'student' ? 'none' : 'flex';
+  document.getElementById('siteFooter').style.display = name === 'student' ? 'none' : '';
 }
 
 function goHome()      { showPage('landing'); }
-function showLogin()   { S.pinInput=''; updateDots(); showPage('login'); }
-function navTo(pg)     { showPage(pg); if(pg==='dash'){ refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); } }
-function adminOut()    { S.loggedIn=false; S.currentAdmin=null; if(S.liveInt)clearInterval(S.liveInt); showPage('landing'); }
+
+function showLogin(){
+  S.pinInput=''; S_regPin=''; S_recPin='';
+  showLoginStep('step1');
+  document.getElementById('loginModal').classList.add('show');
+}
+
+function closeLoginModal(){
+  document.getElementById('loginModal').classList.remove('show');
+}
+
+function loginModalOutsideClick(e){
+  if(e.target === document.getElementById('loginModal')){
+    closeLoginModal();
+  }
+}
 
 /* ── LOGIN FLOW ── */
 const SUPER_PWD = 'AttendX@2025';
 let S_regPin = '';
 let S_recPin = '';
 
-function showLogin(){ S.pinInput=''; S_regPin=''; S_recPin=''; showLoginStep('step1'); showPage('login'); }
+function navTo(pg)  { showPage(pg); if(pg==='dash'){ refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); } }
+function adminOut() { S.loggedIn=false; S.currentAdmin=null; if(S.liveInt)clearInterval(S.liveInt); stopNotifListener(); showPage('landing'); }
+
 function showLoginStep(step){
   ['loginStep1','loginStepAdmin','loginStepRegister','loginStepSuper','loginStepRecover'].forEach(id=>{
     const el = document.getElementById(id);
@@ -2210,7 +2354,9 @@ async function tryLogin() {
 
   S.loggedIn = true;
   S.currentAdmin = username;
+  closeLoginModal();
   showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
+  startNotifListener();
 }
 
 /* ── REGISTER NEW ADMIN ── */
@@ -2260,6 +2406,7 @@ async function registerAdmin(){
     await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
       name, username, phone, pin:'1234', blocked:false, createdAt:Date.now(), lastLogin:null
     });
+    await notifyNewAdmin(name, username);
     showAlert('regAlert','ok','✓ Account created!\nUsername: '+username+'\nDefault PIN: 1234\n\nSave your username — you need it to login.');
     setTimeout(()=>{
       showLoginStep('admin');
@@ -2289,7 +2436,9 @@ async function recoverPin(){
     setTimeout(()=>{
       S.loggedIn = true;
       S.currentAdmin = username;
+      closeLoginModal();
       showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
+      startNotifListener();
     }, 1500);
   } catch(e){
     showAlert('recoverAlert','err','Recovery failed: '+e.message);
@@ -2300,18 +2449,21 @@ async function recoverPin(){
 function trySuperLogin(){
   const pwd = document.getElementById('superPwd').value;
   if(pwd === SUPER_PWD){
+    closeLoginModal();
     showPage('super'); loadAdminList(); loadSuperSessions();
+    startNotifListener();
   } else {
     showAlert('superAlert','err','Incorrect password.');
     document.getElementById('superPwd').value='';
   }
 }
-function superOut(){ S.loggedIn=false; S.currentAdmin=null; showPage('landing'); }
+function superOut(){ S.loggedIn=false; S.currentAdmin=null; stopNotifListener(); showPage('landing'); }
 
 function superGoToDash(){
   S.loggedIn = true;
   S.currentAdmin = '__super__';
   showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
+  startNotifListener();
 }
 
 function backToSuperPanel(){
@@ -2620,13 +2772,17 @@ async function confirmResetPin(){
 }
 
 document.addEventListener('keydown', e => {
-  const lp = document.getElementById('pgLogin');
-  if(lp.classList.contains('active')){
+  const lm = document.getElementById('loginModal');
+  if(lm && lm.classList.contains('show')){
     if(document.getElementById('loginStepAdmin').style.display!=='none'){
       if(e.key>='0'&&e.key<='9') nkPress(e.key);
       if(e.key==='Backspace') nkDel();
     }
+    if(e.key==='Escape') closeLoginModal();
   }
+  // Close notification panel on Escape
+  const np = document.getElementById('notifPanel');
+  if(np && np.classList.contains('show') && e.key==='Escape') closeNotifPanel();
 });
 
 /* ── DASH TABS ── */
@@ -4718,16 +4874,22 @@ function applyTranslations(){
   if(ctCloseBtn) ctCloseBtn.textContent = t('cancel_btn').replace('Annuler','Fermer').replace('Cancel','Close');
 
   // ── FOOTER ──
-  const footerCreated = qs('.site-footer .footer-brand > div > div:first-child');
-  if(footerCreated) footerCreated.textContent = t('created_by');
-  const footerPlatform = qs('.site-footer > div:nth-child(2)');
-  if(footerPlatform && footerPlatform.tagName==='DIV'){
-    const lines = footerPlatform.innerHTML.split('<br>');
-    if(lines.length>=1) footerPlatform.innerHTML = 'AttendX PRO &nbsp;·&nbsp; '+t('footer_platform')+(lines[1]?'<br>'+lines[1]:'');
+  // ── FOOTER (new multi-col structure) ──
+  const footerCreator = qs('.footer-creator');
+  if(footerCreator){
+    const strong = footerCreator.querySelector('strong');
+    footerCreator.textContent = t('created_by')+' ';
+    if(strong) footerCreator.appendChild(strong);
   }
-  const footerLinks = qsa('.footer-links a');
-  if(footerLinks[0]) footerLinks[0].textContent = t('footer_privacy');
-  if(footerLinks[1]) footerLinks[1].textContent = t('footer_contact');
+  const footerBottomLeft = qs('.footer-bottom-left');
+  if(footerBottomLeft){
+    footerBottomLeft.innerHTML = 'AttendX PRO &nbsp;·&nbsp; '+t('footer_platform')+' &nbsp;·&nbsp; © <span id="fyear"></span>';
+    const fyear = document.getElementById('fyear');
+    if(fyear) fyear.textContent = new Date().getFullYear();
+  }
+  const footerBtmLinks = qsa('.footer-bottom-links a');
+  if(footerBtmLinks[0]) footerBtmLinks[0].textContent = t('footer_privacy');
+  if(footerBtmLinks[2]) footerBtmLinks[2].textContent = _lang==='fr'?'Accueil':'Home';
 
   // ── QR TOOL PAGE ──
   const qrChip = qs('#pgQR .qr-chip');
@@ -4799,6 +4961,265 @@ function applyTranslations(){
   const maBtns = qsa('#maxAdminsModal .confirm-acts .btn');
   if(maBtns[0]) maBtns[0].textContent = t('cancel_btn');
   if(maBtns[1]) maBtns[1].textContent = t('save');
+}
+
+/* ══════════════════════════════════════════════════
+   NOTIFICATION SYSTEM
+   - Super admin gets notif on new admin registration
+   - Super admin can message any admin directly
+   - Admins can send max 3 messages/month to super admin
+   - Blocked/removed admins still see super-sent notifs
+   Firestore collection: "notifications"
+   Doc fields: { to, from, type, title, body, read, ts, actionAdminId }
+══════════════════════════════════════════════════ */
+let _notifUnsub = null;
+
+function startNotifListener(){
+  if(!window._db) return;
+  const isSuperAdmin = (S.currentAdmin === '__super__');
+  const toId = isSuperAdmin ? '__super__' : S.currentAdmin;
+  const q = window._fsQuery(
+    window._fsColl(window._db, 'notifications'),
+    window._fsWhere('to','==',toId)
+  );
+  _notifUnsub = window._fsOnSnap(q, snap => {
+    const notifs = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.ts-a.ts);
+    renderNotifBadge(notifs);
+    renderNotifList(notifs);
+  });
+}
+
+function stopNotifListener(){
+  if(_notifUnsub){ _notifUnsub(); _notifUnsub = null; }
+}
+
+function renderNotifBadge(notifs){
+  const unread = notifs.filter(n=>!n.read).length;
+  // update all badge elements (nav renders them dynamically)
+  document.querySelectorAll('[id^="notifBadgeNav"]').forEach(el=>{
+    if(unread > 0){
+      el.style.display='flex'; el.textContent = unread > 9 ? '9+' : unread;
+    } else {
+      el.style.display='none';
+    }
+  });
+}
+
+function renderNotifList(notifs){
+  const list = document.getElementById('notifList');
+  if(!list) return;
+  if(!notifs.length){
+    list.innerHTML = '<div style="text-align:center;padding:32px 0;color:var(--text3);font-size:13px;font-family:var(--mono);">No notifications yet</div>';
+    return;
+  }
+  const isSuperAdmin = (S.currentAdmin === '__super__');
+  list.innerHTML = notifs.map(n => {
+    const timeAgo = _timeAgo(n.ts);
+    const unreadDot = !n.read ? '<span style="width:8px;height:8px;background:var(--blue);border-radius:50%;flex-shrink:0;margin-top:4px;"></span>' : '<span style="width:8px;height:8px;flex-shrink:0;"></span>';
+    const replyBtn = isSuperAdmin && n.type==='admin_to_super'
+      ? `<button onclick="openReplyToAdmin('${n.from}','${n.fromName||n.from}')" style="margin-top:8px;padding:5px 12px;border-radius:var(--r1);background:var(--blue3);border:1px solid var(--line2);color:var(--blue);font-size:11px;font-family:var(--mono);cursor:pointer;font-weight:600;">↩ Reply</button>`
+      : '';
+    return `<div onclick="markNotifRead('${n.id}')" style="display:flex;gap:10px;padding:14px 0;border-bottom:1px solid var(--line);cursor:pointer;align-items:flex-start;">
+      ${unreadDot}
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:var(--head);font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px;">${n.title}</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.5;">${n.body}</div>
+        ${replyBtn}
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:5px;">${timeAgo}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function _timeAgo(ts){
+  const d = Date.now() - ts;
+  if(d < 60000) return 'Just now';
+  if(d < 3600000) return Math.floor(d/60000)+'m ago';
+  if(d < 86400000) return Math.floor(d/3600000)+'h ago';
+  return Math.floor(d/86400000)+'d ago';
+}
+
+async function markNotifRead(id){
+  if(!window._db) return;
+  try {
+    await window._fsSetDoc(window._fsDoc(window._db,'notifications',id), {read:true},{merge:true});
+  } catch(e){}
+}
+
+function openNotifPanel(){
+  document.getElementById('notifPanel').classList.add('show');
+  // mark all as read after opening
+  setTimeout(async()=>{
+    if(!window._db || !S.currentAdmin) return;
+    const toId = S.currentAdmin === '__super__' ? '__super__' : S.currentAdmin;
+    const q = window._fsQuery(
+      window._fsColl(window._db,'notifications'),
+      window._fsWhere('to','==',toId),
+      window._fsWhere('read','==',false)
+    );
+    const snap = await window._fsGetDocs(q);
+    snap.docs.forEach(async d=>{
+      await window._fsSetDoc(d.ref,{read:true},{merge:true});
+    });
+  }, 1000);
+
+  // Show compose section for super admin
+  const composeSection = document.getElementById('notifCompose');
+  if(composeSection){
+    composeSection.style.display = S.currentAdmin === '__super__' ? 'block' : 'none';
+    if(S.currentAdmin === '__super__') loadNotifAdminTargets();
+  }
+  const adminMsgSection = document.getElementById('notifAdminMsg');
+  if(adminMsgSection){
+    adminMsgSection.style.display = S.currentAdmin && S.currentAdmin !== '__super__' ? 'block' : 'none';
+    if(S.currentAdmin && S.currentAdmin !== '__super__') loadAdminMsgQuota();
+  }
+}
+
+function closeNotifPanel(){
+  document.getElementById('notifPanel').classList.remove('show');
+}
+
+/* Super admin sends notification to one or all admins */
+async function superSendNotif(){
+  const target = document.getElementById('notifTargetAdmin').value;
+  const msg = document.getElementById('notifMsgInput').value.trim();
+  if(!msg){ toast('Please write a message.','err'); return; }
+  if(!window._db){ toast('Not connected.','err'); return; }
+
+  try {
+    const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
+    const admins = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const targets = target === '__all__' ? admins : admins.filter(a=>a.id===target||a.username===target);
+    if(!targets.length && target !== '__all__'){ toast('Admin not found.','err'); return; }
+
+    const sendTo = target === '__all__' ? admins : targets;
+    for(const a of sendTo){
+      const docRef = window._fsDoc(window._fsColl(window._db,'notifications'));
+      await window._fsSetDoc(docRef, {
+        to: a.username || a.id,
+        from: '__super__',
+        fromName: 'Super Admin',
+        type: 'super_broadcast',
+        title: '📢 Message from Super Admin',
+        body: msg,
+        read: false,
+        ts: Date.now()
+      });
+    }
+    document.getElementById('notifMsgInput').value='';
+    toast('Notification sent ✓','ok');
+    loadNotifAdminTargets();
+  } catch(e){
+    toast('Failed: '+e.message,'err');
+  }
+}
+
+/* Pre-fill and open reply composer to a specific admin */
+function openReplyToAdmin(adminId, adminName){
+  const sel = document.getElementById('notifTargetAdmin');
+  if(sel){
+    // Try to select that admin
+    for(let opt of sel.options){
+      if(opt.value === adminId){ sel.value = adminId; break; }
+    }
+  }
+  document.getElementById('notifMsgInput').value = '';
+  document.getElementById('notifMsgInput').focus();
+  toast(`Replying to ${adminName}`, 'info');
+}
+
+/* Load admin list into the target selector */
+async function loadNotifAdminTargets(){
+  const sel = document.getElementById('notifTargetAdmin');
+  if(!sel || !window._db) return;
+  sel.innerHTML = '<option value="__all__">📢 All Admins</option>';
+  try {
+    const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
+    snap.docs.forEach(d=>{
+      const a = d.data();
+      const opt = document.createElement('option');
+      opt.value = a.username||d.id;
+      opt.textContent = (a.name||a.username||d.id) + (a.blocked?' (blocked)':'');
+      sel.appendChild(opt);
+    });
+  } catch(e){}
+}
+
+/* Admin sends message to super admin (max 3/month) */
+async function adminSendToSuper(){
+  const msg = document.getElementById('adminMsgInput').value.trim();
+  if(!msg){ toast('Please write a message.','err'); return; }
+  if(!window._db || !S.currentAdmin){ return; }
+
+  // Count this month's messages (client-side filter to avoid composite index)
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+  const q = window._fsQuery(
+    window._fsColl(window._db,'notifications'),
+    window._fsWhere('from','==',S.currentAdmin),
+    window._fsWhere('to','==','__super__')
+  );
+  const snap = await window._fsGetDocs(q);
+  const thisMonthCount = snap.docs.filter(d=>d.data().ts >= monthStart.getTime()).length;
+  if(thisMonthCount >= 3){
+    toast('Monthly limit reached (3 messages/month)','err');
+    return;
+  }
+
+  try {
+    const docRef = window._fsDoc(window._fsColl(window._db,'notifications'));
+    await window._fsSetDoc(docRef, {
+      to: '__super__',
+      from: S.currentAdmin,
+      fromName: S.currentAdmin,
+      type: 'admin_to_super',
+      title: '✉️ Message from ' + S.currentAdmin,
+      body: msg,
+      read: false,
+      ts: Date.now()
+    });
+    document.getElementById('adminMsgInput').value = '';
+    toast('Message sent to Super Admin ✓','ok');
+    loadAdminMsgQuota();
+  } catch(e){
+    toast('Failed: '+e.message,'err');
+  }
+}
+
+async function loadAdminMsgQuota(){
+  const el = document.getElementById('adminMsgQuota');
+  if(!el || !window._db || !S.currentAdmin) return;
+  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+  const q = window._fsQuery(
+    window._fsColl(window._db,'notifications'),
+    window._fsWhere('from','==',S.currentAdmin),
+    window._fsWhere('to','==','__super__')
+  );
+  const snap = await window._fsGetDocs(q);
+  const used = snap.docs.filter(d=>d.data().ts >= monthStart.getTime()).length;
+  const remaining = Math.max(0, 3 - used);
+  el.textContent = `${remaining} message${remaining!==1?'s':''} remaining this month`;
+  el.style.color = remaining === 0 ? 'var(--red)' : 'var(--text3)';
+  const btn = document.getElementById('adminMsgSendBtn');
+  if(btn) btn.disabled = remaining === 0;
+}
+
+/* Fire notification when new admin registers */
+async function notifyNewAdmin(adminName, adminUsername){
+  if(!window._db) return;
+  try {
+    const docRef = window._fsDoc(window._fsColl(window._db,'notifications'));
+    await window._fsSetDoc(docRef, {
+      to: '__super__',
+      from: adminUsername,
+      fromName: adminName,
+      type: 'new_admin',
+      title: '🆕 New Admin Registered',
+      body: `${adminName} (${adminUsername}) just registered as a new admin. You can reply to contact them directly.`,
+      read: false,
+      ts: Date.now()
+    });
+  } catch(e){}
 }
 
 /* ── BOOT ── */
