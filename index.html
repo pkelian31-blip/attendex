@@ -1535,6 +1535,18 @@ body::after { content: none; }
       </div>
     </div>
 
+    <!-- Trial status banner (hidden by default, shown for trial accounts) -->
+    <div id="trialBanner" style="display:none;border-radius:var(--r2);padding:13px 18px;margin-bottom:18px;display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;font-family:var(--body);">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="trialBannerIcon" style="font-size:18px;">⏳</span>
+        <div>
+          <div id="trialBannerTitle" style="font-weight:600;color:inherit;"></div>
+          <div id="trialBannerSub" style="font-size:11px;opacity:0.8;font-family:var(--mono);margin-top:2px;"></div>
+        </div>
+      </div>
+      <button onclick="openNotifPanel()" style="padding:6px 14px;border-radius:var(--r1);background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:inherit;font-size:11px;font-weight:700;font-family:var(--head);cursor:pointer;white-space:nowrap;">✉ Contact Super Admin</button>
+    </div>
+
     <!-- Stats -->
     <div class="stats-grid a-fadeup d1">
       <div class="scard b"><div class="sl">Today's Sessions</div><div class="sv" id="stSess">0</div><div class="sm">Created today</div></div>
@@ -1757,10 +1769,15 @@ body::after { content: none; }
           Configuration
         </div>
 
-        <div class="tabs" style="margin-bottom:20px;">
-          <button class="tab active" onclick="qrTab('link',this)">🔗 Session Link</button>
+        <div class="tabs qr-tabs-wrap" style="margin-bottom:20px;flex-wrap:wrap;gap:6px;">
+          <button class="tab active" onclick="qrTab('link',this)">🔗 Session</button>
           <button class="tab" onclick="qrTab('email',this)">✉ Email</button>
           <button class="tab" onclick="qrTab('web',this)">🌐 Website</button>
+          <button class="tab" onclick="qrTab('filelink',this)">📁 File Link</button>
+          <button class="tab" onclick="qrTab('imgbed',this)">🖼 Image</button>
+          <button class="tab" onclick="qrTab('filecard',this)">📋 File Card</button>
+          <button class="tab" onclick="qrTab('vcard',this)">👤 Contact</button>
+          <button class="tab" onclick="qrTab('note',this)">📝 Note</button>
         </div>
 
         <!-- LINK PANEL -->
@@ -1794,6 +1811,109 @@ body::after { content: none; }
         <div class="qr-panel" id="qrp-web">
           <div class="field"><label>Website / URL *</label><input id="qr-url" placeholder="https://yourwebsite.com"/><div class="err-msg" id="err-url">Please enter a valid URL (include https://).</div></div>
           <div class="field"><label>Label (for history)</label><input id="qr-urlabel" placeholder="My Website"/></div>
+        </div>
+
+        <!-- FILE LINK PANEL -->
+        <div class="qr-panel" id="qrp-filelink">
+          <div style="background:var(--blue3);border:1px solid var(--line2);border-radius:var(--r2);padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--blue);font-family:var(--mono);line-height:1.6;">
+            📁 Paste any Google Drive, Dropbox, OneDrive or direct file URL. The receiver scans the QR and lands on a download page.
+          </div>
+          <div class="field"><label>File Share URL *</label><input id="qr-fl-url" placeholder="https://drive.google.com/file/d/…"/><div class="err-msg" id="err-fl">Please enter a valid URL (include https://).</div></div>
+          <div class="field"><label>File Name (shown on landing page)</label><input id="qr-fl-name" placeholder="e.g. Course Notes Week 3.pdf"/></div>
+          <div class="field"><label>Description (optional)</label><input id="qr-fl-desc" placeholder="e.g. Upload this before next class"/></div>
+          <div class="field"><label>File Type</label>
+            <div class="sel-wrap"><select id="qr-fl-type">
+              <option value="📄 PDF">📄 PDF</option>
+              <option value="🖼 Image">🖼 Image</option>
+              <option value="📊 Spreadsheet">📊 Spreadsheet</option>
+              <option value="📝 Document">📝 Document</option>
+              <option value="🎬 Video">🎬 Video</option>
+              <option value="🎵 Audio">🎵 Audio</option>
+              <option value="📦 Archive">📦 Archive</option>
+              <option value="📁 Other">📁 Other</option>
+            </select></div>
+          </div>
+        </div>
+
+        <!-- IMAGE EMBED PANEL -->
+        <div class="qr-panel" id="qrp-imgbed">
+          <div style="background:var(--gold2);border:1px solid rgba(245,158,11,0.25);border-radius:var(--r2);padding:12px 14px;margin-bottom:14px;font-size:12px;color:#92400e;font-family:var(--mono);line-height:1.6;">
+            ⚠️ Image must be <strong>under 150KB</strong> after compression. Larger images won't fit in a QR. Use for logos, stamps, small photos.
+          </div>
+          <div class="field">
+            <label>Upload Image</label>
+            <div id="imgDropZone" onclick="document.getElementById('qr-img-file').click()" style="border:2px dashed var(--line2);border-radius:var(--r2);padding:28px 16px;text-align:center;cursor:pointer;transition:border-color 0.2s;background:var(--s2);" ondragover="event.preventDefault();this.style.borderColor='var(--blue)'" ondragleave="this.style.borderColor='var(--line2)'" ondrop="handleImgDrop(event)">
+              <div style="font-size:28px;margin-bottom:8px;">🖼</div>
+              <div style="font-size:13px;color:var(--text2);font-family:var(--body);">Click or drag & drop image here</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:4px;font-family:var(--mono);">PNG, JPG, GIF, WebP · Max 150KB after compression</div>
+            </div>
+            <input type="file" id="qr-img-file" accept="image/*" style="display:none;" onchange="handleImgUpload(this)"/>
+          </div>
+          <div id="imgPreviewWrap" style="display:none;margin-top:8px;">
+            <img id="imgPreview" style="max-width:100%;max-height:140px;border-radius:var(--r2);border:1px solid var(--line);object-fit:contain;"/>
+            <div id="imgSizeInfo" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:6px;"></div>
+            <button onclick="clearImgUpload()" style="margin-top:6px;font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;font-family:var(--mono);">✕ Remove image</button>
+          </div>
+          <div class="field" style="margin-top:12px;"><label>Caption (optional)</label><input id="qr-img-caption" placeholder="e.g. Scan to view the campus map"/></div>
+        </div>
+
+        <!-- FILE CARD PANEL -->
+        <div class="qr-panel" id="qrp-filecard">
+          <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--text2);font-family:var(--mono);line-height:1.6;">
+            📋 The receiver scans and sees a styled info card with the file details — name, type, size, description, and your contact. Ideal for physical handouts, printed sheets.
+          </div>
+          <div class="field"><label>File / Document Name *</label><input id="qr-fc-name" placeholder="e.g. HND Level 2 — Chemistry Notes.pdf"/></div>
+          <div class="field"><label>File Type</label>
+            <div class="sel-wrap"><select id="qr-fc-type">
+              <option value="📄 PDF Document">📄 PDF Document</option>
+              <option value="🖼 Image File">🖼 Image File</option>
+              <option value="📊 Excel Spreadsheet">📊 Excel Spreadsheet</option>
+              <option value="📝 Word Document">📝 Word Document</option>
+              <option value="📽 Presentation">📽 Presentation</option>
+              <option value="🎬 Video File">🎬 Video File</option>
+              <option value="📦 ZIP Archive">📦 ZIP Archive</option>
+              <option value="📁 Other File">📁 Other File</option>
+            </select></div>
+          </div>
+          <div class="field"><label>File Size (approximate)</label><input id="qr-fc-size" placeholder="e.g. 2.4 MB"/></div>
+          <div class="field"><label>Description / Instructions</label><textarea id="qr-fc-desc" style="width:100%;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 13px;font-size:13px;font-family:var(--body);color:var(--text);outline:none;resize:vertical;min-height:72px;" placeholder="e.g. Print pages 3–7 and bring to class. Contact prof for access."></textarea></div>
+          <div class="field"><label>Contact / Author Name</label><input id="qr-fc-contact" placeholder="e.g. Prof. Jean Mbarga — mbarga@school.cm"/></div>
+        </div>
+
+        <!-- VCARD / CONTACT PANEL -->
+        <div class="qr-panel" id="qrp-vcard">
+          <div style="background:var(--blue3);border:1px solid var(--line2);border-radius:var(--r2);padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--blue);font-family:var(--mono);line-height:1.6;">
+            👤 Receiver scans and gets a contact card they can save to their phone instantly — no typing required.
+          </div>
+          <div class="field"><label>Full Name *</label><input id="qr-vc-name" placeholder="e.g. Dr. Jean Mbarga"/></div>
+          <div class="field"><label>Phone Number</label><input id="qr-vc-phone" type="tel" placeholder="+237 6XX XXX XXX"/></div>
+          <div class="field"><label>Email</label><input id="qr-vc-email" type="email" placeholder="jean.mbarga@school.cm"/></div>
+          <div class="field"><label>Organisation / School</label><input id="qr-vc-org" placeholder="e.g. IUT Yaoundé"/></div>
+          <div class="field"><label>Job Title / Role</label><input id="qr-vc-title" placeholder="e.g. Senior Lecturer — Chemistry"/></div>
+          <div class="field"><label>Website (optional)</label><input id="qr-vc-url" placeholder="https://school.cm"/></div>
+        </div>
+
+        <!-- NOTE / PLAIN TEXT PANEL -->
+        <div class="qr-panel" id="qrp-note">
+          <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--text2);font-family:var(--mono);line-height:1.6;">
+            📝 Encode any short text directly into the QR — no internet needed. Perfect for instructions, passwords (temp), room numbers, WiFi credentials.
+          </div>
+          <div class="field">
+            <label>Text / Note *</label>
+            <textarea id="qr-note-text" style="width:100%;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 13px;font-size:13px;font-family:var(--body);color:var(--text);outline:none;resize:vertical;min-height:100px;" placeholder="Type any text — WiFi: MyNetwork / Pass: 1234&#10;Or: Room 204, 3rd floor, Bâtiment B&#10;Or: Submit assignment by Friday 17h00" oninput="updateNoteCharCount(this)"></textarea>
+            <div style="display:flex;justify-content:space-between;margin-top:4px;">
+              <span class="hint">~900 char max for reliable scanning</span>
+              <span id="noteCharCount" style="font-size:11px;font-family:var(--mono);color:var(--text3);">0 / 900</span>
+            </div>
+          </div>
+          <div class="field"><label>Quick Template</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <button onclick="noteTemplate('wifi')" style="padding:5px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-size:11px;font-family:var(--mono);cursor:pointer;color:var(--text2);">📶 WiFi</button>
+              <button onclick="noteTemplate('room')" style="padding:5px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-size:11px;font-family:var(--mono);cursor:pointer;color:var(--text2);">🚪 Room</button>
+              <button onclick="noteTemplate('deadline')" style="padding:5px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-size:11px;font-family:var(--mono);cursor:pointer;color:var(--text2);">📅 Deadline</button>
+              <button onclick="noteTemplate('contact')" style="padding:5px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-size:11px;font-family:var(--mono);cursor:pointer;color:var(--text2);">📞 Quick Contact</button>
+            </div>
+          </div>
         </div>
 
         <!-- SHARED OPTIONS -->
@@ -2127,7 +2247,7 @@ body::after { content: none; }
     <!-- Admin → Super compose (max 3/month) -->
     <div id="notifAdminMsg" style="display:none;border-top:1px solid var(--line);padding:16px 20px;">
       <div style="font-family:var(--head);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-bottom:6px;">✉️ Message Super Admin</div>
-      <div id="adminMsgQuota" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">3 messages remaining this month</div>
+      <div id="adminMsgQuota" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">15 messages remaining this month</div>
       <textarea id="adminMsgInput" placeholder="Write your message to the super admin…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-family:var(--body);font-size:12px;color:var(--text);resize:none;height:72px;margin-bottom:8px;"></textarea>
       <button id="adminMsgSendBtn" onclick="adminSendToSuper()" style="width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r2);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;">Send Message</button>
     </div>
@@ -2337,40 +2457,86 @@ async function tryLogin() {
     S.pinInput=''; updateDots(); return;
   }
   const admin = snap.data();
-  if(admin.blocked){
-    for(let i=0;i<4;i++) document.getElementById('pd'+i).classList.add('err');
-    showAlert('loginAlert','err','⛔ Your account has been suspended. Contact the super admin.');
+
+  // ── Trial expiry check (auto-block if 30 days elapsed) ──
+  if(!admin.blocked && admin.trialEnd && Date.now() > admin.trialEnd){
+    // Auto-block the account
+    await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
+      {blocked:true, trialExpired:true, blockedAt:Date.now(), blockedReason:'trial_expired'}, {merge:true});
+    for(let i=0;i<4;i++) document.getElementById('pd'+i)?.classList.add('err');
+    showAlert('loginAlert','err',
+      '⏰ Your 30-day free trial has ended.\n\nYour account has been paused and all your data is safely stored.\nContact the super admin to continue using AttendX PRO.'
+    );
     S.pinInput=''; updateDots(); return;
   }
+
+  if(admin.blocked){
+    for(let i=0;i<4;i++) document.getElementById('pd'+i)?.classList.add('err');
+    const reason = admin.blockedReason === 'trial_expired'
+      ? '⏰ Your free trial has ended. Contact the super admin to reactivate your account.'
+      : '⛔ Your account has been suspended. Contact the super admin.';
+    showAlert('loginAlert','err', reason);
+    S.pinInput=''; updateDots(); return;
+  }
+
   if(S.pinInput !== admin.pin){
-    for(let i=0;i<4;i++) document.getElementById('pd'+i).classList.add('err');
+    for(let i=0;i<4;i++) document.getElementById('pd'+i)?.classList.add('err');
     showAlert('loginAlert','err','Incorrect PIN. Try again.');
     setTimeout(()=>{ S.pinInput=''; updateDots(); }, 700);
     return;
   }
+
   // Log login time
   await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
-    {...admin, lastLogin: Date.now()}, {merge:true});
+    {lastLogin: Date.now()}, {merge:true});
 
   S.loggedIn = true;
   S.currentAdmin = username;
   closeLoginModal();
   showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
   startNotifListener();
+
+  // Check trial reminders on login (send if needed)
+  checkAndSendTrialReminder(admin, username);
 }
 
 /* ── REGISTER NEW ADMIN ── */
+
+/* WhatsApp phone number validator:
+   - Must start with + and country code
+   - Must be 7–15 digits after stripping formatting
+   - We also check it looks like a real mobile number (not just 0000)
+*/
+function validateWhatsAppPhone(raw){
+  const clean = raw.replace(/[\s\-\(\)\.]/g,'');
+  if(!clean.startsWith('+')) return {ok:false, msg:'Phone number must start with + and country code (e.g. +237 6XX XXX XXX).'};
+  const digits = clean.slice(1).replace(/\D/g,'');
+  if(digits.length < 7)  return {ok:false, msg:'Phone number is too short. Include your country code (e.g. +237).'};
+  if(digits.length > 15) return {ok:false, msg:'Phone number is too long. Check and try again.'};
+  if(/^0+$/.test(digits)) return {ok:false, msg:'Please enter a real WhatsApp number.'};
+  return {ok:true, normalized:'+'+digits};
+}
+
 async function registerAdmin(){
   const name  = document.getElementById('regName').value.trim();
   const phone = document.getElementById('regPhone').value.trim();
-  if(!name){ showAlert('regAlert','err','Please enter your full name.'); return; }
-  if(!phone){ showAlert('regAlert','err','Please enter your WhatsApp number.'); return; }
 
-  showAlert('regAlert','info','⏳ Creating account…');
+  if(!name){ showAlert('regAlert','err','Please enter your full name.'); return; }
+  if(!phone){ showAlert('regAlert','err','Please enter your WhatsApp phone number.'); return; }
+
+  // ── WhatsApp phone validation ──
+  const phoneCheck = validateWhatsAppPhone(phone);
+  if(!phoneCheck.ok){
+    showAlert('regAlert','err','📱 ' + phoneCheck.msg);
+    return;
+  }
+  const phoneNorm = phoneCheck.normalized; // e.g. "+2376XXXXXXXX"
+
+  showAlert('regAlert','info','⏳ Checking account…');
   try {
     await waitForFirebase();
     const allSnap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
-    const allAdmins = allSnap.docs.map(d=>d.data());
+    const allAdmins = allSnap.docs.map(d=>({id:d.id,...d.data()}));
 
     // Max admins check
     const maxAdmins = getMaxAdmins();
@@ -2379,39 +2545,65 @@ async function registerAdmin(){
       return;
     }
 
-    // Check if name or phone already exists (blocked or active)
+    // Normalize stored phones for comparison
+    const normPhone = p => p ? ('+'+p.replace(/[\s\-\(\)\.]/g,'').replace(/^\+/,'')) : '';
+
+    // ── PHONE is the unique identity key ──
+    // Same phone = same person, even if they changed their name
+    const phoneMatch = allAdmins.find(a => normPhone(a.phone) === phoneNorm);
+    if(phoneMatch){
+      if(phoneMatch.blocked){
+        showAlert('regAlert','err','⛔ This WhatsApp number belongs to a suspended account.\n\nYour account: @'+phoneMatch.username+'\nContact the super admin to be unblocked. All your data is still saved.');
+      } else {
+        showAlert('regAlert','err','📱 This WhatsApp number is already registered.\n\nYour account: @'+phoneMatch.username+'\nPlease login instead of registering again.');
+      }
+      return;
+    }
+
+    // Name uniqueness check (two admins cannot share a name)
     const nameLower = name.toLowerCase().trim();
-    const phoneClean = phone.replace(/[\s\-\(\)]/g,'');
-    const nameExists  = allAdmins.find(a=>a.name.toLowerCase().trim()===nameLower);
-    const phoneExists = allAdmins.find(a=>a.phone && a.phone.replace(/[\s\-\(\)]/g,'')===phoneClean);
-
-    if(nameExists){
-      if(nameExists.blocked){
-        showAlert('regAlert','err','⛔ This name belongs to a blocked account. Please use a different name or contact the super admin.');
+    const nameMatch = allAdmins.find(a => a.name && a.name.toLowerCase().trim() === nameLower);
+    if(nameMatch){
+      if(nameMatch.blocked){
+        showAlert('regAlert','err','❌ The name "'+name+'" belongs to a suspended account. Choose a different name or contact the super admin.');
       } else {
-        showAlert('regAlert','err','❌ This name is already taken. Please enter a different name to register.');
-      }
-      return;
-    }
-    if(phoneExists){
-      if(phoneExists.blocked){
-        showAlert('regAlert','err','⛔ This phone number is associated with a blocked account. Contact the super admin.');
-      } else {
-        showAlert('regAlert','err','This phone number is already registered. Please login instead.');
+        showAlert('regAlert','err','❌ The name "'+name+'" is already taken by another admin. Please use a different name.');
       }
       return;
     }
 
-    const username = name.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,20)+'_'+Date.now().toString().slice(-4);
+    // ── Build account ──
+    const username = name.toLowerCase().replace(/[^a-z0-9]/g,'_').substring(0,18)+'_'+Date.now().toString().slice(-4);
+    const now = Date.now();
+    const trialEnd = now + 30 * 24 * 60 * 60 * 1000; // 30 days
+
     await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
-      name, username, phone, pin:'1234', blocked:false, createdAt:Date.now(), lastLogin:null
+      name,
+      username,
+      phone: phoneNorm,
+      pin: '1234',
+      blocked: false,
+      trialStart: now,
+      trialEnd,
+      trialExpired: false,
+      lastLogin: null,
+      createdAt: now
     });
-    await notifyNewAdmin(name, username);
-    showAlert('regAlert','ok','✓ Account created!\nUsername: '+username+'\nDefault PIN: 1234\n\nSave your username — you need it to login.');
+
+    // Notify super admin of new registration
+    await notifyNewAdmin(name, username, phoneNorm);
+
+    // Send welcome + trial notification to the new admin
+    await sendTrialWelcomeNotif(username, name, trialEnd);
+
+    const trialDate = new Date(trialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    showAlert('regAlert','ok',
+      `✅ Account created!\n\nUsername: ${username}\nDefault PIN: 1234\n\n🎁 You have 30 days of free access.\nTrial ends: ${trialDate}\n\nSave your username — you need it to login.`
+    );
     setTimeout(()=>{
       showLoginStep('admin');
       document.getElementById('adminUsername').value = username;
-    }, 3000);
+    }, 4000);
   } catch(e){
     showAlert('regAlert','err','Failed to create account: '+e.message);
   }
@@ -2632,37 +2824,52 @@ function sendSuperSess(){
 async function loadAdminList(){
   await waitForFirebase();
   const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
-  const admins = snap.docs.map(d=>d.data());
+  const admins = snap.docs.map(d=>({id:d.id,...d.data()}));
   const list = document.getElementById('adminList');
   document.getElementById('adminCount').textContent = admins.length+' / '+getMaxAdmins()+' admins';
   if(!admins.length){
     list.innerHTML='<div class="empty-st"><div class="ei">👥</div><div class="et">No admins registered yet.</div></div>';
     return;
   }
-  list.innerHTML = admins.map(a=>`
-    <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-        <div>
-          <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;">
-            ${a.name}
-            ${a.blocked?'<span class="badge" style="background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,0.2);">BLOCKED</span>':'<span class="badge" style="background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,0.2);">ACTIVE</span>'}
-          </div>
-          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px;">
-            @${a.username} · Last login: ${a.lastLogin?new Date(a.lastLogin).toLocaleString():'Never'}
-          </div>
+  const now = Date.now();
+  list.innerHTML = admins.map(a=>{
+    let trialBadge='', trialLine='';
+    if(a.trialEnd){
+      const daysLeft=Math.max(0,Math.ceil((a.trialEnd-now)/(24*60*60*1000)));
+      const expired=now>a.trialEnd;
+      if(expired||a.trialExpired){
+        trialBadge='<span class="badge" style="background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);">TRIAL EXPIRED</span>';
+        trialLine=`<div style="font-size:10px;color:var(--red);font-family:var(--mono);margin-top:2px;">⏰ Trial ended ${new Date(a.trialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>`;
+      } else {
+        const color=daysLeft<=5?'var(--red)':daysLeft<=10?'var(--gold)':'var(--green)';
+        trialBadge=`<span class="badge" style="background:rgba(59,130,246,0.10);color:var(--blue);border:1px solid rgba(59,130,246,0.2);">🎁 ${daysLeft}d left</span>`;
+        trialLine=`<div style="font-size:10px;color:${color};font-family:var(--mono);margin-top:2px;">Trial ends ${new Date(a.trialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>`;
+      }
+    }
+    const statusBadge=a.blocked
+      ?(a.blockedReason==='trial_expired'
+        ?'<span class="badge" style="background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,0.2);">⏰ TRIAL ENDED</span>'
+        :'<span class="badge" style="background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,0.2);">BLOCKED</span>')
+      :'<span class="badge" style="background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,0.2);">ACTIVE</span>';
+    return `<div style="background:var(--s2);border:1px solid ${a.blocked?'rgba(239,68,68,0.2)':'var(--line)'};border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="min-width:0;">
+          <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${a.name} ${statusBadge} ${trialBadge}</div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px;">@${a.username} · 📱 ${a.phone||'—'} · Login: ${a.lastLogin?new Date(a.lastLogin).toLocaleString():'Never'}</div>
+          ${trialLine}
+          ${a.blockedReason==='trial_expired'?'<div style="font-size:10px;color:var(--text3);font-family:var(--mono);">Unblock to reactivate — all data preserved</div>':''}
         </div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;">
-          <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑 Reset PIN</button>
-          <button class="btn btn-gold btn-xs" onclick="superPdfAllSessions('${a.username}','${a.name}')">📄 All PDFs</button>
-          <button class="btn btn-red btn-xs" onclick="superDelAllSessions('${a.username}','${a.name}')">🗑 Del Sessions</button>
-          <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')">❌ Remove</button>
-          <button class="btn ${a.blocked?'btn-green':'btn-red'} btn-xs" onclick="toggleBlock('${a.username}',${a.blocked})">
-            ${a.blocked?'✓ Unblock':'⛔ Block'}
-          </button>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;">
+          <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑 PIN</button>
+          <button class="btn btn-gold btn-xs" onclick="superPdfAllSessions('${a.username}','${a.name}')">📄 PDF</button>
+          <button class="btn btn-ghost btn-xs" onclick="openReplyToAdmin('${a.username}','${a.name}');openNotifPanel();">✉ Msg</button>
+          <button class="btn btn-red btn-xs" onclick="superDelAllSessions('${a.username}','${a.name}')">🗑</button>
+          <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')">❌</button>
+          <button class="btn ${a.blocked?'btn-green':'btn-red'} btn-xs" onclick="toggleBlock('${a.username}',${!!a.blocked},'${a.name}')">${a.blocked?'✓ Unblock':'⛔ Block'}</button>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 /* ── SUPER: ALL SESSIONS ── */
@@ -2730,12 +2937,44 @@ async function superPdfAllSessions(adminId, adminName){
 }
 
 /* ── BLOCK / UNBLOCK ── */
-async function toggleBlock(username, currentlyBlocked){
+async function toggleBlock(username, currentlyBlocked, adminName){
   await waitForFirebase();
-  // Only update blocked flag — all sessions and data stay intact
-  await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
-    {blocked:!currentlyBlocked},{merge:true});
-  toast(username+(currentlyBlocked?' unblocked':' blocked'),'ok');
+  if(currentlyBlocked){
+    // Unblock: reset trial_expired and give fresh 30-day trial
+    const newTrialEnd = Date.now() + TRIAL_MS;
+    await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
+      blocked:false, trialExpired:false, blockedReason:null, blockedAt:null,
+      trialEnd:newTrialEnd,
+      trial_reminder_5:false, trial_reminder_10:false, trial_reminder_15:false,
+      trial_reminder_20:false, trial_reminder_25:false
+    },{merge:true});
+    try {
+      const trialDate=new Date(newTrialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+      const ref=window._fsDoc(window._fsColl(window._db,'notifications'));
+      await window._fsSetDoc(ref,{
+        to:username, from:'__super__', fromName:'Super Admin',
+        type:'account_reactivated',
+        title:'✅ Your account has been reactivated!',
+        body:`Great news, ${adminName||username}! The super admin reactivated your account. You have a fresh 30 days of access until ${trialDate}. Welcome back to AttendX PRO!`,
+        read:false, ts:Date.now()
+      });
+    } catch(e){}
+    toast('@'+username+' unblocked — 30-day trial reset','ok');
+  } else {
+    await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
+      {blocked:true, blockedAt:Date.now(), blockedReason:'manual'},{merge:true});
+    try {
+      const ref=window._fsDoc(window._fsColl(window._db,'notifications'));
+      await window._fsSetDoc(ref,{
+        to:username, from:'__super__', fromName:'Super Admin',
+        type:'account_blocked',
+        title:'⛔ Your account has been suspended',
+        body:'Your AttendX PRO account has been suspended by the super admin. All your data is safely preserved. Contact the super admin for more information.',
+        read:false, ts:Date.now()
+      });
+    } catch(e){}
+    toast('@'+username+' blocked','warn');
+  }
   loadAdminList();
 }
 
@@ -3010,7 +3249,40 @@ function renderLivePanel() {
 }
 
 /* ── REFRESH DASHBOARD ── */
-function refreshDash() { refreshStats(); renderSessions(); renderReports(); renderLivePanel(); }
+function refreshDash() { refreshStats(); renderSessions(); renderReports(); renderLivePanel(); renderTrialBanner(); }
+
+async function renderTrialBanner(){
+  const banner = document.getElementById('trialBanner');
+  if(!banner || !S.currentAdmin || S.currentAdmin==='__super__'){ if(banner) banner.style.display='none'; return; }
+  if(!window._db) return;
+  try {
+    const snap = await window._fsGetDoc(window._fsDoc(window._db,'admins',S.currentAdmin));
+    if(!snap.exists()){ banner.style.display='none'; return; }
+    const a = snap.data();
+    if(!a.trialEnd){ banner.style.display='none'; return; }
+
+    const now = Date.now();
+    const daysLeft = Math.max(0, Math.ceil((a.trialEnd - now)/(24*60*60*1000)));
+    const pct = Math.round((1-(daysLeft/TRIAL_DAYS))*100);
+
+    const icon   = daysLeft <= 5 ? '🚨' : daysLeft <= 10 ? '⚠️' : '⏳';
+    const bg     = daysLeft <= 5 ? 'linear-gradient(90deg,#ef4444,#dc2626)'
+                 : daysLeft <= 10? 'linear-gradient(90deg,#f59e0b,#d97706)'
+                 : 'linear-gradient(90deg,var(--blue),var(--cyan))';
+    const title  = daysLeft <= 0 ? 'Your free trial has ended'
+                 : `Free trial — ${daysLeft} day${daysLeft!==1?'s':''} remaining`;
+    const sub    = daysLeft <= 0
+      ? 'Account paused. Contact super admin to reactivate.'
+      : `Trial ends ${new Date(a.trialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})} · Day ${30-daysLeft} of 30`;
+
+    banner.style.display='flex';
+    banner.style.background = bg;
+    banner.style.color = '#fff';
+    document.getElementById('trialBannerIcon').textContent = icon;
+    document.getElementById('trialBannerTitle').textContent = title;
+    document.getElementById('trialBannerSub').textContent = sub;
+  } catch(e){ banner.style.display='none'; }
+}
 function refreshStats() {
   todaySessions().then(ss=>{
     Promise.all(ss.map(s=>getRec(s.id))).then(allRecs=>{
@@ -3802,37 +4074,208 @@ function qrTab(t,btn){
   document.querySelectorAll('.err-msg').forEach(e=>e.classList.remove('show'));
 }
 
+/* ── IMAGE UPLOAD HELPERS ── */
+let _qrImgDataUrl = '';
+
+function handleImgUpload(input){
+  const file = input.files[0];
+  if(!file) return;
+  processQRImage(file);
+}
+function handleImgDrop(e){
+  e.preventDefault();
+  document.getElementById('imgDropZone').style.borderColor='var(--line2)';
+  const file = e.dataTransfer.files[0];
+  if(!file || !file.type.startsWith('image/')) { toast('Please drop an image file','warn'); return; }
+  processQRImage(file);
+}
+function processQRImage(file){
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    const img = new Image();
+    img.onload = function(){
+      // Compress via canvas
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if(w > MAX || h > MAX){ const s = Math.min(MAX/w, MAX/h); w=Math.round(w*s); h=Math.round(h*s); }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      // Try quality steps until < 150KB
+      let q = 0.8; let dataUrl;
+      do { dataUrl = canvas.toDataURL('image/jpeg', q); q -= 0.1; } while(dataUrl.length > 200000 && q > 0.1);
+      const sizeKB = Math.round(dataUrl.length * 0.75 / 1024);
+      if(sizeKB > 150){
+        toast('Image too large even after compression ('+sizeKB+'KB). Use a smaller image.','err');
+        return;
+      }
+      _qrImgDataUrl = dataUrl;
+      document.getElementById('imgPreview').src = dataUrl;
+      document.getElementById('imgPreviewWrap').style.display = 'block';
+      document.getElementById('imgSizeInfo').textContent = `Compressed: ${sizeKB}KB · ${w}×${h}px`;
+      document.getElementById('imgDropZone').style.display = 'none';
+      toast(`Image ready — ${sizeKB}KB`, 'ok');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function clearImgUpload(){
+  _qrImgDataUrl = '';
+  document.getElementById('imgPreviewWrap').style.display = 'none';
+  document.getElementById('imgDropZone').style.display = 'block';
+  document.getElementById('qr-img-file').value = '';
+}
+
+/* ── NOTE HELPERS ── */
+function updateNoteCharCount(ta){
+  const len = ta.value.length;
+  const el = document.getElementById('noteCharCount');
+  el.textContent = len+' / 900';
+  el.style.color = len > 900 ? 'var(--red)' : 'var(--text3)';
+}
+function noteTemplate(type){
+  const ta = document.getElementById('qr-note-text');
+  const tpl = {
+    wifi: 'WIFI:S:NetworkName;T:WPA;P:Password;;',
+    room: 'Room 204 — 3rd Floor, Bâtiment B\nOpen 08h00–18h00 weekdays',
+    deadline: 'Assignment Deadline\nSubject: Chemistry Lab Report\nDate: Friday 17h00\nSubmit to: teacher@school.cm',
+    contact: 'Prof. Jean Mbarga\nTel: +237 6XX XXX XXX\nEmail: mbarga@school.cm\nOffice: Room 104'
+  };
+  ta.value = tpl[type] || '';
+  updateNoteCharCount(ta);
+}
+
+/* ── LANDING PAGE BUILDER (for File Link + File Card + Image Embed) ── */
+function buildLandingPage(opts){
+  // opts: { title, subtitle, icon, body, actionLabel, actionUrl, footer }
+  return `data:text/html;charset=utf-8,${encodeURIComponent(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${opts.title}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f4ff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,80,0.12);padding:36px 28px;max-width:420px;width:100%;text-align:center}
+.icon{font-size:52px;margin-bottom:16px}
+h1{font-size:20px;font-weight:700;color:#1e293b;margin-bottom:6px}
+.sub{font-size:14px;color:#64748b;margin-bottom:24px;line-height:1.6}
+.info-row{display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:10px;text-align:left}
+.info-label{font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px;min-width:70px}
+.info-val{font-size:13px;color:#1e293b;font-weight:500;word-break:break-all}
+.btn{display:inline-block;margin-top:24px;padding:14px 32px;background:#3b82f6;color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:15px;letter-spacing:.3px}
+.btn:hover{background:#2563eb}
+.footer{margin-top:20px;font-size:11px;color:#94a3b8}
+img.embed{max-width:100%;border-radius:12px;margin:16px 0;border:1px solid #e2e8f0}
+</style></head><body>
+<div class="card">
+  <div class="icon">${opts.icon}</div>
+  <h1>${opts.title}</h1>
+  <p class="sub">${opts.subtitle||''}</p>
+  ${opts.rows ? opts.rows.map(r=>`<div class="info-row"><span class="info-label">${r[0]}</span><span class="info-val">${r[1]}</span></div>`).join('') : ''}
+  ${opts.imgSrc ? `<img class="embed" src="${opts.imgSrc}" alt="Embedded image"/>` : ''}
+  ${opts.actionUrl ? `<a class="btn" href="${opts.actionUrl}" target="_blank">${opts.actionLabel||'Open'}</a>` : ''}
+  ${opts.footer ? `<div class="footer">${opts.footer}</div>` : ''}
+</div></body></html>`)}`;
+}
+
+/* ── GENERATE QR ── */
 function generateQR(){
-  let link='';
+  let link='', badge='', histLabel='';
+  document.querySelectorAll('.err-msg').forEach(e=>e.classList.remove('show'));
+
   if(qrCurrentTab==='link'){
     link=document.getElementById('qr-link-url').value.trim();
     if(!link){toast('Please paste a session link first','warn');return;}
-    // Encode expiry into the link
-    const days = parseInt(document.getElementById('qr-link-expiry').value)||0;
-    if(days > 0){
-      const expiry = Date.now() + days*24*60*60*1000;
-      // Wrap the original link with expiry via our app's QR proxy
-      link = 'https://attendex-pro.vercel.app?qr_link='+encodeURIComponent(link)+'&qr_exp='+expiry;
-    }
+    const days=parseInt(document.getElementById('qr-link-expiry').value)||0;
+    if(days>0){ const expiry=Date.now()+days*24*60*60*1000; link='https://attendex-pro.vercel.app?qr_link='+encodeURIComponent(link)+'&qr_exp='+expiry; }
+    badge='🔗 Session QR'; histLabel=document.getElementById('qr-link-label').value.trim()||link;
+
   } else if(qrCurrentTab==='email'){
     const em=document.getElementById('qr-em').value.trim();
     const el=document.getElementById('err-em');
     if(!em||!/^[^@]+@[^@]+\.[^@]+$/.test(em)){el.classList.add('show');return;}
-    el.classList.remove('show');
     let l='mailto:'+em; const prms=[];
     const sub=document.getElementById('qr-sub').value.trim();
     const body=document.getElementById('qr-body').value.trim();
     if(sub)prms.push('subject='+encodeURIComponent(sub));
     if(body)prms.push('body='+encodeURIComponent(body));
     if(prms.length)l+='?'+prms.join('&');
-    link=l;
-  } else {
+    link=l; badge='✉ Email QR'; histLabel=em;
+
+  } else if(qrCurrentTab==='web'){
     const url=document.getElementById('qr-url').value.trim();
     const el=document.getElementById('err-url');
     if(!url||!/^https?:\/\/.+/.test(url)){el.classList.add('show');return;}
-    el.classList.remove('show');
-    link=url;
+    link=url; badge='🌐 Website QR'; histLabel=document.getElementById('qr-urlabel').value.trim()||url;
+
+  } else if(qrCurrentTab==='filelink'){
+    const url=document.getElementById('qr-fl-url').value.trim();
+    const el=document.getElementById('err-fl');
+    if(!url||!/^https?:\/\/.+/.test(url)){el.classList.add('show');return;}
+    const name=document.getElementById('qr-fl-name').value.trim()||'Shared File';
+    const desc=document.getElementById('qr-fl-desc').value.trim();
+    const type=document.getElementById('qr-fl-type').value;
+    link = buildLandingPage({
+      icon: type.split(' ')[0]||'📁',
+      title: name,
+      subtitle: desc || 'Tap the button below to open or download this file.',
+      rows: [['Type', type],['Source', url.length>40?url.substring(0,40)+'…':url]],
+      actionUrl: url, actionLabel: '⬇ Open / Download',
+      footer: 'Generated by AttendX PRO · KЭL ♛ PHANTOM'
+    });
+    badge='📁 File Link QR'; histLabel=name;
+
+  } else if(qrCurrentTab==='imgbed'){
+    if(!_qrImgDataUrl){toast('Please upload an image first','warn');return;}
+    const caption=document.getElementById('qr-img-caption').value.trim();
+    link = buildLandingPage({
+      icon:'🖼',
+      title: caption || 'Scanned Image',
+      subtitle: caption ? '' : 'Image embedded in this QR code.',
+      imgSrc: _qrImgDataUrl,
+      actionUrl: _qrImgDataUrl, actionLabel: '⬇ Download Image',
+      footer: 'Generated by AttendX PRO · KЭL ♛ PHANTOM'
+    });
+    badge='🖼 Image QR'; histLabel=caption||'Embedded Image';
+
+  } else if(qrCurrentTab==='filecard'){
+    const name=document.getElementById('qr-fc-name').value.trim();
+    if(!name){toast('Please enter a file name','warn');return;}
+    const type=document.getElementById('qr-fc-type').value;
+    const size=document.getElementById('qr-fc-size').value.trim();
+    const desc=document.getElementById('qr-fc-desc').value.trim();
+    const contact=document.getElementById('qr-fc-contact').value.trim();
+    const rows=[['Type',type]];
+    if(size)rows.push(['Size',size]);
+    if(contact)rows.push(['Contact',contact]);
+    link = buildLandingPage({
+      icon: type.split(' ')[0]||'📋',
+      title: name,
+      subtitle: desc || 'File information card.',
+      rows,
+      footer: 'Generated by AttendX PRO · KЭL ♛ PHANTOM'
+    });
+    badge='📋 File Card QR'; histLabel=name;
+
+  } else if(qrCurrentTab==='vcard'){
+    const name=document.getElementById('qr-vc-name').value.trim();
+    if(!name){toast('Please enter a name','warn');return;}
+    const phone=document.getElementById('qr-vc-phone').value.trim();
+    const email=document.getElementById('qr-vc-email').value.trim();
+    const org=document.getElementById('qr-vc-org').value.trim();
+    const title=document.getElementById('qr-vc-title').value.trim();
+    const url=document.getElementById('qr-vc-url').value.trim();
+    // vCard 3.0 format — phones can import directly
+    link = `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nN:${name};;;;\n${org?'ORG:'+org+'\n':''}${title?'TITLE:'+title+'\n':''}${phone?'TEL;TYPE=CELL:'+phone+'\n':''}${email?'EMAIL:'+email+'\n':''}${url?'URL:'+url+'\n':''}END:VCARD`;
+    badge='👤 Contact QR'; histLabel=name;
+
+  } else if(qrCurrentTab==='note'){
+    const text=document.getElementById('qr-note-text').value.trim();
+    if(!text){toast('Please enter some text','warn');return;}
+    if(text.length>900){toast('Text is too long (max 900 chars for reliable scanning)','warn');return;}
+    link=text; badge='📝 Note QR'; histLabel=text.substring(0,32)+(text.length>32?'…':'');
   }
+
   S.qrLink=link;
   const size=parseInt(document.getElementById('qr-size').value);
   const fg=document.getElementById('qr-fg').value;
@@ -3840,22 +4283,32 @@ function generateQR(){
   const ecl=document.getElementById('qr-ecl').value;
   const out=document.getElementById('qr-output');
   out.innerHTML='';
-  new QRCode(out,{text:link,width:size,height:size,colorDark:fg,colorLight:bg,correctLevel:QRCode.CorrectLevel[ecl]});
-  const badges={'link':'🔗 Session QR','email':'✉ Email QR','web':'🌐 Website QR'};
-  document.getElementById('qrTypeBadge').textContent=badges[qrCurrentTab];
-  document.getElementById('qrUrlPrev').textContent=link.length>64?link.substring(0,64)+'…':link;
+
+  // QRCode lib has a limit — warn if content is very large (data URLs)
+  const encodedLen = encodeURIComponent(link).length;
+  if(encodedLen > 2800){
+    toast('Content is very large — use a smaller image or shorter text for best scan results','warn');
+  }
+
+  try {
+    new QRCode(out,{text:link,width:size,height:size,colorDark:fg,colorLight:bg,correctLevel:QRCode.CorrectLevel[ecl]});
+  } catch(e){
+    toast('Content too large to encode. Try a smaller image or shorter text.','err');
+    return;
+  }
+
+  document.getElementById('qrTypeBadge').textContent=badge;
+  document.getElementById('qrUrlPrev').textContent=
+    (qrCurrentTab==='imgbed'||qrCurrentTab==='filelink'||qrCurrentTab==='filecard')
+    ? histLabel
+    : (link.length>64?link.substring(0,64)+'…':link);
   document.getElementById('qrEmpty').style.display='none';
   document.getElementById('qrResult').classList.add('show');
-  // stats
   S.qrStats.total++;
   if(qrCurrentTab==='link')S.qrStats.link++;
   else if(qrCurrentTab==='email')S.qrStats.email++;
   updQRStats();
-  // history
-  const lbl=qrCurrentTab==='link'?(document.getElementById('qr-link-label').value.trim()||link)
-    :qrCurrentTab==='email'?document.getElementById('qr-em').value.trim()
-    :(document.getElementById('qr-urlabel').value.trim()||link);
-  addQRHistory(lbl,qrCurrentTab,link);
+  addQRHistory(histLabel, qrCurrentTab, link);
   toast('QR code generated!','ok');
 }
 
@@ -4903,6 +5356,11 @@ function applyTranslations(){
   if(qrTabs[0]) qrTabs[0].textContent = t('qr_session_link');
   if(qrTabs[1]) qrTabs[1].textContent = t('qr_email');
   if(qrTabs[2]) qrTabs[2].textContent = t('qr_website');
+  if(qrTabs[3]) qrTabs[3].textContent = _lang==='fr'?'📁 Lien Fichier':'📁 File Link';
+  if(qrTabs[4]) qrTabs[4].textContent = _lang==='fr'?'🖼 Image':'🖼 Image';
+  if(qrTabs[5]) qrTabs[5].textContent = _lang==='fr'?'📋 Fiche Fichier':'📋 File Card';
+  if(qrTabs[6]) qrTabs[6].textContent = _lang==='fr'?'👤 Contact':'👤 Contact';
+  if(qrTabs[7]) qrTabs[7].textContent = _lang==='fr'?'📝 Note':'📝 Note';
   // QR panels
   const qrLinkLabel = qs('#qrp-link .field label');
   if(qrLinkLabel) qrLinkLabel.textContent = t('qr_paste_link');
@@ -4967,7 +5425,7 @@ function applyTranslations(){
    NOTIFICATION SYSTEM
    - Super admin gets notif on new admin registration
    - Super admin can message any admin directly
-   - Admins can send max 3 messages/month to super admin
+   - Admins can send max 15 messages/month to super admin
    - Blocked/removed admins still see super-sent notifs
    Firestore collection: "notifications"
    Doc fields: { to, from, type, title, body, read, ts, actionAdminId }
@@ -5161,8 +5619,8 @@ async function adminSendToSuper(){
   );
   const snap = await window._fsGetDocs(q);
   const thisMonthCount = snap.docs.filter(d=>d.data().ts >= monthStart.getTime()).length;
-  if(thisMonthCount >= 3){
-    toast('Monthly limit reached (3 messages/month)','err');
+  if(thisMonthCount >= 15){
+    toast('Monthly limit reached (15 messages/month)','err');
     return;
   }
 
@@ -5197,16 +5655,114 @@ async function loadAdminMsgQuota(){
   );
   const snap = await window._fsGetDocs(q);
   const used = snap.docs.filter(d=>d.data().ts >= monthStart.getTime()).length;
-  const remaining = Math.max(0, 3 - used);
+  const remaining = Math.max(0, 15 - used);
   el.textContent = `${remaining} message${remaining!==1?'s':''} remaining this month`;
   el.style.color = remaining === 0 ? 'var(--red)' : 'var(--text3)';
   const btn = document.getElementById('adminMsgSendBtn');
   if(btn) btn.disabled = remaining === 0;
 }
 
-/* Fire notification when new admin registers */
-async function notifyNewAdmin(adminName, adminUsername){
+/* ══════════════════════════════════════════════════
+   TRIAL MANAGEMENT SYSTEM
+   - 30 days free from registration
+   - Reminder notifications every 5 days: Day 5, 10, 15, 20, 25
+   - At Day 25: urgent warning (5 days left)
+   - On expiry: auto-block at login, notify super admin
+   - Super admin can unblock to reactivate
+   - All data preserved when blocked
+══════════════════════════════════════════════════ */
+
+const TRIAL_DAYS = 30;
+const TRIAL_MS   = TRIAL_DAYS * 24 * 60 * 60 * 1000;
+
+// Reminder checkpoints (days elapsed since trial start)
+const TRIAL_REMINDER_DAYS = [5, 10, 15, 20, 25];
+
+async function sendTrialWelcomeNotif(username, name, trialEnd){
   if(!window._db) return;
+  const trialDate = new Date(trialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+  try {
+    const ref = window._fsDoc(window._fsColl(window._db,'notifications'));
+    await window._fsSetDoc(ref,{
+      to: username,
+      from: '__super__',
+      fromName: 'AttendX PRO',
+      type: 'trial_welcome',
+      title: '🎁 Welcome! Your 30-day free trial starts now',
+      body: `Hi ${name}, your account is active! You have 30 days of full free access until ${trialDate}. After that, the super admin can reactivate your account. Enjoy AttendX PRO!`,
+      read: false,
+      ts: Date.now()
+    });
+  } catch(e){}
+}
+
+async function checkAndSendTrialReminder(adminData, username){
+  if(!window._db || !adminData.trialStart || !adminData.trialEnd) return;
+  if(adminData.blocked || adminData.trialExpired) return;
+
+  const now = Date.now();
+  const elapsed = now - adminData.trialStart;
+  const elapsedDays = Math.floor(elapsed / (24*60*60*1000));
+  const daysLeft = Math.ceil((adminData.trialEnd - now) / (24*60*60*1000));
+
+  // Find which reminder checkpoint we're at
+  // We send a reminder when elapsedDays first reaches a checkpoint
+  for(const checkpoint of TRIAL_REMINDER_DAYS){
+    if(elapsedDays >= checkpoint){
+      // Check if we already sent this checkpoint's reminder
+      const sentKey = `trial_reminder_${checkpoint}`;
+      if(adminData[sentKey]) continue; // already sent
+
+      // Send reminder
+      const isUrgent = checkpoint === 25;
+      const title = isUrgent
+        ? `🚨 Only ${daysLeft} days left in your free trial!`
+        : `⏳ Trial update — ${daysLeft} day${daysLeft!==1?'s':''} remaining`;
+      const body = isUrgent
+        ? `Your AttendX PRO free trial ends in ${daysLeft} days. After that, your account will be paused automatically. Contact the super admin before it expires to continue without interruption. All your data will be safe.`
+        : `You're ${checkpoint} days into your 30-day free trial. You have ${daysLeft} days remaining. Make the most of it — and contact the super admin before Day 30 if you want to continue.`;
+
+      try {
+        // Notif to admin
+        const ref1 = window._fsDoc(window._fsColl(window._db,'notifications'));
+        await window._fsSetDoc(ref1,{
+          to: username,
+          from: '__super__',
+          fromName: 'AttendX PRO',
+          type: 'trial_reminder',
+          title, body,
+          read: false,
+          ts: now
+        });
+
+        // If day 25 (urgent), also alert super admin
+        if(isUrgent){
+          const ref2 = window._fsDoc(window._fsColl(window._db,'notifications'));
+          await window._fsSetDoc(ref2,{
+            to: '__super__',
+            from: username,
+            fromName: adminData.name || username,
+            type: 'trial_expiring_soon',
+            title: `⚠️ Admin trial expiring soon — ${adminData.name || username}`,
+            body: `The admin "${adminData.name||username}" (@${username}) has only ${daysLeft} days left in their free trial. They will be auto-blocked at Day 30. You can proactively contact them or wait to unblock after expiry.`,
+            read: false,
+            ts: now
+          });
+        }
+
+        // Mark this checkpoint as sent in Firestore
+        await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
+          {[sentKey]: true}, {merge:true});
+
+      } catch(e){ console.warn('Trial reminder error:', e); }
+      break; // Only send one reminder per login
+    }
+  }
+}
+
+async function notifyNewAdmin(adminName, adminUsername, phone){
+  if(!window._db) return;
+  const trialDate = new Date(Date.now() + TRIAL_MS).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
   try {
     const docRef = window._fsDoc(window._fsColl(window._db,'notifications'));
     await window._fsSetDoc(docRef, {
@@ -5215,7 +5771,7 @@ async function notifyNewAdmin(adminName, adminUsername){
       fromName: adminName,
       type: 'new_admin',
       title: '🆕 New Admin Registered',
-      body: `${adminName} (${adminUsername}) just registered as a new admin. You can reply to contact them directly.`,
+      body: `${adminName} (@${adminUsername}) just registered.\nWhatsApp: ${phone||'—'}\n🎁 Trial ends: ${trialDate}\n\nClick ↩ Reply to contact them directly on the platform.`,
       read: false,
       ts: Date.now()
     });
