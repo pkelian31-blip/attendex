@@ -4,6 +4,70 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>AttendX PRO — Smart Attendance Platform</title>
+<!-- PWA: Add to Home Screen -->
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQXR0ZW5kWCBQUk8iLCJzaG9ydF9uYW1lIjoiQXR0ZW5kWCIsImRlc2NyaXB0aW9uIjoiU21hcnQgQXR0ZW5kYW5jZSBQbGF0Zm9ybSIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjRjBGNEZGIiwidGhlbWVfY29sb3IiOiIjM0I2RkU4Iiwib3JpZW50YXRpb24iOiJhbnkiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCNGJXeHVjejBpYUhSMGNEb3ZMM2QzZHk1M015NXZjbWN2TWpBd01DOXpkbWNpSUhacFpYZENiM2c5SWpBZ01DQXhNREFnTVRBd0lpQjNhV1IwYUQwaU1UQXdJaUJvWldsbmFIUTlJakV3TUNJK1BISmxZM1FnZUcxc2JuTTlJbWgwZEhBNkx5OTNkM2N1ZHpNdWIzSm5MekU1T1RZdlkyeHZkV1FpSUhkcFpIUm9QU0l4TUNJZ2FHVnBaMmgwUFNJeE1DSWdabWxzYkQwaUkyWTFObVl4TnlJZ2RtbGxkMEp2ZUQwaU1DQXdJREV3TUNBM05EQWlJR1pwYkd3OUltSmhZMnRuY205MWJtUWlQbFpsWjJseVlYTWdVRkpQSURZeU5EQThMM0psWTNRK1BDOXpkbWMrIiwic2l6ZXMiOiIxMDB4MTAwIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="AttendX PRO"/>
+<meta name="theme-color" content="#3B6FE8"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIHJ4PSIyMCIgZmlsbD0idXJsKCNnKSIvPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMTAwIiB5Mj0iMTAwIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzNCNkZFOCIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzBFQTVFOSIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjx0ZXh0IHg9IjUwIiB5PSI2NSIgZm9udC1zaXplPSI1NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiPuKclzwvdGV4dD48L3N2Zz4="/>
+<script>
+  // Register Service Worker for PWA / offline support
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      const swCode = `
+const CACHE = 'attendx-v1';
+const OFFLINE_ASSETS = ['/'];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(OFFLINE_ASSETS).catch(()=>{})));
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+  self.clients.claim();
+});
+self.addEventListener('fetch', e => {
+  if(e.request.method !== 'GET') return;
+  e.respondWith(fetch(e.request).catch(() => caches.match(e.request).then(r=>r||new Response('Offline',{status:503}))));
+});
+      `;
+      const blob = new Blob([swCode], {type:'application/javascript'});
+      const swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl, {scope:'/'}).catch(()=>{});
+    });
+  }
+  // PWA Install prompt
+  let _pwaPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    _pwaPrompt = e;
+    const btn = document.getElementById('pwaInstallBtn');
+    if(btn) btn.style.display = 'flex';
+  });
+  window.addEventListener('appinstalled', () => {
+    const btn = document.getElementById('pwaInstallBtn');
+    if(btn) btn.style.display = 'none';
+    _pwaPrompt = null;
+  });
+  function installPWA() {
+    if(!_pwaPrompt) {
+      // Show manual instructions if native prompt unavailable
+      const ua = navigator.userAgent;
+      let msg = '';
+      if(/iPhone|iPad/.test(ua)) msg = '📱 iOS: Tap the Share button (□↑) → "Add to Home Screen"';
+      else if(/Android/.test(ua)) msg = '📱 Android: Tap the menu (⋮) → "Add to Home Screen" or "Install App"';
+      else msg = '💻 Desktop: Click the install icon (⊕) in your browser address bar, or use the browser menu → "Install AttendX PRO"';
+      alert('Install AttendX PRO as an app!\n\n' + msg);
+      return;
+    }
+    _pwaPrompt.prompt();
+    _pwaPrompt.userChoice.then(r => {
+      if(r.outcome === 'accepted') { toast('AttendX PRO installed! ✓','ok'); }
+      _pwaPrompt = null;
+    });
+  }
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -234,6 +298,400 @@ body::after { content: none; }
   50%     { transform: translateY(-10px) rotate(-2deg); opacity: 0.13; }
   75%     { transform: translateY(-25px) rotate(4deg); opacity: 0.15; }
 }
+
+/* ══════════════════════════════════════════
+   NEW BACKGROUND THEMES
+══════════════════════════════════════════ */
+
+/* ── THEME: QR Pulse ── */
+.school-bg .qr-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid;
+  animation: qrExpand ease-out infinite;
+  pointer-events: none;
+}
+@keyframes qrExpand {
+  0%   { transform: scale(0.2); opacity: 0.5; }
+  100% { transform: scale(2.8); opacity: 0; }
+}
+.school-bg .qr-cell {
+  position: absolute;
+  border-radius: 3px;
+  animation: qrBlink ease-in-out infinite alternate;
+}
+@keyframes qrBlink {
+  0%   { opacity: 0.04; transform: scale(0.9); }
+  100% { opacity: 0.20; transform: scale(1.1); }
+}
+.school-bg .qr-dot {
+  position: absolute;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  animation: qrDotPulse ease-in-out infinite;
+}
+@keyframes qrDotPulse {
+  0%,100% { transform: scale(1); opacity: 0.15; }
+  50%     { transform: scale(2); opacity: 0.45; }
+}
+
+/* ── THEME: Purple Matrix (neural / data network) ── */
+.school-bg .matrix-node {
+  position: absolute;
+  border-radius: 50%;
+  animation: matrixPulse ease-in-out infinite;
+}
+@keyframes matrixPulse {
+  0%,100% { transform: scale(1); opacity: 0.12; }
+  50%     { transform: scale(1.5); opacity: 0.35; }
+}
+.school-bg .matrix-line {
+  position: absolute;
+  height: 1px;
+  transform-origin: left center;
+  animation: matrixLine ease-in-out infinite;
+}
+@keyframes matrixLine {
+  0%,100% { opacity: 0.04; }
+  50%     { opacity: 0.18; }
+}
+.school-bg .matrix-char {
+  position: absolute;
+  font-family: monospace;
+  font-weight: 700;
+  animation: matrixDrop linear infinite;
+  user-select: none;
+}
+@keyframes matrixDrop {
+  0%   { transform: translateY(-20px); opacity: 0; }
+  10%  { opacity: 0.3; }
+  90%  { opacity: 0.2; }
+  100% { transform: translateY(105vh); opacity: 0; }
+}
+
+/* ── THEME: Green Growth (leaves / nature / attendance growth) ── */
+.school-bg .leaf {
+  position: absolute;
+  font-size: 22px;
+  animation: leafSway ease-in-out infinite;
+  user-select: none;
+  transform-origin: bottom center;
+}
+@keyframes leafSway {
+  0%,100% { transform: rotate(-12deg) translateY(0); opacity: 0.15; }
+  33%     { transform: rotate(8deg) translateY(-12px); opacity: 0.25; }
+  66%     { transform: rotate(-5deg) translateY(-6px); opacity: 0.18; }
+}
+.school-bg .growth-bar {
+  position: absolute;
+  border-radius: 4px 4px 0 0;
+  bottom: 0;
+  animation: growUp ease-in-out infinite;
+}
+@keyframes growUp {
+  0%,100% { transform: scaleY(0.2); opacity: 0.06; }
+  50%     { transform: scaleY(1); opacity: 0.14; }
+}
+.school-bg .green-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  animation: driftOrb ease-in-out infinite;
+}
+.school-bg .sparkle {
+  position: absolute;
+  font-size: 14px;
+  animation: sparklePop ease-in-out infinite;
+  user-select: none;
+}
+@keyframes sparklePop {
+  0%,100% { transform: scale(0.5) rotate(0deg); opacity: 0; }
+  50%     { transform: scale(1.2) rotate(180deg); opacity: 0.4; }
+}
+
+/* ── THEME: Pink Hearts (warmth / community / students) ── */
+.school-bg .heart {
+  position: absolute;
+  font-size: 20px;
+  animation: heartFloat ease-in-out infinite;
+  user-select: none;
+}
+@keyframes heartFloat {
+  0%   { transform: translateY(0) scale(0.8) rotate(-10deg); opacity: 0; }
+  20%  { opacity: 0.25; }
+  80%  { opacity: 0.18; }
+  100% { transform: translateY(-90vh) scale(1.1) rotate(15deg); opacity: 0; }
+}
+.school-bg .pink-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(55px);
+  animation: pinkPulse ease-in-out infinite;
+}
+@keyframes pinkPulse {
+  0%,100% { transform: scale(1) translate(0,0); opacity: 0.5; }
+  33%     { transform: scale(1.15) translate(20px,-15px); opacity: 0.7; }
+  66%     { transform: scale(0.9) translate(-10px,20px); opacity: 0.4; }
+}
+.school-bg .petal {
+  position: absolute;
+  border-radius: 50% 0;
+  animation: petalSpin ease-in-out infinite;
+}
+@keyframes petalSpin {
+  0%,100% { transform: rotate(0deg) scale(0.8); opacity: 0.08; }
+  50%     { transform: rotate(180deg) scale(1.1); opacity: 0.18; }
+}
+
+/* ── THEME: Attendance Grid (checklist / timetable) ── */
+.school-bg .grid-cell {
+  position: absolute;
+  border: 1px solid;
+  border-radius: 4px;
+  animation: gridPop ease-in-out infinite;
+}
+@keyframes gridPop {
+  0%,100% { opacity: 0.03; transform: scale(0.9); }
+  50%     { opacity: 0.12; transform: scale(1); }
+}
+.school-bg .check-mark {
+  position: absolute;
+  font-size: 18px;
+  animation: checkAppear ease-in-out infinite;
+  user-select: none;
+}
+@keyframes checkAppear {
+  0%,100% { transform: scale(0) rotate(-30deg); opacity: 0; }
+  40%,60% { transform: scale(1) rotate(0deg); opacity: 0.3; }
+}
+.school-bg .scan-line {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  left: 0;
+  animation: scanDown linear infinite;
+}
+@keyframes scanDown {
+  0%   { top: -2px; opacity: 0.5; }
+  50%  { opacity: 0.2; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* ── THEME: Clock / Time (sessions, deadlines) ── */
+.school-bg .clock-face {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid;
+  animation: clockTick ease-in-out infinite;
+}
+@keyframes clockTick {
+  0%,100% { transform: scale(1); opacity: 0.08; }
+  50%     { transform: scale(1.04); opacity: 0.18; }
+}
+.school-bg .clock-hand {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform-origin: bottom center;
+  border-radius: 2px;
+  animation: handSpin linear infinite;
+}
+@keyframes handSpin {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to   { transform: translateX(-50%) rotate(360deg); }
+}
+.school-bg .time-digit {
+  position: absolute;
+  font-family: monospace;
+  font-weight: 700;
+  animation: digitFade ease-in-out infinite;
+  user-select: none;
+}
+@keyframes digitFade {
+  0%,100% { opacity: 0.05; }
+  50%     { opacity: 0.25; }
+}
+
+/* ── THEME: Ocean Wave (calm / focus) ── */
+.school-bg .wave-line {
+  position: absolute;
+  width: 200%;
+  left: -50%;
+  border-radius: 40%;
+  animation: waveRoll linear infinite;
+  pointer-events: none;
+}
+@keyframes waveRoll {
+  0%   { transform: translateX(0) rotate(0deg); }
+  100% { transform: translateX(-25%) rotate(360deg); }
+}
+.school-bg .bubble {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  animation: bubbleRise ease-in infinite;
+}
+@keyframes bubbleRise {
+  0%   { transform: translateY(0) scale(0.5); opacity: 0.4; }
+  100% { transform: translateY(-100vh) scale(1.2); opacity: 0; }
+}
+.school-bg .ocean-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: driftOrb ease-in-out infinite;
+}
+
+/* ── THEME: Galaxy / Stars (night study) ── */
+.school-bg .galaxy-star {
+  position: absolute;
+  border-radius: 50%;
+  animation: starShimmer ease-in-out infinite;
+}
+@keyframes starShimmer {
+  0%,100% { opacity: 0.1; transform: scale(1); }
+  50%     { opacity: 0.9; transform: scale(1.5); }
+}
+.school-bg .shooting-star {
+  position: absolute;
+  height: 2px;
+  border-radius: 1px;
+  animation: shootAcross linear infinite;
+}
+@keyframes shootAcross {
+  0%   { transform: translateX(-200px) translateY(0) rotate(-25deg); opacity: 0; width: 0; }
+  20%  { opacity: 1; width: 80px; }
+  80%  { opacity: 0.5; width: 40px; }
+  100% { transform: translateX(120vw) translateY(60px) rotate(-25deg); opacity: 0; width: 0; }
+}
+.school-bg .nebula {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  animation: nebulaDrift ease-in-out infinite;
+}
+@keyframes nebulaDrift {
+  0%,100% { transform: scale(1) translate(0,0); opacity: 0.3; }
+  50%     { transform: scale(1.2) translate(15px,-20px); opacity: 0.5; }
+}
+.school-bg .constellation-dot {
+  position: absolute;
+  border-radius: 50%;
+  animation: constTwinkle ease-in-out infinite;
+}
+@keyframes constTwinkle {
+  0%,100% { opacity: 0.15; transform: scale(1); }
+  50%     { opacity: 0.7; transform: scale(1.6); }
+}
+
+/* ── THEME: Fire / Energy (urgency / live sessions) ── */
+.school-bg .flame {
+  position: absolute;
+  animation: flameRise ease-in-out infinite;
+  user-select: none;
+  filter: blur(0.5px);
+}
+@keyframes flameRise {
+  0%   { transform: translateY(0) scaleX(1) rotate(-3deg); opacity: 0; }
+  15%  { opacity: 0.25; }
+  50%  { transform: translateY(-40px) scaleX(0.8) rotate(4deg); opacity: 0.20; }
+  85%  { opacity: 0.10; }
+  100% { transform: translateY(-90px) scaleX(0.6) rotate(-2deg); opacity: 0; }
+}
+.school-bg .ember {
+  position: absolute;
+  border-radius: 50%;
+  animation: emberFloat ease-in infinite;
+}
+@keyframes emberFloat {
+  0%   { transform: translateY(0) translateX(0); opacity: 0.6; }
+  100% { transform: translateY(-80vh) translateX(calc((var(--dir,1) * 40px))); opacity: 0; }
+}
+.school-bg .fire-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: fireOrb ease-in-out infinite;
+}
+@keyframes fireOrb {
+  0%,100% { transform: scale(1); opacity: 0.3; }
+  50%     { transform: scale(1.3); opacity: 0.6; }
+}
+
+/* ── THEME: Snow / Minimal (clean, calm) ── */
+.school-bg .snowflake {
+  position: absolute;
+  font-size: 16px;
+  animation: snowFall linear infinite;
+  user-select: none;
+}
+@keyframes snowFall {
+  0%   { transform: translateY(-30px) rotate(0deg) translateX(0); opacity: 0; }
+  10%  { opacity: 0.3; }
+  90%  { opacity: 0.2; }
+  100% { transform: translateY(105vh) rotate(720deg) translateX(30px); opacity: 0; }
+}
+.school-bg .ice-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  animation: driftOrb ease-in-out infinite;
+}
+.school-bg .crystal {
+  position: absolute;
+  border: 1px solid rgba(200,230,255,0.3);
+  border-radius: 2px;
+  animation: crystalSpin linear infinite;
+}
+@keyframes crystalSpin {
+  0%   { transform: rotate(0deg) scale(0.8); opacity: 0.05; }
+  50%  { opacity: 0.2; }
+  100% { transform: rotate(360deg) scale(1.1); opacity: 0.05; }
+}
+
+/* ════════════════════════════════
+   SECURITY & ANTI-FRAUD STYLES
+════════════════════════════════ */
+.pwa-install-btn{display:none;align-items:center;gap:7px;padding:6px 14px;background:linear-gradient(135deg,var(--green),#2ECC71);color:#06120A;border:none;border-radius:var(--r1);font-family:var(--head);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 3px 12px rgba(16,185,129,0.3);}
+.pwa-install-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(16,185,129,0.4);}
+.toggle-switch{position:relative;width:44px;height:24px;cursor:pointer;}
+.toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-track{position:absolute;inset:0;background:var(--line);border-radius:100px;transition:background 0.3s;}
+.toggle-track::before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+.toggle-switch input:checked + .toggle-track{background:var(--green);}
+.toggle-switch input:checked + .toggle-track::before{transform:translateX(20px);}
+.dyn-qr-panel{background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:16px;text-align:center;display:none;margin-top:12px;}
+.dyn-qr-panel.active{display:block;}
+.qr-countdown{font-family:var(--mono);font-size:32px;font-weight:700;color:var(--blue);line-height:1;transition:color 0.3s;}
+.qr-countdown.warn{color:var(--gold);}
+.qr-countdown.crit{color:var(--red);animation:blink 0.6s ease infinite;}
+.qr-countdown-track{height:4px;background:var(--line);border-radius:4px;margin:8px 0 12px;overflow:hidden;}
+.qr-countdown-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green),var(--blue));transition:width 1s linear,background 0.3s;}
+.qr-refresh-badge{display:inline-flex;align-items:center;gap:5px;background:var(--green2);border:1px solid rgba(16,185,129,0.2);border-radius:100px;padding:3px 10px;font-size:10px;font-family:var(--mono);color:var(--green);letter-spacing:0.5px;margin-bottom:12px;}
+.qr-refresh-badge .dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:ping 1s ease infinite;}
+.dyn-qr-output{display:inline-block;padding:12px;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);}
+.dyn-qr-label{font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:8px;letter-spacing:0.5px;}
+.flag-panel{background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.15);border-radius:var(--r2);padding:14px;margin-top:14px;display:none;}
+.flag-panel.has-flags{display:block;animation:fadeUp 0.4s ease both;}
+.flag-panel-title{font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+.flag-item{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;background:var(--s1);border:1px solid rgba(239,68,68,0.12);border-radius:var(--r1);margin-bottom:6px;font-size:11px;line-height:1.5;}
+.flag-item:last-child{margin-bottom:0;}
+.flag-ico{flex-shrink:0;font-size:14px;margin-top:1px;}
+.flag-text{flex:1;color:var(--text);}
+.flag-text strong{color:var(--red);}
+.flag-ts{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px;}
+.ip-warn-badge{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:var(--r1);padding:8px 12px;font-size:11px;font-family:var(--mono);color:var(--gold);margin-bottom:10px;display:none;}
+.ip-warn-badge.show{display:block;}
+.offline-queue-badge{position:fixed;bottom:22px;left:22px;background:var(--gold);color:#fff;border-radius:var(--r2);padding:10px 14px;font-size:12px;font-family:var(--mono);font-weight:700;z-index:9998;display:none;box-shadow:0 4px 16px rgba(245,158,11,0.4);animation:fadeUp 0.3s ease both;}
+.offline-queue-badge.show{display:block;}
+.risk-score-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.5px;}
+.risk-score-badge.low{background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,0.2);}
+.risk-score-badge.med{background:var(--gold2);color:var(--gold);border:1px solid rgba(245,158,11,0.2);}
+.risk-score-badge.high{background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,0.2);}
+.sec-mode-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.sec-mode-btn{flex:1;min-width:100px;padding:8px 10px;border-radius:var(--r1);border:1px solid var(--line);background:var(--s2);font-family:var(--body);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;text-align:center;color:var(--text2);}
+.sec-mode-btn:hover{border-color:var(--line2);background:var(--s3);}
+.sec-mode-btn.active{background:var(--blue3);border-color:rgba(79,158,255,0.3);color:var(--blue);}
 
 /* ════════════════════════════════
    ANIMATIONS
@@ -1282,11 +1740,20 @@ body::after { content: none; }
     <button class="lang-btn active" id="langEN" onclick="setLang('en')"><span class="lang-flag">🇬🇧</span> EN</button>
     <button class="lang-btn" id="langFR" onclick="setLang('fr')"><span class="lang-flag">🇫🇷</span> FR</button>
   </div>
+  <!-- PWA Install Button -->
+  <button class="pwa-install-btn" id="pwaInstallBtn" onclick="installPWA()" title="Install as App">
+    📲 Install App
+  </button>
   <div class="nav-right" id="navRight">
     <button class="nav-btn nav-btn-ghost" onclick="showLogin()">Admin Login</button>
     <button class="nav-btn nav-btn-solid" onclick="showLogin()">Get Started →</button>
   </div>
 </nav>
+
+<!-- Offline Queue Badge -->
+<div class="offline-queue-badge" id="offlineQueueBadge">
+  ⚡ <span id="offlineQueueCount">0</span> pending — will auto-submit when online
+</div>
 
 <!-- ═══════════════ MAIN ═══════════════ -->
 <div class="main">
@@ -1307,6 +1774,7 @@ body::after { content: none; }
       <button class="cta-btn cta-primary" onclick="showLogin()">Open Admin Panel →</button>
       <button class="cta-btn cta-outline" onclick="showLogin()">View Demo</button>
       <button class="cta-btn cta-outline" onclick="openContact()" style="border-color:var(--blue);color:var(--blue);">✦ Contact Us</button>
+      <button class="cta-btn cta-outline" onclick="installPWA()" style="border-color:var(--green);color:var(--green);" title="Install as app">📲 Install App</button>
     </div>
     <div class="features-grid a-fadeup d4">
       <div class="feat">
@@ -1326,18 +1794,18 @@ body::after { content: none; }
       </div>
       <div class="feat">
         <div class="feat-icon gold">▦</div>
-        <div class="feat-title">QR Code Generator</div>
-        <div class="feat-desc">Built-in QR tool — generate QR codes for session links, emails, or websites and share instantly.</div>
+        <div class="feat-title">🔄 Dynamic QR Mode</div>
+        <div class="feat-desc">Rotating QR codes refresh every 30s — screenshots are rejected. No link sharing possible. Scan-only attendance.</div>
       </div>
       <div class="feat">
-        <div class="feat-icon b">🔐</div>
-        <div class="feat-title">Secure Admin Panel</div>
-        <div class="feat-desc">PIN-protected dashboard with live session monitoring, search, delete, and custom PIN settings.</div>
+        <div class="feat-icon b">🛡</div>
+        <div class="feat-title">Anti-Fraud Protection</div>
+        <div class="feat-desc">Device fingerprinting, IP duplicate detection, behavioral anomaly scoring, and QR token validation block cheating.</div>
       </div>
       <div class="feat">
         <div class="feat-icon g">📡</div>
-        <div class="feat-title">Live Tracking</div>
-        <div class="feat-desc">Watch attendance roll in live with real-time present count and countdown timer per session.</div>
+        <div class="feat-title">Offline Support (PWA)</div>
+        <div class="feat-desc">Works offline — submissions saved locally and auto-synced when connection returns. Install as app on any device.</div>
       </div>
     </div>
   </div>
@@ -1609,6 +2077,35 @@ body::after { content: none; }
 
             <button class="btn-gen" onclick="createSession()">⚡ Generate Attendance Link</button>
             <div class="alert" id="createAlert"></div>
+
+            <!-- Security Mode Selection -->
+            <div style="margin-top:14px;padding:12px 14px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);">
+              <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-family:var(--head);">🛡 Session Mode</div>
+              <div class="sec-mode-row">
+                <button class="sec-mode-btn active" id="modeStatic" onclick="setSessionMode('static',this)">🔗 Link Mode<br/><span style="font-size:10px;font-weight:400;color:inherit;opacity:0.7;">Share a link</span></button>
+                <button class="sec-mode-btn" id="modeDynamic" onclick="setSessionMode('dynamic',this)">🔄 Dynamic QR<br/><span style="font-size:10px;font-weight:400;color:inherit;opacity:0.7;">Rotating QR code</span></button>
+              </div>
+              <!-- Dynamic QR Panel -->
+              <div class="dyn-qr-panel" id="dynQRPanel">
+                <div class="qr-refresh-badge"><div class="dot"></div>Auto-refresh active</div>
+                <div id="dynQROut" class="dyn-qr-output"></div>
+                <div class="qr-countdown-track"><div class="qr-countdown-fill" id="dynQRFill" style="width:100%"></div></div>
+                <div class="qr-countdown" id="dynQRCountdown">30</div>
+                <div class="dyn-qr-label">QR rotates every 30 seconds — screenshot reuse blocked</div>
+                <div style="margin-top:10px;font-size:11px;color:var(--text3);font-family:var(--mono);background:var(--blue3);border-radius:var(--r1);padding:8px 10px;text-align:left;">
+                  ✓ Each QR contains a one-time token valid for 30s<br/>
+                  ✓ Cannot be shared as a link — scan only<br/>
+                  ✓ Screenshot reuse automatically rejected<br/>
+                  ✓ Combined with device fingerprint lock
+                </div>
+              </div>
+            </div>
+
+            <!-- Anti-fraud flags panel (shown when suspicious activity detected) -->
+            <div class="flag-panel" id="fraudFlagsPanel">
+              <div class="flag-panel-title">⚠️ Suspicious Activity Detected</div>
+              <div id="fraudFlagsList"></div>
+            </div>
 
             <!-- Link + QR output -->
             <div class="link-out" id="linkOut">
@@ -2051,10 +2548,28 @@ body::after { content: none; }
           <label>Choose Animated Background</label>
           <div class="sel-wrap">
             <select id="bgTheme" onchange="changeBgTheme()">
-              <option value="school">School Icons — Books, pencils, graduation caps</option>
-              <option value="book">Opening Book — Pages turning animation</option>
-              <option value="phantom">KЭL ♛ PHANTOM — Animated signature</option>
-              <option value="docs">Documents — PDFs, clocks, papers floating</option>
+              <optgroup label="— Original —">
+                <option value="school">📚 School Icons — Books, pencils, caps floating</option>
+                <option value="book">📖 Opening Book — Pages turning animation</option>
+                <option value="phantom">♛ KЭL ♛ PHANTOM — Animated signature</option>
+                <option value="docs">📄 Documents — PDFs, clocks, papers floating</option>
+              </optgroup>
+              <optgroup label="— App Themes —">
+                <option value="qrpulse">📡 QR Pulse — Scan rings &amp; QR grid cells</option>
+                <option value="grid">☑ Attendance Grid — Cells, checks &amp; scan line</option>
+                <option value="clock">⏰ Clock &amp; Time — Ticking faces, digit rain</option>
+              </optgroup>
+              <optgroup label="— Color Themes —">
+                <option value="purple">🟣 Purple Matrix — Neural data network (purple)</option>
+                <option value="green">🟢 Green Growth — Leaves, sparks, rising bars (green)</option>
+                <option value="pink">🩷 Pink Hearts — Hearts, petals, blossoms (pink)</option>
+              </optgroup>
+              <optgroup label="— Atmosphere —">
+                <option value="ocean">🌊 Ocean Wave — Waves, bubbles, sea orbs</option>
+                <option value="galaxy">🌌 Galaxy — Stars, shooting stars, nebulae</option>
+                <option value="fire">🔥 Fire &amp; Energy — Flames, embers, heat glow</option>
+                <option value="snow">❄️ Snow &amp; Ice — Snowflakes, crystals, minimal</option>
+              </optgroup>
             </select>
           </div>
         </div>
@@ -2391,7 +2906,7 @@ let S_regPin = '';
 let S_recPin = '';
 
 function navTo(pg)  { showPage(pg); if(pg==='dash'){ refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); } }
-function adminOut() { S.loggedIn=false; S.currentAdmin=null; if(S.liveInt)clearInterval(S.liveInt); stopNotifListener(); showPage('landing'); }
+function adminOut() { S.loggedIn=false; S.currentAdmin=null; if(S.liveInt)clearInterval(S.liveInt); stopDynQR(); stopNotifListener(); showPage('landing'); }
 
 function showLoginStep(step){
   ['loginStep1','loginStepAdmin','loginStepRegister','loginStepSuper','loginStepRecover'].forEach(id=>{
@@ -2457,6 +2972,13 @@ async function tryLogin() {
     S.pinInput=''; updateDots(); return;
   }
   const admin = snap.data();
+
+  // ── Deleted account check — cannot log in, phone is freed ──
+  if(admin.deleted){
+    for(let i=0;i<4;i++) document.getElementById('pd'+i)?.classList.add('err');
+    showAlert('loginAlert','err','❌ This account has been permanently removed by the super admin.\n\nYour phone number is now available — you may register a new account.');
+    S.pinInput=''; updateDots(); return;
+  }
 
   // ── Trial expiry check (auto-block if 30 days elapsed) ──
   if(!admin.blocked && admin.trialEnd && Date.now() > admin.trialEnd){
@@ -2549,8 +3071,10 @@ async function registerAdmin(){
     const normPhone = p => p ? ('+'+p.replace(/[\s\-\(\)\.]/g,'').replace(/^\+/,'')) : '';
 
     // ── PHONE is the unique identity key ──
-    // Same phone = same person, even if they changed their name
-    const phoneMatch = allAdmins.find(a => normPhone(a.phone) === phoneNorm);
+    // Deleted admins (deleted:true) release their phone — it can be reused
+    // Blocked admins keep their phone locked (they still exist, just suspended)
+    const activeAdmins = allAdmins.filter(a => !a.deleted); // exclude soft-deleted
+    const phoneMatch = activeAdmins.find(a => normPhone(a.phone) === phoneNorm);
     if(phoneMatch){
       if(phoneMatch.blocked){
         showAlert('regAlert','err','⛔ This WhatsApp number belongs to a suspended account.\n\nYour account: @'+phoneMatch.username+'\nContact the super admin to be unblocked. All your data is still saved.');
@@ -2560,9 +3084,9 @@ async function registerAdmin(){
       return;
     }
 
-    // Name uniqueness check (two admins cannot share a name)
+    // Name uniqueness check — also skip deleted accounts (their name is freed)
     const nameLower = name.toLowerCase().trim();
-    const nameMatch = allAdmins.find(a => a.name && a.name.toLowerCase().trim() === nameLower);
+    const nameMatch = activeAdmins.find(a => a.name && a.name.toLowerCase().trim() === nameLower);
     if(nameMatch){
       if(nameMatch.blocked){
         showAlert('regAlert','err','❌ The name "'+name+'" belongs to a suspended account. Choose a different name or contact the super admin.');
@@ -2824,52 +3348,96 @@ function sendSuperSess(){
 async function loadAdminList(){
   await waitForFirebase();
   const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
-  const admins = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const allAdmins = snap.docs.map(d=>({id:d.id,...d.data()}));
+  // Separate active (non-deleted) from deleted (soft-deleted)
+  const admins = allAdmins.filter(a => !a.deleted);
+  const deletedAdmins = allAdmins.filter(a => a.deleted);
   const list = document.getElementById('adminList');
+  // Count only active (non-deleted) admins towards the limit
   document.getElementById('adminCount').textContent = admins.length+' / '+getMaxAdmins()+' admins';
+  let html = '';
   if(!admins.length){
-    list.innerHTML='<div class="empty-st"><div class="ei">👥</div><div class="et">No admins registered yet.</div></div>';
-    return;
-  }
-  const now = Date.now();
-  list.innerHTML = admins.map(a=>{
-    let trialBadge='', trialLine='';
-    if(a.trialEnd){
-      const daysLeft=Math.max(0,Math.ceil((a.trialEnd-now)/(24*60*60*1000)));
-      const expired=now>a.trialEnd;
-      if(expired||a.trialExpired){
-        trialBadge='<span class="badge" style="background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);">TRIAL EXPIRED</span>';
-        trialLine=`<div style="font-size:10px;color:var(--red);font-family:var(--mono);margin-top:2px;">⏰ Trial ended ${new Date(a.trialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>`;
-      } else {
-        const color=daysLeft<=5?'var(--red)':daysLeft<=10?'var(--gold)':'var(--green)';
-        trialBadge=`<span class="badge" style="background:rgba(59,130,246,0.10);color:var(--blue);border:1px solid rgba(59,130,246,0.2);">🎁 ${daysLeft}d left</span>`;
-        trialLine=`<div style="font-size:10px;color:${color};font-family:var(--mono);margin-top:2px;">Trial ends ${new Date(a.trialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>`;
+    html='<div class="empty-st"><div class="ei">👥</div><div class="et">No admins registered yet.</div></div>';
+  } else {
+    const now = Date.now();
+    html = admins.map(a=>{
+      let trialBadge='', trialLine='';
+      if(a.trialEnd){
+        const daysLeft=Math.max(0,Math.ceil((a.trialEnd-now)/(24*60*60*1000)));
+        const expired=now>a.trialEnd;
+        if(expired||a.trialExpired){
+          trialBadge='<span class="badge" style="background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);">TRIAL EXPIRED</span>';
+          trialLine=`<div style="font-size:10px;color:var(--red);font-family:var(--mono);margin-top:2px;">⏰ Trial ended ${new Date(a.trialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>`;
+        } else {
+          const color=daysLeft<=5?'var(--red)':daysLeft<=10?'var(--gold)':'var(--green)';
+          trialBadge=`<span class="badge" style="background:rgba(59,130,246,0.10);color:var(--blue);border:1px solid rgba(59,130,246,0.2);">🎁 ${daysLeft}d left</span>`;
+          trialLine=`<div style="font-size:10px;color:${color};font-family:var(--mono);margin-top:2px;">Trial ends ${new Date(a.trialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>`;
+        }
       }
+      const statusBadge=a.blocked
+        ?(a.blockedReason==='trial_expired'
+          ?'<span class="badge" style="background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,0.2);">⏰ TRIAL ENDED</span>'
+          :'<span class="badge" style="background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,0.2);">BLOCKED</span>')
+        :'<span class="badge" style="background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,0.2);">ACTIVE</span>';
+      return `<div style="background:var(--s2);border:1px solid ${a.blocked?'rgba(239,68,68,0.2)':'var(--line)'};border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="min-width:0;">
+            <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${a.name} ${statusBadge} ${trialBadge}</div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px;">@${a.username} · 📱 ${a.phone||'—'} · Login: ${a.lastLogin?new Date(a.lastLogin).toLocaleString():'Never'}</div>
+            ${trialLine}
+            ${a.blockedReason==='trial_expired'?'<div style="font-size:10px;color:var(--text3);font-family:var(--mono);">Unblock to reactivate — all data preserved</div>':''}
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;">
+            <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑 PIN</button>
+            <button class="btn btn-gold btn-xs" onclick="superPdfAllSessions('${a.username}','${a.name}')">📄 PDF</button>
+            <button class="btn btn-ghost btn-xs" onclick="openReplyToAdmin('${a.username}','${a.name}');openNotifPanel();">✉ Msg</button>
+            <button class="btn btn-red btn-xs" onclick="superDelAllSessions('${a.username}','${a.name}')">🗑</button>
+            <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')">❌ Remove</button>
+            <button class="btn ${a.blocked?'btn-green':'btn-red'} btn-xs" onclick="toggleBlock('${a.username}',${!!a.blocked},'${a.name}')">${a.blocked?'✓ Unblock':'⛔ Block'}</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Audit trail: show recently deleted admins (collapsible) ──
+  if(deletedAdmins.length){
+    const deletedHtml = deletedAdmins.map(a=>`
+      <div style="background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);border-radius:var(--r1);padding:10px 14px;margin-bottom:6px;opacity:0.7;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text3);display:flex;align-items:center;gap:6px;">
+              <span>🗑 ${a.name}</span>
+              <span class="badge" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2);font-size:9px;">REMOVED</span>
+            </div>
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;">@${a.username} · 📱 ${a.phone||'—'} · Removed: ${a.deletedAt?new Date(a.deletedAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—'}</div>
+            <div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-top:2px;">✓ Phone number released — available for new registration</div>
+          </div>
+          <button class="btn btn-ghost btn-xs" style="font-size:10px;" onclick="purgeDeletedAdmin('${a.username}','${a.name}')">🗑 Purge</button>
+        </div>
+      </div>`).join('');
+    html += `<details style="margin-top:14px;">
+      <summary style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);cursor:pointer;font-family:var(--head);padding:8px 0;list-style:none;">
+        🗂 Removed Accounts (${deletedAdmins.length}) — Phone numbers freed ▾
+      </summary>
+      <div style="margin-top:8px;">${deletedHtml}</div>
+    </details>`;
+  }
+
+  list.innerHTML = html;
+}
+
+/* ── PURGE DELETED ADMIN (permanent wipe from Firestore) ── */
+async function purgeDeletedAdmin(username, name){
+  showConf('🗑','Permanently Purge?',
+    `Completely erase all traces of "${name}" (@${username}) from the database. Their sessions are kept. This cannot be undone.`,
+    async()=>{
+      await waitForFirebase();
+      await window._fsDeleteDoc(window._fsDoc(window._db,'admins',username));
+      toast('@'+username+' permanently purged from database','ok');
+      loadAdminList();
     }
-    const statusBadge=a.blocked
-      ?(a.blockedReason==='trial_expired'
-        ?'<span class="badge" style="background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,0.2);">⏰ TRIAL ENDED</span>'
-        :'<span class="badge" style="background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,0.2);">BLOCKED</span>')
-      :'<span class="badge" style="background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,0.2);">ACTIVE</span>';
-    return `<div style="background:var(--s2);border:1px solid ${a.blocked?'rgba(239,68,68,0.2)':'var(--line)'};border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-        <div style="min-width:0;">
-          <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${a.name} ${statusBadge} ${trialBadge}</div>
-          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px;">@${a.username} · 📱 ${a.phone||'—'} · Login: ${a.lastLogin?new Date(a.lastLogin).toLocaleString():'Never'}</div>
-          ${trialLine}
-          ${a.blockedReason==='trial_expired'?'<div style="font-size:10px;color:var(--text3);font-family:var(--mono);">Unblock to reactivate — all data preserved</div>':''}
-        </div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;">
-          <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑 PIN</button>
-          <button class="btn btn-gold btn-xs" onclick="superPdfAllSessions('${a.username}','${a.name}')">📄 PDF</button>
-          <button class="btn btn-ghost btn-xs" onclick="openReplyToAdmin('${a.username}','${a.name}');openNotifPanel();">✉ Msg</button>
-          <button class="btn btn-red btn-xs" onclick="superDelAllSessions('${a.username}','${a.name}')">🗑</button>
-          <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')">❌</button>
-          <button class="btn ${a.blocked?'btn-green':'btn-red'} btn-xs" onclick="toggleBlock('${a.username}',${!!a.blocked},'${a.name}')">${a.blocked?'✓ Unblock':'⛔ Block'}</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+  );
 }
 
 /* ── SUPER: ALL SESSIONS ── */
@@ -2981,11 +3549,18 @@ async function toggleBlock(username, currentlyBlocked, adminName){
 /* ── DELETE ADMIN ── */
 async function deleteAdmin(username, name){
   showConf('❌','Remove Admin?',
-    `Permanently remove "${name}" (@${username}). Their sessions will NOT be deleted — only the account is removed.`,
+    `Permanently remove "${name}" (@${username}).\n\nTheir sessions will NOT be deleted. Their WhatsApp number will be freed — someone else can register with it.\nThis action cannot be undone.`,
     async()=>{
       await waitForFirebase();
-      await window._fsDeleteDoc(window._fsDoc(window._db,'admins',username));
-      toast('@'+username+' removed','ok');
+      // Soft-delete: mark as deleted so phone number is released for re-registration
+      // but audit trail is preserved (super admin can see history)
+      await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
+        deleted: true,
+        deletedAt: Date.now(),
+        blocked: true,
+        blockedReason: 'admin_deleted'
+      }, {merge:true});
+      toast('@'+username+' removed — their phone number is now available for re-registration','ok');
       loadAdminList();
     }
   );
@@ -3129,7 +3704,8 @@ function createSession() {
   if(!sub||!cls||!time) { showAlert('createAlert','err','Subject, class and start time are required.'); return; }
 
   const start = Date.now(), expiry = start + dur*60*1000, id = start;
-  const sess = {id,sub,cls,dept,lec,time,dur,room,start,expiry,adminId:S.currentAdmin||'default'};
+  const isDynamic = S._sessionMode === 'dynamic';
+  const sess = {id,sub,cls,dept,lec,time,dur,room,start,expiry,adminId:S.currentAdmin||'default',sessionMode:isDynamic?'dynamic':'static'};
   const radius = parseInt(v('inRadius'))||100;
   if (S.teacherLat != null) {
     sess.geoLat    = S.teacherLat;
@@ -3151,19 +3727,40 @@ function createSession() {
   document.getElementById('lvDur').textContent = dur+'m';
   S.activeSessionId = id;
 
-  // Generate inline QR
-  const qrOut = document.getElementById('qrInlineOut');
-  qrOut.innerHTML = '';
-  new QRCode(qrOut, {
-    text:link, width:160, height:160,
-    colorDark:'#000000', colorLight:'#ffffff',
-    correctLevel: QRCode.CorrectLevel.H
-  });
-  document.getElementById('qrInline').classList.add('show');
-  document.getElementById('liveMon').classList.add('show');
+  // Initialize fraud flags
+  if(!S._fraudFlags) S._fraudFlags = {};
+  S._fraudFlags[id] = [];
+  // Subscribe to real-time fraud flags from Firebase
+  if(window._db){
+    window._fsOnSnap(window._fsColl(window._db,'sessions',String(id),'flags'), snap=>{
+      S._fraudFlags[id] = snap.docs.map(d=>d.data());
+      renderFraudFlags(id);
+    });
+  }
 
-  showAlert('createAlert','ok','✓ Session created — '+sub+' · '+cls+' · '+dur+' min');
-  toast('Session created: '+sub,'ok');
+  if(isDynamic){
+    // Dynamic QR mode — start rotating QR
+    document.getElementById('qrInline').classList.add('show');
+    document.getElementById('qrInlineOut').innerHTML = '<div style="font-size:11px;color:var(--text3);font-family:var(--mono);text-align:center;padding:8px;">Dynamic QR active above ↑</div>';
+    startDynQR(id, link);
+    showAlert('createAlert','ok','✓ Dynamic QR Session created — '+sub+' · rotating QR every '+DYN_QR_TTL+'s');
+    toast('🔄 Dynamic QR Session: '+sub,'ok');
+  } else {
+    // Static link mode — generate inline QR
+    stopDynQR();
+    const qrOut = document.getElementById('qrInlineOut');
+    qrOut.innerHTML = '';
+    new QRCode(qrOut, {
+      text:link, width:160, height:160,
+      colorDark:'#000000', colorLight:'#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    document.getElementById('qrInline').classList.add('show');
+    showAlert('createAlert','ok','✓ Session created — '+sub+' · '+cls+' · '+dur+' min');
+    toast('Session created: '+sub,'ok');
+  }
+
+  document.getElementById('liveMon').classList.add('show');
   refreshDash();
   startLiveMonitor(id);
 }
@@ -3369,9 +3966,35 @@ function openModal(sid) {
       if(!recs.length){
         body+='<div class="empty-st"><div class="ei">👤</div><div class="et">No attendance records yet.</div></div>';
       } else {
-        body+=`<div class="att-wrap"><table class="att-table">
-          <thead><tr><th>#</th><th>First Name</th><th>Last Name</th><th>Matricule</th><th>Class</th><th>Department</th><th>Time</th></tr></thead>
-          <tbody>${recs.map((r,i)=>`<tr class="${i===0?'first':''}"><td class="rc">${i+1}</td><td>${r.fN}</td><td>${r.lN}</td><td class="mc">${r.mat}</td><td>${r.cls||'—'}</td><td>${r.dept||'—'}</td><td class="tc">${r.time}</td></tr>`).join('')}
+        // Compute risk analysis
+        const ipGroups = {};
+        recs.forEach(r=>{ if(r.ip){ ipGroups[r.ip]=(ipGroups[r.ip]||[]); ipGroups[r.ip].push(r); } });
+        const dupIPs = Object.entries(ipGroups).filter(([ip,arr])=>arr.length>1);
+        const flags = [];
+        if(dupIPs.length>0) flags.push({ico:'🌐', msg:`<strong>${dupIPs.length} IP address${dupIPs.length>1?'es':''}</strong> used by multiple students — possible cheating via same network`});
+        const dupeTimings = [];
+        for(let i=1;i<recs.length;i++){
+          const gap=(recs[i].ts||0)-(recs[i-1].ts||0);
+          if(gap<2000) dupeTimings.push(i);
+        }
+        if(dupeTimings.length>1) flags.push({ico:'⚡', msg:`<strong>${dupeTimings.length} rapid submissions</strong> detected — submissions less than 2 seconds apart`});
+
+        let flagHtml='';
+        if(flags.length){
+          flagHtml=`<div class="flag-panel has-flags" style="margin-bottom:14px;">
+            <div class="flag-panel-title">⚠️ Suspicious Activity</div>
+            ${flags.map(f=>`<div class="flag-item"><div class="flag-ico">${f.ico}</div><div class="flag-text">${f.msg}</div></div>`).join('')}
+          </div>`;
+        }
+
+        body+=flagHtml+`<div class="att-wrap"><table class="att-table">
+          <thead><tr><th>#</th><th>First Name</th><th>Last Name</th><th>Matricule</th><th>Class</th><th>Department</th><th>Time</th><th>Risk</th></tr></thead>
+          <tbody>${recs.map((r,i)=>{
+            let risk='low'; let riskTxt='✓ OK';
+            const sameIP=r.ip && recs.filter(x=>x.ip===r.ip).length>1;
+            if(sameIP){risk='med';riskTxt='⚠ Shared IP';}
+            return `<tr class="${i===0?'first':''}"><td class="rc">${i+1}</td><td>${r.fN}</td><td>${r.lN}</td><td class="mc">${r.mat}</td><td>${r.cls||'—'}</td><td>${r.dept||'—'}</td><td class="tc">${r.time}</td><td><span class="risk-score-badge ${risk}">${riskTxt}</span></td></tr>`;
+          }).join('')}
           </tbody></table></div>`;
       }
       document.getElementById('mBody').innerHTML=body;
@@ -3557,6 +4180,134 @@ function hideAC(){ setTimeout(()=>document.getElementById('acList').classList.re
 function pickDept(d){ document.getElementById('stuDept').value=d; document.getElementById('acList').classList.remove('open'); }
 
 /* ── SUBMIT ATTENDANCE ── */
+/* ── OFFLINE QUEUE (PWA offline support) ── */
+const _offlineQueue = JSON.parse(localStorage.getItem('ax_offline_queue')||'[]');
+function _persistQueue(){ localStorage.setItem('ax_offline_queue', JSON.stringify(_offlineQueue)); }
+function _showOfflineBadge(){
+  const b=document.getElementById('offlineQueueBadge');
+  const c=document.getElementById('offlineQueueCount');
+  if(!b||!c) return;
+  if(_offlineQueue.length>0){ c.textContent=_offlineQueue.length; b.classList.add('show'); }
+  else { b.classList.remove('show'); }
+}
+async function _flushOfflineQueue(){
+  if(!_offlineQueue.length||!window._db) return;
+  const toFlush=[..._offlineQueue];
+  for(const item of toFlush){
+    try {
+      await Promise.all([saveRec(item.sid, item.rec), saveDeviceMark(item.sid, item.deviceId)]);
+      _offlineQueue.splice(_offlineQueue.indexOf(item),1);
+    } catch(e){ break; } // stop if still offline
+  }
+  _persistQueue(); _showOfflineBadge();
+}
+window.addEventListener('online', ()=>{ toast('Back online — syncing attendance…','info'); _flushOfflineQueue(); });
+window.addEventListener('offline', ()=>{ toast('⚠ Offline — submissions saved locally','warn'); });
+_showOfflineBadge();
+// Try flush on load
+document.addEventListener('firebaseReady', ()=> setTimeout(_flushOfflineQueue, 1500));
+
+/* ── GET CLIENT IP (best-effort, non-blocking) ── */
+async function getClientIP(){
+  try {
+    const r = await fetch('https://api.ipify.org?format=json', {signal: AbortSignal.timeout(3000)});
+    const d = await r.json();
+    return d.ip || null;
+  } catch(e){ return null; }
+}
+
+/* ── DYNAMIC QR SESSION MODE ── */
+let _dynQRInterval = null;
+let _dynQRToken = null;
+let _dynQRExpiry = 0;
+const DYN_QR_TTL = 30; // seconds
+
+function setSessionMode(mode, btn){
+  document.querySelectorAll('.sec-mode-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  S._sessionMode = mode;
+  const panel = document.getElementById('dynQRPanel');
+  if(panel) panel.classList.toggle('active', mode==='dynamic');
+  if(mode==='dynamic'){
+    toast('Dynamic QR mode: QR rotates every 30s — screenshot sharing blocked','info');
+  }
+}
+
+function _genDynToken(sid){
+  const t = Date.now();
+  const nonce = Math.random().toString(36).slice(2,10);
+  return btoa(sid+':'+t+':'+nonce);
+}
+
+function startDynQR(sid, link){
+  if(_dynQRInterval) clearInterval(_dynQRInterval);
+  _rotateDynQR(sid, link);
+  _dynQRInterval = setInterval(()=>_rotateDynQR(sid, link), DYN_QR_TTL*1000);
+}
+
+function _rotateDynQR(sid, baseLink){
+  _dynQRToken = _genDynToken(sid);
+  _dynQRExpiry = Date.now() + DYN_QR_TTL*1000;
+  // Store token in Firestore so student page can validate
+  if(window._db){
+    window._fsSetDoc(window._fsDoc(window._db,'sessions',String(sid)), {dynQRToken:_dynQRToken, dynQRExpiry:_dynQRExpiry},{merge:true}).catch(()=>{});
+  }
+  const dynLink = baseLink + '&qrt=' + encodeURIComponent(_dynQRToken);
+  const out = document.getElementById('dynQROut');
+  if(!out) return;
+  out.innerHTML='';
+  new QRCode(out, {text:dynLink, width:160, height:160, colorDark:'#000', colorLight:'#fff', correctLevel:QRCode.CorrectLevel.M});
+  // Start countdown
+  _startDynCountdown();
+  toast('🔄 QR rotated — new token active','info');
+}
+
+function _startDynCountdown(){
+  if(window._dynCDInt) clearInterval(window._dynCDInt);
+  window._dynCDInt = setInterval(()=>{
+    const rem = Math.max(0, Math.ceil((_dynQRExpiry - Date.now())/1000));
+    const el = document.getElementById('dynQRCountdown');
+    const fill = document.getElementById('dynQRFill');
+    if(!el||!fill){ clearInterval(window._dynCDInt); return; }
+    el.textContent = rem;
+    el.className = 'qr-countdown' + (rem<=5?' crit':rem<=10?' warn':'');
+    fill.style.width = ((rem/DYN_QR_TTL)*100)+'%';
+    fill.style.background = rem<=5?'var(--red)':rem<=10?'var(--gold)':'linear-gradient(90deg,var(--green),var(--blue))';
+    if(rem<=0) clearInterval(window._dynCDInt);
+  }, 1000);
+}
+
+function stopDynQR(){
+  if(_dynQRInterval){ clearInterval(_dynQRInterval); _dynQRInterval=null; }
+  if(window._dynCDInt){ clearInterval(window._dynCDInt); window._dynCDInt=null; }
+}
+
+/* ── FRAUD FLAG PUSH (real-time to teacher dashboard) ── */
+function pushFraudFlag(sid, flagObj){
+  if(!window._db) return;
+  const ref = window._fsDoc(window._fsColl(window._db,'sessions',String(sid),'flags',String(Date.now())));
+  window._fsSetDoc(ref, {...flagObj, ts:Date.now()}).catch(()=>{});
+  // Also update in-memory and re-render
+  if(!S._fraudFlags) S._fraudFlags = {};
+  if(!S._fraudFlags[sid]) S._fraudFlags[sid] = [];
+  S._fraudFlags[sid].push(flagObj);
+  renderFraudFlags(sid);
+}
+
+function renderFraudFlags(sid){
+  const panel = document.getElementById('fraudFlagsPanel');
+  const list  = document.getElementById('fraudFlagsList');
+  if(!panel||!list) return;
+  const flags = (S._fraudFlags&&S._fraudFlags[sid])||[];
+  if(!flags.length){ panel.classList.remove('has-flags'); return; }
+  panel.classList.add('has-flags');
+  list.innerHTML = flags.slice(-8).reverse().map(f=>`
+    <div class="flag-item">
+      <div class="flag-ico">${f.ico||'⚠️'}</div>
+      <div class="flag-text">${f.msg}<div class="flag-ts">${new Date(f.ts).toLocaleTimeString('fr-FR')}</div></div>
+    </div>`).join('');
+}
+
 function checkStudentGeo(s) {
   const box = document.getElementById('stuGeoStatus');
   const btn = document.getElementById('stuSubmitBtn');
@@ -3727,11 +4478,31 @@ function submitAttend(){
   const dept=document.getElementById('stuDept').value.trim();
   const phone=document.getElementById('stuPhone').value.trim();
   if(!fN||!lN||!mat||!cls||!dept){showAlert('stuAlert','err','⚠ All fields except phone are required.');return;}
+
+  // Class match check
   const norm=x=>x.toLowerCase().replace(/[\s\-_.]/g,'');
   const sc=norm(s.cls),ic=norm(cls);
   if(sc!==ic&&!sc.includes(ic)&&!ic.includes(sc)){
     showAlert('stuAlert','err',`❌ Wrong Class\n\nThis session is for: "${s.cls}"\nYou entered: "${cls}"\n\nYou cannot mark attendance here.`);
     return;
+  }
+
+  // Validate Dynamic QR token if session uses dynamic mode
+  const urlParams = new URLSearchParams(window.location.search);
+  const qrToken = urlParams.get('qrt');
+  if(s.dynQRToken && s.dynQRExpiry){
+    if(!qrToken){
+      showAlert('stuAlert','err','❌ This session requires scanning the rotating QR code. Direct links are not accepted.');
+      return;
+    }
+    if(qrToken !== s.dynQRToken){
+      showAlert('stuAlert','err','❌ QR code expired or invalid. Please scan the latest QR code displayed in class.');
+      return;
+    }
+    if(Date.now() > s.dynQRExpiry){
+      showAlert('stuAlert','err','⏱ This QR code has expired. Please scan the new QR code now being displayed.');
+      return;
+    }
   }
 
   // Disable button to prevent double-tap
@@ -3747,27 +4518,68 @@ function submitAttend(){
         return;
       }
       // Check matricule duplicate in Firebase
-      getRec(s.id).then(recs=>{
+      getRec(s.id).then(async recs=>{
         if(recs.find(r=>r.mat.toLowerCase()===mat.toLowerCase())){
           showAlert('stuAlert','err','⚠ Matricule '+mat.toUpperCase()+' already recorded.');
           btn.disabled=false; btn.textContent='✓ Submit My Attendance';
           return;
         }
+
+        // Get client IP (best-effort, non-blocking)
+        const clientIP = await getClientIP().catch(()=>null);
+
+        // Check for IP duplicates (flag if >2 from same IP)
+        if(clientIP){
+          const sameIPCount = recs.filter(r=>r.ip===clientIP).length;
+          if(sameIPCount >= 2){
+            // Flag suspicious but still allow (teacher sees warning)
+            pushFraudFlag(s.id, {ico:'🌐', msg:`<strong>${mat.toUpperCase()}</strong> submitted from an IP address already used by ${sameIPCount} other student${sameIPCount>1?'s':''} — possible network sharing`});
+          }
+        }
+
+        // Behavioral detection: rapid submission
+        const now = Date.now();
+        const recent = recs.filter(r=>(now-(r.ts||0))<3000);
+        if(recent.length>=3){
+          pushFraudFlag(s.id, {ico:'⚡', msg:`Rapid submission burst detected — ${recent.length} submissions in 3 seconds. Possible automated/shared submission.`});
+        }
+
         const rank=recs.length+1;
         const rec={no:rank,fN,lN,mat:mat.toUpperCase(),cls,dept,phone:phone||null,
-          time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),ts:Date.now()};
-        // Save record + device mark atomically
-        Promise.all([saveRec(s.id, rec), saveDeviceMark(s.id, deviceId)]).then(()=>{
+          time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
+          ts:now, deviceId, ip:clientIP||null,
+          qrToken: qrToken||null
+        };
+
+        if(navigator.onLine){
+          // Online — save immediately
+          Promise.all([saveRec(s.id, rec), saveDeviceMark(s.id, deviceId)]).then(()=>{
+            document.getElementById('attendCard').style.display='none';
+            document.getElementById('successSt').classList.add('show');
+            document.getElementById('succName').textContent=fN+' '+lN;
+            document.getElementById('succDetail').textContent=mat.toUpperCase()+' · '+cls+' · '+dept;
+            const rl=rank===1?'🥇 First to attend!':rank===2?'🥈 2nd to arrive':rank===3?'🥉 3rd to arrive':'#'+rank+' on attendance list';
+            document.getElementById('succRank').textContent=rl;
+          }).catch(e=>{
+            // Fallback to offline queue
+            _offlineQueue.push({sid:s.id, rec, deviceId, ts:now});
+            _persistQueue(); _showOfflineBadge();
+            document.getElementById('attendCard').style.display='none';
+            document.getElementById('successSt').classList.add('show');
+            document.getElementById('succName').textContent=fN+' '+lN;
+            document.getElementById('succDetail').textContent='Saved locally — will sync when connection returns';
+            document.getElementById('succRank').textContent='⚡ Pending sync';
+          });
+        } else {
+          // Offline — queue locally
+          _offlineQueue.push({sid:s.id, rec, deviceId, ts:now});
+          _persistQueue(); _showOfflineBadge();
           document.getElementById('attendCard').style.display='none';
           document.getElementById('successSt').classList.add('show');
           document.getElementById('succName').textContent=fN+' '+lN;
-          document.getElementById('succDetail').textContent=mat.toUpperCase()+' · '+cls+' · '+dept;
-          const rl=rank===1?'🥇 First to attend!':rank===2?'🥈 2nd to arrive':rank===3?'🥉 3rd to arrive':'#'+rank+' on attendance list';
-          document.getElementById('succRank').textContent=rl;
-        }).catch(e=>{
-          showAlert('stuAlert','err','Submission failed: '+e.message);
-          btn.disabled=false; btn.textContent='✓ Submit My Attendance';
-        });
+          document.getElementById('succDetail').textContent='Saved locally — will sync automatically when reconnected';
+          document.getElementById('succRank').textContent='⚡ Offline — pending sync';
+        }
       });
     });
   });
@@ -4532,94 +5344,363 @@ function buildBg(theme){
   if(!bg) return;
   bg.innerHTML = '';
 
-  if(theme === 'school'){
-    const icons = ['📚','📖','✏️','📝','🎓','📐','📏','🔬','📓','🖊️','📌','🏫','🧪','🧮','🖍️','📊','🔭','🧲','💡','🏆'];
-    for(let i=0;i<22;i++){
-      const el = document.createElement('div');
-      el.className = 'particle';
-      el.textContent = icons[Math.floor(Math.random()*icons.length)];
-      const left=2+Math.random()*96, dur=10+Math.random()*18, delay=Math.random()*-25, size=16+Math.random()*22;
-      el.style.cssText=`left:${left}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;`;
+  /* ── helpers ── */
+  const rnd = (min,max) => min + Math.random()*(max-min);
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+  function orb(colors, count=5, blurPx=40, minSize=150, maxSize=350){
+    for(let i=0;i<count;i++){
+      const el=document.createElement('div'); el.className='orb';
+      el.style.cssText=`width:${rnd(minSize,maxSize)}px;height:${rnd(minSize,maxSize)}px;left:${rnd(0,85)}%;top:${rnd(0,85)}%;background:${pick(colors)};filter:blur(${blurPx}px);animation-duration:${rnd(7,14)}s;animation-delay:${rnd(-12,0)}s;`;
       bg.appendChild(el);
     }
-    const orbColors=['rgba(59,111,232,0.07)','rgba(14,165,233,0.06)','rgba(16,185,129,0.05)','rgba(245,158,11,0.05)','rgba(139,92,246,0.05)'];
-    for(let i=0;i<6;i++){
-      const orb=document.createElement('div'); orb.className='orb';
-      const size=200+Math.random()*300, left=Math.random()*90, top=Math.random()*90, dur=8+Math.random()*10, delay=Math.random()*-12;
-      orb.style.cssText=`width:${size}px;height:${size}px;left:${left}%;top:${top}%;background:${orbColors[i%orbColors.length]};animation-duration:${dur}s;animation-delay:${delay}s;`;
-      bg.appendChild(orb);
+  }
+  function stars(colors, count=30){
+    for(let i=0;i<count;i++){
+      const el=document.createElement('div'); el.className='star';
+      const sz=rnd(2,4);
+      el.style.cssText=`left:${rnd(0,100)}%;top:${rnd(0,100)}%;width:${sz}px;height:${sz}px;background:${pick(colors)};animation-duration:${rnd(2,5)}s;animation-delay:${rnd(-6,0)}s;`;
+      bg.appendChild(el);
     }
-    const starColors=['var(--blue)','var(--cyan)','var(--green)','var(--gold)'];
-    for(let i=0;i<35;i++){
-      const star=document.createElement('div'); star.className='star';
-      const left=Math.random()*100, top=Math.random()*100, dur=2+Math.random()*4, delay=Math.random()*-6, size=2+Math.random()*3;
-      star.style.cssText=`left:${left}%;top:${top}%;width:${size}px;height:${size}px;background:${starColors[i%starColors.length]};animation-duration:${dur}s;animation-delay:${delay}s;`;
-      bg.appendChild(star);
-    }
+  }
 
-  } else if(theme === 'book'){
+  /* ════════════════════════════
+     ORIGINAL THEMES (kept)
+  ════════════════════════════ */
+  if(theme==='school'){
+    const icons=['📚','📖','✏️','📝','🎓','📐','📏','🔬','📓','🖊️','📌','🏫','🧪','🧮','🖍️','📊','🔭','🧲','💡','🏆'];
+    for(let i=0;i<22;i++){
+      const el=document.createElement('div'); el.className='particle';
+      el.textContent=pick(icons);
+      el.style.cssText=`left:${rnd(2,96)}%;font-size:${rnd(16,38)}px;animation-duration:${rnd(10,28)}s;animation-delay:${rnd(-25,0)}s;`;
+      bg.appendChild(el);
+    }
+    orb(['rgba(59,111,232,0.07)','rgba(14,165,233,0.06)','rgba(16,185,129,0.05)','rgba(245,158,11,0.05)','rgba(139,92,246,0.05)']);
+    stars(['var(--blue)','var(--cyan)','var(--green)','var(--gold)']);
+
+  } else if(theme==='book'){
     const bookColors=['#3B6FE8','#0EA5E9','#10B981','#F59E0B','#8B5CF6','#EF4444'];
     for(let i=0;i<12;i++){
       const wrap=document.createElement('div'); wrap.className='book-wrap';
-      const left=5+Math.random()*88, top=5+Math.random()*88, dur=6+Math.random()*8, delay=Math.random()*-10, scale=0.5+Math.random()*0.8;
-      wrap.style.cssText=`left:${left}%;top:${top}%;animation-duration:${dur}s;animation-delay:${delay}s;transform:scale(${scale});`;
+      wrap.style.cssText=`left:${rnd(5,88)}%;top:${rnd(5,88)}%;animation-duration:${rnd(6,14)}s;animation-delay:${rnd(-10,0)}s;transform:scale(${rnd(0.5,1.3)});`;
       const book=document.createElement('div'); book.className='book';
       const cover=document.createElement('div'); cover.className='book-cover';
       cover.style.background=`linear-gradient(135deg,${bookColors[i%bookColors.length]},${bookColors[(i+1)%bookColors.length]})`;
       const page=document.createElement('div'); page.className='book-page';
-      const pageDur=2+Math.random()*3, pageDelay=Math.random()*-4;
-      page.style.cssText=`animation-duration:${pageDur}s;animation-delay:${pageDelay}s;`;
+      page.style.cssText=`animation-duration:${rnd(2,5)}s;animation-delay:${rnd(-4,0)}s;`;
       book.appendChild(cover); book.appendChild(page); wrap.appendChild(book); bg.appendChild(wrap);
     }
-    // also add some twinkling stars
-    for(let i=0;i<20;i++){
-      const star=document.createElement('div'); star.className='star';
-      const left=Math.random()*100, top=Math.random()*100, dur=2+Math.random()*4, delay=Math.random()*-6;
-      star.style.cssText=`left:${left}%;top:${top}%;animation-duration:${dur}s;animation-delay:${delay}s;background:var(--blue);`;
-      bg.appendChild(star);
-    }
+    stars(['var(--blue)'],20);
 
-  } else if(theme === 'phantom'){
-    const name = ['K','Э','L',' ','♛',' ','P','H','A','N','T','O','M'];
-    const colors = ['#3B6FE8','#0EA5E9','#10B981','#F59E0B','#FFD700','#F59E0B','#EF4444','#8B5CF6','#EC4899','#3B6FE8','#0EA5E9','#10B981','#F59E0B'];
-    const cols = 5, rows = 3;
-    for(let r=0;r<rows;r++){
-      for(let c=0;c<cols;c++){
-        const idx = (r*cols+c) % name.length;
-        if(name[idx]===' ') continue;
-        const el=document.createElement('div'); el.className='phantom-letter';
-        el.textContent = name[idx];
-        const left=5+c*(90/cols)+Math.random()*8;
-        const top=10+r*(75/rows)+Math.random()*8;
-        const dur=3+Math.random()*4, delay=Math.random()*-6;
-        const size=24+Math.random()*32;
-        el.style.cssText=`left:${left}%;top:${top}%;font-size:${size}px;color:${colors[idx]};animation-duration:${dur}s;animation-delay:${delay}s;text-shadow:0 0 20px ${colors[idx]}44;`;
-        bg.appendChild(el);
-      }
-    }
-    // orbs
-    for(let i=0;i<5;i++){
-      const orb=document.createElement('div'); orb.className='orb';
-      const size=150+Math.random()*200, left=Math.random()*85, top=Math.random()*85, dur=7+Math.random()*8, delay=Math.random()*-10;
-      orb.style.cssText=`width:${size}px;height:${size}px;left:${left}%;top:${top}%;background:${colors[i*2]}18;animation-duration:${dur}s;animation-delay:${delay}s;`;
-      bg.appendChild(orb);
-    }
-
-  } else if(theme === 'docs'){
-    const docIcons=['📄','📋','📊','📈','🕐','🕑','🕒','🕓','🕔','🕕','📁','🗂️','📑','🗒️','⏰','🕰️'];
-    for(let i=0;i<24;i++){
-      const el=document.createElement('div'); el.className='doc-item';
-      el.textContent=docIcons[Math.floor(Math.random()*docIcons.length)];
-      const left=2+Math.random()*95, top=2+Math.random()*95, dur=4+Math.random()*7, delay=Math.random()*-8, size=18+Math.random()*24;
-      el.style.cssText=`left:${left}%;top:${top}%;font-size:${size}px;animation-duration:${dur}s;animation-delay:${delay}s;`;
+  } else if(theme==='phantom'){
+    const name=['K','Э','L','♛','P','H','A','N','T','O','M'];
+    const colors=['#3B6FE8','#0EA5E9','#10B981','#F59E0B','#FFD700','#EF4444','#8B5CF6','#EC4899','#3B6FE8','#0EA5E9','#10B981'];
+    for(let r=0;r<3;r++) for(let c=0;c<5;c++){
+      const idx=(r*5+c)%name.length;
+      const el=document.createElement('div'); el.className='phantom-letter';
+      el.textContent=name[idx];
+      const sz=rnd(24,56);
+      el.style.cssText=`left:${5+c*18+rnd(0,8)}%;top:${10+r*28+rnd(0,8)}%;font-size:${sz}px;color:${colors[idx]};animation-duration:${rnd(3,7)}s;animation-delay:${rnd(-6,0)}s;text-shadow:0 0 20px ${colors[idx]}44;`;
       bg.appendChild(el);
     }
-    for(let i=0;i<4;i++){
-      const orb=document.createElement('div'); orb.className='orb';
-      const size=180+Math.random()*220, left=Math.random()*85, top=Math.random()*85, dur=9+Math.random()*7, delay=Math.random()*-10;
-      orb.style.cssText=`width:${size}px;height:${size}px;left:${left}%;top:${top}%;background:rgba(59,111,232,0.06);animation-duration:${dur}s;animation-delay:${delay}s;`;
-      bg.appendChild(orb);
+    orb(colors.map(c=>c+'18'),5,40,150,220);
+
+  } else if(theme==='docs'){
+    const docIcons=['📄','📋','📊','📈','🕐','🕑','🕒','📁','🗂️','📑','🗒️','⏰','🕰️','📌','🖨️'];
+    for(let i=0;i<24;i++){
+      const el=document.createElement('div'); el.className='doc-item';
+      el.textContent=pick(docIcons);
+      el.style.cssText=`left:${rnd(2,95)}%;top:${rnd(2,95)}%;font-size:${rnd(18,32)}px;animation-duration:${rnd(4,11)}s;animation-delay:${rnd(-8,0)}s;`;
+      bg.appendChild(el);
     }
+    orb(['rgba(59,111,232,0.06)'],4);
+
+  /* ════════════════════════════
+     NEW THEMES
+  ════════════════════════════ */
+
+  } else if(theme==='qrpulse'){
+    /* QR Pulse — concentric scan rings + QR grid cells + pulsing dots */
+    const qrColors=['#3B6FE8','#0EA5E9','#10B981'];
+    // Rings emitting from 3 centres
+    [[25,30],[75,50],[50,75]].forEach(([lx,ty],ci)=>{
+      for(let r=0;r<4;r++){
+        const ring=document.createElement('div'); ring.className='qr-ring';
+        const sz=rnd(60,180);
+        ring.style.cssText=`width:${sz}px;height:${sz}px;left:calc(${lx}% - ${sz/2}px);top:calc(${ty}% - ${sz/2}px);border-color:${qrColors[ci]};animation-duration:${rnd(2.5,5)}s;animation-delay:${rnd(-5,0)}s;opacity:0.5;`;
+        bg.appendChild(ring);
+      }
+    });
+    // QR grid cells
+    for(let i=0;i<50;i++){
+      const cell=document.createElement('div'); cell.className='qr-cell';
+      const sz=rnd(8,24);
+      cell.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,97)}%;top:${rnd(0,97)}%;background:${pick(qrColors)};animation-duration:${rnd(1.5,4)}s;animation-delay:${rnd(-4,0)}s;`;
+      bg.appendChild(cell);
+    }
+    // Glow dots
+    for(let i=0;i<18;i++){
+      const dot=document.createElement('div'); dot.className='qr-dot';
+      dot.style.cssText=`left:${rnd(0,99)}%;top:${rnd(0,99)}%;background:${pick(qrColors)};animation-duration:${rnd(1,3)}s;animation-delay:${rnd(-3,0)}s;`;
+      bg.appendChild(dot);
+    }
+    orb(['rgba(59,111,232,0.06)','rgba(14,165,233,0.05)','rgba(16,185,129,0.05)'],4);
+
+  } else if(theme==='purple'){
+    /* Purple Matrix — neural network data rain */
+    const purples=['#8B5CF6','#A78BFA','#7C3AED','#C084FC','#6D28D9'];
+    // Falling matrix characters
+    const chars='01アイウエオカキQRXZ@#$%';
+    for(let i=0;i<28;i++){
+      const el=document.createElement('div'); el.className='matrix-char';
+      el.textContent=pick(chars.split(''));
+      const col=pick(purples);
+      el.style.cssText=`left:${rnd(0,99)}%;font-size:${rnd(11,20)}px;color:${col};text-shadow:0 0 8px ${col}88;animation-duration:${rnd(4,10)}s;animation-delay:${rnd(-10,0)}s;`;
+      bg.appendChild(el);
+    }
+    // Network nodes
+    for(let i=0;i<20;i++){
+      const node=document.createElement('div'); node.className='matrix-node';
+      const sz=rnd(4,14);
+      const col=pick(purples);
+      node.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,99)}%;top:${rnd(0,99)}%;background:${col};box-shadow:0 0 12px ${col}66;animation-duration:${rnd(2,5)}s;animation-delay:${rnd(-5,0)}s;`;
+      bg.appendChild(node);
+    }
+    // Network lines (horizontal segments)
+    for(let i=0;i<15;i++){
+      const line=document.createElement('div'); line.className='matrix-line';
+      const w=rnd(40,160);
+      line.style.cssText=`width:${w}px;left:${rnd(0,85)}%;top:${rnd(0,99)}%;background:${pick(purples)};transform:rotate(${rnd(-30,30)}deg);animation-duration:${rnd(2,6)}s;animation-delay:${rnd(-6,0)}s;`;
+      bg.appendChild(line);
+    }
+    orb(['rgba(139,92,246,0.10)','rgba(167,139,250,0.08)','rgba(109,40,217,0.07)'],5,50,180,350);
+    stars(purples,25);
+
+  } else if(theme==='green'){
+    /* Green Growth — leaves, sparkles, rising bars */
+    const greens=['#10B981','#34D399','#059669','#6EE7B7','#065F46'];
+    const leafIcons=['🍃','🌿','☘️','🌱','🍀','🌾','🪴'];
+    // Leaves
+    for(let i=0;i<20;i++){
+      const el=document.createElement('div'); el.className='leaf';
+      el.textContent=pick(leafIcons);
+      el.style.cssText=`left:${rnd(0,96)}%;top:${rnd(0,96)}%;font-size:${rnd(16,32)}px;animation-duration:${rnd(4,9)}s;animation-delay:${rnd(-9,0)}s;`;
+      bg.appendChild(el);
+    }
+    // Rising bars (like a chart)
+    for(let i=0;i<12;i++){
+      const bar=document.createElement('div'); bar.className='growth-bar';
+      const w=rnd(12,30);
+      bar.style.cssText=`width:${w}px;left:${rnd(0,96)}%;height:${rnd(40,120)}px;background:${pick(greens)};transform-origin:bottom center;animation-duration:${rnd(2.5,6)}s;animation-delay:${rnd(-6,0)}s;`;
+      bg.appendChild(bar);
+    }
+    // Sparkles
+    for(let i=0;i<14;i++){
+      const sp=document.createElement('div'); sp.className='sparkle';
+      sp.textContent=pick(['✨','⭐','💚','🌟']);
+      sp.style.cssText=`left:${rnd(0,96)}%;top:${rnd(0,96)}%;animation-duration:${rnd(2,5)}s;animation-delay:${rnd(-5,0)}s;`;
+      bg.appendChild(sp);
+    }
+    // Green orbs
+    for(let i=0;i<5;i++){
+      const ob=document.createElement('div'); ob.className='green-orb orb';
+      const sz=rnd(150,320);
+      ob.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,80)}%;top:${rnd(0,80)}%;background:${pick(greens)}14;filter:blur(55px);animation-duration:${rnd(7,13)}s;animation-delay:${rnd(-12,0)}s;`;
+      bg.appendChild(ob);
+    }
+    stars(greens,20);
+
+  } else if(theme==='pink'){
+    /* Pink Hearts — hearts floating, petals, blobs */
+    const pinks=['#EC4899','#F472B6','#DB2777','#FBCFE8','#BE185D'];
+    const heartIcons=['💗','💝','💖','💕','🌸','🌺','🦋','✨'];
+    // Floating hearts
+    for(let i=0;i<22;i++){
+      const el=document.createElement('div'); el.className='heart';
+      el.textContent=pick(heartIcons);
+      el.style.cssText=`left:${rnd(0,96)}%;font-size:${rnd(14,30)}px;animation-duration:${rnd(7,16)}s;animation-delay:${rnd(-16,0)}s;`;
+      bg.appendChild(el);
+    }
+    // Rotating petals
+    for(let i=0;i<16;i++){
+      const petal=document.createElement('div'); petal.className='petal';
+      const sz=rnd(20,60);
+      petal.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,96)}%;top:${rnd(0,96)}%;background:${pick(pinks)}22;animation-duration:${rnd(4,9)}s;animation-delay:${rnd(-9,0)}s;`;
+      bg.appendChild(petal);
+    }
+    // Pink blobs
+    for(let i=0;i<5;i++){
+      const blob=document.createElement('div'); blob.className='pink-blob';
+      const sz=rnd(180,360);
+      blob.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,75)}%;top:${rnd(0,75)}%;background:${pick(pinks)}18;animation-duration:${rnd(6,12)}s;animation-delay:${rnd(-10,0)}s;`;
+      bg.appendChild(blob);
+    }
+    stars(pinks,18);
+
+  } else if(theme==='grid'){
+    /* Attendance Grid — cells, check marks, scanning line */
+    const gridColors=['#3B6FE8','#0EA5E9','#10B981'];
+    // Grid cells
+    for(let r=0;r<8;r++) for(let c=0;c<12;c++){
+      if(Math.random()>0.55) continue;
+      const cell=document.createElement('div'); cell.className='grid-cell';
+      const col=pick(gridColors);
+      cell.style.cssText=`width:${rnd(22,40)}px;height:${rnd(22,40)}px;left:${3+c*8}%;top:${5+r*11}%;border-color:${col}33;background:${col}08;animation-duration:${rnd(2,6)}s;animation-delay:${rnd(-6,0)}s;`;
+      bg.appendChild(cell);
+    }
+    // Check marks appearing
+    for(let i=0;i<14;i++){
+      const ck=document.createElement('div'); ck.className='check-mark';
+      ck.textContent=pick(['✓','✔','☑','✅']);
+      const col=pick(gridColors);
+      ck.style.cssText=`left:${rnd(3,96)}%;top:${rnd(3,96)}%;color:${col};animation-duration:${rnd(3,7)}s;animation-delay:${rnd(-7,0)}s;`;
+      bg.appendChild(ck);
+    }
+    // Scan line
+    const scan=document.createElement('div'); scan.className='scan-line';
+    scan.style.cssText=`background:linear-gradient(90deg,transparent,rgba(59,111,232,0.15),transparent);animation-duration:4s;`;
+    bg.appendChild(scan);
+    orb(['rgba(59,111,232,0.05)','rgba(16,185,129,0.04)'],4,40,180,300);
+
+  } else if(theme==='clock'){
+    /* Clock / Time — clock faces with rotating hands + digit rain */
+    const clockColors=['#F59E0B','#EF4444','#3B6FE8','#10B981'];
+    // Clock faces
+    for(let i=0;i<8;i++){
+      const face=document.createElement('div'); face.className='clock-face';
+      const sz=rnd(60,160);
+      const col=pick(clockColors);
+      const wrap=document.createElement('div');
+      wrap.style.cssText=`position:absolute;left:${rnd(3,88)}%;top:${rnd(3,88)}%;width:${sz}px;height:${sz}px;`;
+      face.style.cssText=`width:100%;height:100%;border-color:${col}33;animation-duration:${rnd(3,8)}s;animation-delay:${rnd(-8,0)}s;`;
+      // Hour hand
+      const hhand=document.createElement('div'); hhand.className='clock-hand';
+      hhand.style.cssText=`width:2px;height:${sz*0.28}px;background:${col}88;margin-left:-1px;animation-duration:${rnd(10,20)}s;`;
+      // Minute hand
+      const mhand=document.createElement('div'); mhand.className='clock-hand';
+      mhand.style.cssText=`width:1.5px;height:${sz*0.38}px;background:${col}66;margin-left:-0.75px;animation-duration:${rnd(4,8)}s;`;
+      face.appendChild(hhand); face.appendChild(mhand); wrap.appendChild(face); bg.appendChild(wrap);
+    }
+    // Time digits floating
+    const times=['08:00','09:30','12:15','14:00','16:45','18:00','23:59','00:00'];
+    for(let i=0;i<10;i++){
+      const el=document.createElement('div'); el.className='time-digit';
+      el.textContent=pick(times);
+      const col=pick(clockColors);
+      el.style.cssText=`left:${rnd(0,88)}%;top:${rnd(0,96)}%;font-size:${rnd(11,22)}px;color:${col};animation-duration:${rnd(3,7)}s;animation-delay:${rnd(-7,0)}s;`;
+      bg.appendChild(el);
+    }
+    orb(['rgba(245,158,11,0.07)','rgba(239,68,68,0.06)','rgba(59,111,232,0.06)'],4);
+
+  } else if(theme==='ocean'){
+    /* Ocean Wave — wave layers, bubbles, ocean orbs */
+    const oceanColors=['rgba(14,165,233,0.06)','rgba(59,130,246,0.07)','rgba(6,182,212,0.06)'];
+    // Wave layers
+    [0.3,0.5,0.7].forEach((opBase,wi)=>{
+      const wave=document.createElement('div'); wave.className='wave-line';
+      const ht=rnd(80,200);
+      wave.style.cssText=`height:${ht}px;top:${20+wi*22}%;background:${pick(oceanColors)};border-radius:40%;animation-duration:${rnd(12,20)}s;animation-delay:${rnd(-10,0)}s;`;
+      bg.appendChild(wave);
+    });
+    // Bubbles
+    for(let i=0;i<20;i++){
+      const bub=document.createElement('div'); bub.className='bubble';
+      const sz=rnd(6,28);
+      bub.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,98)}%;bottom:${rnd(-10,30)}%;border-color:rgba(14,165,233,0.25);animation-duration:${rnd(5,12)}s;animation-delay:${rnd(-12,0)}s;`;
+      bg.appendChild(bub);
+    }
+    // Ocean orbs
+    for(let i=0;i<5;i++){
+      const ob=document.createElement('div'); ob.className='ocean-orb orb';
+      const sz=rnd(200,400);
+      ob.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,75)}%;top:${rnd(0,75)}%;background:${pick(['rgba(14,165,233,0.09)','rgba(6,182,212,0.07)','rgba(59,130,246,0.08)'])};filter:blur(65px);animation-duration:${rnd(8,15)}s;animation-delay:${rnd(-12,0)}s;`;
+      bg.appendChild(ob);
+    }
+    stars(['#0EA5E9','#06B6D4','#38BDF8'],22);
+
+  } else if(theme==='galaxy'){
+    /* Galaxy — stars, shooting stars, nebulae */
+    const galaxyColors=['#8B5CF6','#3B6FE8','#EC4899','#F59E0B','#10B981'];
+    // Stars of varying sizes
+    for(let i=0;i<60;i++){
+      const star=document.createElement('div'); star.className='galaxy-star';
+      const sz=rnd(1,5); const col=pick(galaxyColors);
+      star.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,100)}%;top:${rnd(0,100)}%;background:${col};box-shadow:0 0 ${sz*2}px ${col};animation-duration:${rnd(1.5,5)}s;animation-delay:${rnd(-5,0)}s;border-radius:50%;`;
+      bg.appendChild(star);
+    }
+    // Shooting stars
+    for(let i=0;i<5;i++){
+      const ss=document.createElement('div'); ss.className='shooting-star';
+      const col=pick(galaxyColors);
+      ss.style.cssText=`left:${rnd(0,60)}%;top:${rnd(5,60)}%;background:linear-gradient(90deg,${col},transparent);animation-duration:${rnd(3,6)}s;animation-delay:${rnd(-6,0)}s;`;
+      bg.appendChild(ss);
+    }
+    // Nebulae blobs
+    for(let i=0;i<4;i++){
+      const neb=document.createElement('div'); neb.className='nebula';
+      const sz=rnd(200,450); const col=pick(galaxyColors);
+      neb.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,70)}%;top:${rnd(0,70)}%;background:${col}14;animation-duration:${rnd(8,16)}s;animation-delay:${rnd(-12,0)}s;`;
+      bg.appendChild(neb);
+    }
+    // Constellation dots
+    for(let i=0;i<15;i++){
+      const cd=document.createElement('div'); cd.className='constellation-dot';
+      const sz=rnd(3,7); const col=pick(galaxyColors);
+      cd.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,99)}%;top:${rnd(0,99)}%;background:${col};border-radius:50%;animation-duration:${rnd(2,5)}s;animation-delay:${rnd(-5,0)}s;`;
+      bg.appendChild(cd);
+    }
+
+  } else if(theme==='fire'){
+    /* Fire / Energy — flames, embers, orange-red glow */
+    const fireColors=['#EF4444','#F97316','#F59E0B','#DC2626','#EA580C'];
+    const flameIcons=['🔥','💥','⚡','✨'];
+    // Flame emojis rising
+    for(let i=0;i<18;i++){
+      const fl=document.createElement('div'); fl.className='flame';
+      fl.textContent=pick(flameIcons);
+      fl.style.cssText=`left:${rnd(0,96)}%;bottom:${rnd(-5,20)}%;font-size:${rnd(18,38)}px;animation-duration:${rnd(2.5,6)}s;animation-delay:${rnd(-6,0)}s;`;
+      bg.appendChild(fl);
+    }
+    // Ember particles
+    for(let i=0;i<25;i++){
+      const em=document.createElement('div'); em.className='ember';
+      const sz=rnd(3,8); const col=pick(fireColors);
+      em.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,99)}%;bottom:${rnd(0,30)}%;background:${col};box-shadow:0 0 6px ${col};animation-duration:${rnd(2,5)}s;animation-delay:${rnd(-5,0)}s;--dir:${Math.random()>0.5?1:-1};`;
+      bg.appendChild(em);
+    }
+    // Fire orbs
+    for(let i=0;i<4;i++){
+      const fo=document.createElement('div'); fo.className='fire-orb orb';
+      const sz=rnd(150,300); const col=pick(['rgba(239,68,68,0.12)','rgba(249,115,22,0.10)','rgba(245,158,11,0.09)']);
+      fo.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,80)}%;top:${rnd(30,85)}%;background:${col};filter:blur(60px);animation-duration:${rnd(2,5)}s;animation-delay:${rnd(-5,0)}s;`;
+      bg.appendChild(fo);
+    }
+
+  } else if(theme==='snow'){
+    /* Snow / Minimal — snowflakes, ice orbs, crystal shapes */
+    const iceColors=['rgba(186,230,253,0.18)','rgba(147,197,253,0.14)','rgba(165,243,252,0.15)'];
+    const flakeIcons=['❄️','🌨','✦','*','·','❅'];
+    // Snowflakes
+    for(let i=0;i<24;i++){
+      const sf=document.createElement('div'); sf.className='snowflake';
+      sf.textContent=pick(flakeIcons);
+      sf.style.cssText=`left:${rnd(0,98)}%;font-size:${rnd(10,24)}px;animation-duration:${rnd(8,18)}s;animation-delay:${rnd(-18,0)}s;opacity:0.3;`;
+      bg.appendChild(sf);
+    }
+    // Crystal shapes
+    for(let i=0;i<16;i++){
+      const cr=document.createElement('div'); cr.className='crystal';
+      const sz=rnd(15,50);
+      cr.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,96)}%;top:${rnd(0,96)}%;animation-duration:${rnd(5,12)}s;animation-delay:${rnd(-12,0)}s;transform:rotate(${rnd(0,45)}deg);`;
+      bg.appendChild(cr);
+    }
+    // Ice orbs
+    for(let i=0;i<5;i++){
+      const ob=document.createElement('div'); ob.className='ice-orb orb';
+      const sz=rnd(180,380);
+      ob.style.cssText=`width:${sz}px;height:${sz}px;left:${rnd(0,75)}%;top:${rnd(0,75)}%;background:${pick(iceColors)};filter:blur(55px);animation-duration:${rnd(9,16)}s;animation-delay:${rnd(-14,0)}s;`;
+      bg.appendChild(ob);
+    }
+    stars(['#BAE6FD','#93C5FD','#67E8F9'],18);
   }
 }
 
