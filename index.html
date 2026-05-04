@@ -37,35 +37,145 @@ self.addEventListener('fetch', e => {
       navigator.serviceWorker.register(swUrl, {scope:'/'}).catch(()=>{});
     });
   }
-  // PWA Install prompt
+  // ── PWA Install — works on ALL browsers and platforms ──
   let _pwaPrompt = null;
+  let _pwaInstalled = false;
+
+  // Detect if already running as installed PWA
+  if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true){
+    _pwaInstalled = true;
+  }
+
+  // Capture native install prompt (Chrome/Edge Android & Desktop)
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     _pwaPrompt = e;
-    const btn = document.getElementById('pwaInstallBtn');
-    if(btn) btn.style.display = 'flex';
+    _showInstallBtn();
   });
+
   window.addEventListener('appinstalled', () => {
-    const btn = document.getElementById('pwaInstallBtn');
-    if(btn) btn.style.display = 'none';
+    _pwaInstalled = true;
     _pwaPrompt = null;
+    _hideInstallBtn();
+    toast('✓ AttendX PRO installed successfully!','ok');
   });
+
+  function _showInstallBtn(){
+    document.querySelectorAll('.pwa-install-btn').forEach(b => b.style.display='flex');
+  }
+  function _hideInstallBtn(){
+    document.querySelectorAll('.pwa-install-btn').forEach(b => b.style.display='none');
+  }
+
+  // Always show install button unless already installed as PWA
+  window.addEventListener('DOMContentLoaded', () => {
+    if(!_pwaInstalled) _showInstallBtn();
+  });
+
   function installPWA() {
-    if(!_pwaPrompt) {
-      // Show manual instructions if native prompt unavailable
-      const ua = navigator.userAgent;
-      let msg = '';
-      if(/iPhone|iPad/.test(ua)) msg = '📱 iOS: Tap the Share button (□↑) → "Add to Home Screen"';
-      else if(/Android/.test(ua)) msg = '📱 Android: Tap the menu (⋮) → "Add to Home Screen" or "Install App"';
-      else msg = '💻 Desktop: Click the install icon (⊕) in your browser address bar, or use the browser menu → "Install AttendX PRO"';
-      alert('Install AttendX PRO as an app!\n\n' + msg);
+    // If native prompt is available (Chrome/Edge Android & Desktop) — fire it directly
+    if(_pwaPrompt){
+      _pwaPrompt.prompt();
+      _pwaPrompt.userChoice.then(r => {
+        if(r.outcome === 'accepted'){
+          toast('✓ Installing AttendX PRO…','ok');
+          _hideInstallBtn();
+        }
+        _pwaPrompt = null;
+      });
       return;
     }
-    _pwaPrompt.prompt();
-    _pwaPrompt.userChoice.then(r => {
-      if(r.outcome === 'accepted') { toast('AttendX PRO installed! ✓','ok'); }
-      _pwaPrompt = null;
-    });
+    // Otherwise show the beautiful step-by-step install modal
+    _showPWAModal();
+  }
+
+  function _showPWAModal(){
+    // Remove any existing modal
+    const old = document.getElementById('pwaInstallModal');
+    if(old) old.remove();
+
+    const ua = navigator.userAgent;
+    const isIOS     = /iPhone|iPad|iPod/i.test(ua);
+    const isAndroid = /Android/i.test(ua);
+    const isSamsung = /SamsungBrowser/i.test(ua);
+    const isFirefox = /Firefox/i.test(ua);
+    const isDesktop = !isIOS && !isAndroid;
+
+    let steps = '', icon = '', title = '', note = '';
+
+    if(isIOS){
+      title = 'Install on iPhone / iPad';
+      icon  = '🍎';
+      note  = 'iOS requires Safari browser to install web apps.';
+      steps = `
+        <div class="pwa-step"><div class="pwa-step-num">1</div><div class="pwa-step-body"><strong>Open this page in Safari</strong><br/><span>Must be Safari — Chrome/Firefox on iOS cannot install apps</span></div></div>
+        <div class="pwa-step"><div class="pwa-step-num">2</div><div class="pwa-step-body"><strong>Tap the Share button</strong><br/><span>The <strong>□↑</strong> icon at the bottom of the screen (or top on iPad)</span></div></div>
+        <div class="pwa-step"><div class="pwa-step-num">3</div><div class="pwa-step-body"><strong>Tap "Add to Home Screen"</strong><br/><span>Scroll down in the share sheet and tap <strong>⊕ Add to Home Screen</strong></span></div></div>
+        <div class="pwa-step"><div class="pwa-step-num">4</div><div class="pwa-step-body"><strong>Tap "Add"</strong><br/><span>The AttendX PRO icon will appear on your home screen</span></div></div>`;
+    } else if(isSamsung){
+      title = 'Install on Samsung Phone';
+      icon  = '📱';
+      steps = `
+        <div class="pwa-step"><div class="pwa-step-num">1</div><div class="pwa-step-body"><strong>Tap the menu button</strong><br/><span>The <strong>⋮</strong> three-dot menu at the top right</span></div></div>
+        <div class="pwa-step"><div class="pwa-step-num">2</div><div class="pwa-step-body"><strong>Tap "Add page to"</strong><br/><span>Then select <strong>"Home screen"</strong></span></div></div>
+        <div class="pwa-step"><div class="pwa-step-num">3</div><div class="pwa-step-body"><strong>Tap "Add"</strong><br/><span>AttendX PRO is now on your home screen</span></div></div>`;
+    } else if(isAndroid){
+      title = 'Install on Android';
+      icon  = '🤖';
+      steps = `
+        <div class="pwa-step"><div class="pwa-step-num">1</div><div class="pwa-step-body"><strong>Tap the menu button</strong><br/><span>The <strong>⋮</strong> three-dot menu at the top right of Chrome</span></div></div>
+        <div class="pwa-step"><div class="pwa-step-num">2</div><div class="pwa-step-body"><strong>Tap "Add to Home screen"</strong><br/><span>Or look for <strong>"Install App"</strong> — it means the same thing</span></div></div>
+        <div class="pwa-step"><div class="pwa-step-num">3</div><div class="pwa-step-body"><strong>Tap "Install"</strong><br/><span>The app icon will appear on your home screen like a normal app</span></div></div>`;
+    } else if(isFirefox){
+      title = 'Install on Firefox';
+      icon  = '🦊';
+      note  = 'Tip: Chrome or Edge gives a smoother install experience.';
+      steps = `
+        <div class="pwa-step"><div class="pwa-step-num">1</div><div class="pwa-step-body"><strong>Click the address bar</strong><br/><span>Look for the <strong>house ⊕</strong> icon on the right side of the address bar</span></div></div>
+        <div class="pwa-step"><div class="pwa-step-num">2</div><div class="pwa-step-body"><strong>Click "Install"</strong><br/><span>A dialog will confirm the installation</span></div></div>
+        <div class="pwa-step"><div class="pwa-step-num">3</div><div class="pwa-step-body"><strong>Open from desktop or Start menu</strong><br/><span>AttendX PRO appears as a standalone app</span></div></div>`;
+    } else {
+      title = 'Install on Computer';
+      icon  = '💻';
+      steps = `
+        <div class="pwa-step"><div class="pwa-step-num">1</div><div class="pwa-step-body"><strong>Look at the address bar</strong><br/><span>Find the <strong>⊕ install icon</strong> on the right side of the address bar in Chrome or Edge</span></div></div>
+        <div class="pwa-step"><div class="pwa-step-num">2</div><div class="pwa-step-body"><strong>Click it and select "Install"</strong><br/><span>Or go to browser menu <strong>⋮ → "Install AttendX PRO…"</strong></span></div></div>
+        <div class="pwa-step"><div class="pwa-step-num">3</div><div class="pwa-step-body"><strong>App opens in its own window</strong><br/><span>Find it in your Start menu, Dock, or desktop — works offline too</span></div></div>`;
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'pwaInstallModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);padding:0;';
+    modal.innerHTML = `
+      <div style="background:var(--s1);border:1px solid var(--line);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:24px 22px 32px;animation:slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1) both;">
+        <div style="width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 20px;"></div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+          <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">${icon}</div>
+          <div>
+            <div style="font-family:var(--head);font-size:16px;font-weight:800;margin-bottom:2px;">${title}</div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">AttendX PRO · Free · Works offline</div>
+          </div>
+          <button onclick="document.getElementById('pwaInstallModal').remove()" style="margin-left:auto;background:var(--s3);border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;color:var(--text2);display:flex;align-items:center;justify-content:center;">✕</button>
+        </div>
+        ${note ? `<div style="background:var(--gold2);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:8px 12px;font-size:11px;font-family:var(--mono);color:var(--gold);margin-bottom:14px;">⚠ ${note}</div>` : ''}
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">${steps}</div>
+        <div style="background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:11px;font-family:var(--mono);color:var(--text3);line-height:1.7;">
+          ✓ Works like a real app — no app store needed<br/>
+          ✓ Loads instantly, works offline<br/>
+          ✓ No storage space wasted — lightweight<br/>
+          ✓ Updates automatically when you're online
+        </div>
+      </div>`;
+    // Add slideUp animation if not already defined
+    if(!document.getElementById('pwaSlideUpStyle')){
+      const st=document.createElement('style');
+      st.id='pwaSlideUpStyle';
+      st.textContent='@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}.pwa-step{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;background:var(--s2);border:1px solid var(--line);border-radius:10px;}.pwa-step-num{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;font-family:var(--mono);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}.pwa-step-body{font-size:12px;line-height:1.5;color:var(--text);}.pwa-step-body strong{color:var(--text);}.pwa-step-body span{font-size:11px;color:var(--text3);}';
+      document.head.appendChild(st);
+    }
+    // Close on backdrop tap
+    modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
   }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -652,7 +762,7 @@ body::after { content: none; }
 /* ════════════════════════════════
    SECURITY & ANTI-FRAUD STYLES
 ════════════════════════════════ */
-.pwa-install-btn{display:none;align-items:center;gap:7px;padding:6px 14px;background:linear-gradient(135deg,var(--green),#2ECC71);color:#06120A;border:none;border-radius:var(--r1);font-family:var(--head);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 3px 12px rgba(16,185,129,0.3);}
+.pwa-install-btn{display:flex;align-items:center;gap:7px;padding:6px 14px;background:linear-gradient(135deg,var(--green),#2ECC71);color:#06120A;border:none;border-radius:var(--r1);font-family:var(--head);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 3px 12px rgba(16,185,129,0.3);}
 .pwa-install-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(16,185,129,0.4);}
 .toggle-switch{position:relative;width:44px;height:24px;cursor:pointer;}
 .toggle-switch input{opacity:0;width:0;height:0;position:absolute;}
@@ -1734,6 +1844,8 @@ body::after { content: none; }
     <button class="nav-ptab active" id="ntDash"    onclick="navTo('dash')">Dashboard</button>
     <button class="nav-ptab"        id="ntQR"      onclick="navTo('qr')">QR Tool</button>
   </div>
+  <!-- QR Scanner — always visible in nav, no login needed -->
+  <button class="nav-btn nav-btn-ghost" style="font-size:12px;padding:5px 12px;" onclick="showPage('qrscanner')" title="Scan any QR code">📷 QR Scanner</button>
 
   <div class="lang-toggle" id="langToggle">
     <div class="lang-slider" id="langSlider"></div>
@@ -2079,25 +2191,71 @@ body::after { content: none; }
             <div class="alert" id="createAlert"></div>
 
             <!-- Security Mode Selection -->
-            <div style="margin-top:14px;padding:12px 14px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);">
-              <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-family:var(--head);">🛡 Session Mode</div>
+            <div style="margin-top:14px;padding:14px 16px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);">
+              <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;font-family:var(--head);">▦ QR Session Mode</div>
               <div class="sec-mode-row">
-                <button class="sec-mode-btn active" id="modeStatic" onclick="setSessionMode('static',this)">🔗 Link Mode<br/><span style="font-size:10px;font-weight:400;color:inherit;opacity:0.7;">Share a link</span></button>
-                <button class="sec-mode-btn" id="modeDynamic" onclick="setSessionMode('dynamic',this)">🔄 Dynamic QR<br/><span style="font-size:10px;font-weight:400;color:inherit;opacity:0.7;">Rotating QR code</span></button>
+                <button class="sec-mode-btn active" id="modeStatic" onclick="setSessionMode('static',this)">
+                  ▦ Static QR<br/><span style="font-size:10px;font-weight:400;opacity:0.7;">One QR, all students</span>
+                </button>
+                <button class="sec-mode-btn" id="modeDynamic" onclick="setSessionMode('dynamic',this)">
+                  🔄 Dynamic QR<br/><span style="font-size:10px;font-weight:400;opacity:0.7;">Rotating tokens</span>
+                </button>
               </div>
-              <!-- Dynamic QR Panel -->
+
+              <!-- STATIC QR explanation -->
+              <div id="staticQRInfo" style="background:var(--s1);border:1px solid var(--line);border-radius:var(--r1);padding:10px 12px;font-size:11px;font-family:var(--mono);color:var(--text2);line-height:1.8;">
+                <div style="font-weight:700;color:var(--green);margin-bottom:5px;">✓ Recommended for large classes (100–700+ students)</div>
+                ✓ One permanent QR projected on screen or printed<br/>
+                ✓ Each student scans it <strong>once</strong> with their own phone<br/>
+                ✓ Device fingerprint locks that phone — no one else can use it<br/>
+                ✓ Matricule locks that student — cannot be submitted twice<br/>
+                ✓ All 700 students can scan freely, at their own pace<br/>
+                ✓ No timing pressure — QR stays valid for the session duration
+              </div>
+
+              <!-- DYNAMIC QR explanation (hidden by default) -->
+              <div id="dynamicQRInfo" style="display:none;background:var(--s1);border:1px solid rgba(245,158,11,0.25);border-radius:var(--r1);padding:10px 12px;margin-bottom:10px;">
+                <div style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:6px;">🔄 Dynamic QR — How it works</div>
+                <div style="font-size:11px;font-family:var(--mono);color:var(--text2);line-height:1.8;">
+                  • A new QR code appears every <strong id="dynTTLPreview">60</strong> seconds<br/>
+                  • Each QR has a unique one-time token that expires with it<br/>
+                  • Students who scan QR #1 are locked in — if QR #2 appears<br/>
+                  &nbsp;&nbsp;they just tap Submit, they don't need to re-scan<br/>
+                  • Screenshots reused after expiry are <strong>rejected</strong><br/>
+                  • ⚠ Best for small classes (under 30) — with 700 students,<br/>
+                  &nbsp;&nbsp;use Static QR instead to avoid timing pressure
+                </div>
+                <div style="margin-top:8px;padding:8px 10px;background:rgba(245,158,11,0.08);border-radius:var(--r1);font-size:11px;font-family:var(--mono);color:var(--gold);">
+                  ℹ The QR rotation time below does NOT limit how long students<br/>
+                  have to submit — it only controls how often the QR refreshes.<br/>
+                  Students keep their token until they submit or the session ends.
+                </div>
+              </div>
+
+              <!-- Admin-controlled QR rotation time (dynamic mode only) -->
+              <div id="dynQRTimingRow" style="display:none;margin-bottom:10px;">
+                <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px;">⏱ QR Rotation Interval</label>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <div class="sec-mode-btn active" style="flex:none;min-width:0;padding:6px 10px;" id="ttl30" onclick="setDynTTL(30,this)">30s</div>
+                  <div class="sec-mode-btn" style="flex:none;min-width:0;padding:6px 10px;" id="ttl60" onclick="setDynTTL(60,this)">1 min</div>
+                  <div class="sec-mode-btn" style="flex:none;min-width:0;padding:6px 10px;" id="ttl120" onclick="setDynTTL(120,this)">2 min</div>
+                  <div class="sec-mode-btn" style="flex:none;min-width:0;padding:6px 10px;" id="ttl300" onclick="setDynTTL(300,this)">5 min</div>
+                  <div style="display:flex;align-items:center;gap:5px;">
+                    <input type="number" id="customTTL" min="10" max="3600" placeholder="Custom (s)" 
+                      style="width:90px;padding:5px 8px;border-radius:var(--r1);border:1px solid var(--line);background:var(--s1);color:var(--text);font-family:var(--mono);font-size:11px;"
+                      oninput="setDynTTLCustom(this.value)"/>
+                  </div>
+                </div>
+                <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:5px;">Current: QR rotates every <strong id="dynTTLLabel">30 seconds</strong></div>
+              </div>
+
+              <!-- Dynamic QR display panel (shown after session is created) -->
               <div class="dyn-qr-panel" id="dynQRPanel">
                 <div class="qr-refresh-badge"><div class="dot"></div>Auto-refresh active</div>
                 <div id="dynQROut" class="dyn-qr-output"></div>
                 <div class="qr-countdown-track"><div class="qr-countdown-fill" id="dynQRFill" style="width:100%"></div></div>
-                <div class="qr-countdown" id="dynQRCountdown">30</div>
-                <div class="dyn-qr-label">QR rotates every 30 seconds — screenshot reuse blocked</div>
-                <div style="margin-top:10px;font-size:11px;color:var(--text3);font-family:var(--mono);background:var(--blue3);border-radius:var(--r1);padding:8px 10px;text-align:left;">
-                  ✓ Each QR contains a one-time token valid for 30s<br/>
-                  ✓ Cannot be shared as a link — scan only<br/>
-                  ✓ Screenshot reuse automatically rejected<br/>
-                  ✓ Combined with device fingerprint lock
-                </div>
+                <div class="qr-countdown" id="dynQRCountdown">—</div>
+                <div class="dyn-qr-label" id="dynQRLabel">QR rotates on the interval you set</div>
               </div>
             </div>
 
@@ -2506,6 +2664,83 @@ body::after { content: none; }
   </div>
 </div>
 
+<!-- ═══════════ PUBLIC QR SCANNER PAGE (no login needed) ═══════════ -->
+<div class="page" id="pgQRScanner" style="display:none;">
+  <div style="max-width:480px;margin:0 auto;padding:28px 16px;">
+
+    <!-- Back button -->
+    <button onclick="history.back()||showPage('landing')" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text3);font-family:var(--mono);font-size:12px;cursor:pointer;margin-bottom:20px;padding:0;">
+      ← Back
+    </button>
+
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;background:var(--blue3);border:1px solid rgba(79,158,255,0.2);border-radius:var(--r2);font-size:26px;margin-bottom:12px;">📷</div>
+      <h2 style="font-family:var(--head);font-size:22px;font-weight:800;margin:0 0 6px;">QR Code Scanner</h2>
+      <p style="font-size:12px;color:var(--text3);font-family:var(--mono);">Point your camera at any QR code — attendance, links, anything</p>
+    </div>
+
+    <!-- Camera feed card -->
+    <div id="qrScanCard" style="background:var(--s1);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden;margin-bottom:16px;">
+      <!-- Start screen -->
+      <div id="qrScanStart" style="padding:32px 20px;text-align:center;">
+        <div style="font-size:48px;margin-bottom:12px;">📷</div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px;">Tap to start camera</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:16px;">Allow camera access when prompted</div>
+        <button onclick="startQRScanner()" style="padding:10px 24px;background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;border:none;border-radius:var(--r2);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;">
+          📷 Start Scanner
+        </button>
+      </div>
+      <!-- Camera view -->
+      <div id="qrScanLive" style="display:none;position:relative;">
+        <video id="qrVideo" autoplay playsinline muted style="width:100%;display:block;max-height:300px;object-fit:cover;background:#000;"></video>
+        <canvas id="qrCanvas" style="display:none;"></canvas>
+        <!-- Scan overlay -->
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+          <div id="qrScanBox" style="width:200px;height:200px;border:2px solid rgba(79,158,255,0.8);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.35);">
+            <div style="position:absolute;top:-1px;left:-1px;width:24px;height:24px;border-top:3px solid var(--blue);border-left:3px solid var(--blue);border-radius:4px 0 0 0;"></div>
+            <div style="position:absolute;top:-1px;right:-1px;width:24px;height:24px;border-top:3px solid var(--blue);border-right:3px solid var(--blue);border-radius:0 4px 0 0;"></div>
+            <div style="position:absolute;bottom:-1px;left:-1px;width:24px;height:24px;border-bottom:3px solid var(--blue);border-left:3px solid var(--blue);border-radius:0 0 0 4px;"></div>
+            <div style="position:absolute;bottom:-1px;right:-1px;width:24px;height:24px;border-bottom:3px solid var(--blue);border-right:3px solid var(--blue);border-radius:0 0 4px 0;"></div>
+          </div>
+        </div>
+        <!-- Scanning label -->
+        <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#fff;font-family:var(--mono);font-size:11px;padding:4px 12px;border-radius:100px;">
+          <span id="qrScanStatus">🔍 Scanning…</span>
+        </div>
+        <!-- Stop button -->
+        <button onclick="stopQRScanner()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:var(--r1);padding:5px 10px;font-size:11px;cursor:pointer;">✕ Stop</button>
+      </div>
+    </div>
+
+    <!-- Result card -->
+    <div id="qrScanResult" style="display:none;background:var(--s1);border:1px solid var(--line);border-radius:var(--r2);padding:16px;margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);font-family:var(--head);margin-bottom:8px;">✓ QR Code Detected</div>
+      <div id="qrScanResultText" style="font-family:var(--mono);font-size:12px;color:var(--text);word-break:break-all;padding:8px;background:var(--s2);border-radius:var(--r1);margin-bottom:10px;"></div>
+      <div id="qrScanActions" style="display:flex;gap:8px;flex-wrap:wrap;">
+        <!-- Buttons injected by JS depending on content type -->
+      </div>
+      <button onclick="startQRScanner()" style="margin-top:10px;width:100%;padding:8px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);font-family:var(--mono);font-size:11px;color:var(--text2);cursor:pointer;">🔄 Scan Another</button>
+    </div>
+
+    <!-- Upload QR image fallback -->
+    <div style="background:var(--s1);border:1px solid var(--line);border-radius:var(--r2);padding:14px;text-align:center;margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">No camera? Upload a QR image instead</div>
+      <label style="display:inline-flex;align-items:center;gap:6px;padding:7px 16px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);font-family:var(--mono);font-size:11px;cursor:pointer;color:var(--text2);">
+        🖼 Choose Image
+        <input type="file" accept="image/*" onchange="scanQRFromFile(this)" style="display:none;"/>
+      </label>
+    </div>
+
+    <!-- Info box -->
+    <div style="background:var(--s1);border:1px solid var(--line);border-radius:var(--r2);padding:12px 14px;font-size:11px;font-family:var(--mono);color:var(--text3);line-height:1.7;">
+      ✓ Works with attendance QR codes, website links, contact cards, and any QR<br/>
+      ✓ Attendance QR codes open directly in this app<br/>
+      ✓ No account needed — free for all students<br/>
+      ✓ Camera data never leaves your device
+    </div>
+  </div>
+</div>
+
 </div><!-- /main -->
 
 <!-- ══════════ MODAL: Session Details ══════════ -->
@@ -2850,10 +3085,12 @@ function showQRExpired(){
 
 /* ── PAGE SYSTEM ── */
 function showPage(name) {
-  const map = {landing:'pgLanding',dash:'pgDash',student:'pgStudent',qr:'pgQR',super:'pgSuper'};
+  // Stop QR scanner camera when navigating away
+  if(name !== 'qrscanner') stopQRScanner();
+  const map = {landing:'pgLanding',dash:'pgDash',student:'pgStudent',qr:'pgQR',super:'pgSuper',qrscanner:'pgQRScanner'};
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const el = document.getElementById(map[name]);
-  if (el) el.classList.add('active');
+  if (el) { el.classList.add('active'); el.style.display=''; }
 
   const navTabs  = document.getElementById('navTabs');
   const navRight = document.getElementById('navRight');
@@ -2875,14 +3112,167 @@ function showPage(name) {
   } else if (name === 'student') {
     navTabs.style.display = 'none';
     navRight.innerHTML = '';
+  } else if (name === 'qrscanner') {
+    navTabs.style.display = 'none';
+    navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showPage('landing')">← Home</button>`;
   } else {
     navTabs.style.display = 'none';
     navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showLogin()">Admin Login</button><button class="nav-btn nav-btn-solid" onclick="showLogin()">Get Started →</button>`;
   }
-  document.getElementById('siteFooter').style.display = name === 'student' ? 'none' : '';
+  document.getElementById('siteFooter').style.display = (name === 'student'||name==='qrscanner') ? 'none' : '';
 }
 
 function goHome()      { showPage('landing'); }
+
+/* ═══════════════════════════════════════════════
+   PUBLIC QR SCANNER — no login required
+   Uses jsQR library (loaded on demand) or
+   BarcodeDetector API (native on Android/Chrome)
+═══════════════════════════════════════════════ */
+let _qrStream = null;
+let _qrScanLoop = null;
+let _jsQRLoaded = false;
+
+async function _ensureJsQR(){
+  if(window.jsQR || _jsQRLoaded) return;
+  return new Promise((res,rej)=>{
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';
+    s.onload = ()=>{ _jsQRLoaded=true; res(); };
+    s.onerror = ()=>rej(new Error('Failed to load jsQR'));
+    document.head.appendChild(s);
+  });
+}
+
+async function startQRScanner(){
+  const startEl = document.getElementById('qrScanStart');
+  const liveEl  = document.getElementById('qrScanLive');
+  const video   = document.getElementById('qrVideo');
+  const resultEl= document.getElementById('qrScanResult');
+  const statusEl= document.getElementById('qrScanStatus');
+  if(resultEl) resultEl.style.display='none';
+  // Load jsQR in background
+  await _ensureJsQR().catch(()=>{});
+  try {
+    _qrStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width:{ideal:1280}, height:{ideal:720} }
+    });
+  } catch(e) {
+    // Fallback to any camera
+    try { _qrStream = await navigator.mediaDevices.getUserMedia({video:true}); }
+    catch(e2) {
+      toast('Camera access denied. Please allow camera in browser settings.','err');
+      return;
+    }
+  }
+  video.srcObject = _qrStream;
+  if(startEl) startEl.style.display='none';
+  if(liveEl)  liveEl.style.display='block';
+  if(statusEl) statusEl.textContent='🔍 Scanning…';
+  _startScanLoop(video, statusEl);
+}
+
+function _startScanLoop(video, statusEl){
+  if(_qrScanLoop) cancelAnimationFrame(_qrScanLoop);
+  const canvas = document.getElementById('qrCanvas');
+  const ctx = canvas.getContext('2d');
+  // Try native BarcodeDetector first (fast, no library)
+  const useNative = ('BarcodeDetector' in window);
+  let bd = null;
+  if(useNative){ try { bd = new BarcodeDetector({formats:['qr_code']}); } catch(e){ bd=null; } }
+  let lastResult = null;
+  function scan(){
+    if(!video.videoWidth){ _qrScanLoop=requestAnimationFrame(scan); return; }
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    if(bd){
+      bd.detect(canvas).then(codes=>{
+        if(codes.length>0 && codes[0].rawValue !== lastResult){
+          lastResult = codes[0].rawValue;
+          _onQRDetected(lastResult);
+        } else { _qrScanLoop=requestAnimationFrame(scan); }
+      }).catch(()=>{ _qrScanLoop=requestAnimationFrame(scan); });
+    } else if(window.jsQR){
+      const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+      const code = jsQR(imgData.data, canvas.width, canvas.height, {inversionAttempts:'dontInvert'});
+      if(code && code.data !== lastResult){
+        lastResult = code.data;
+        _onQRDetected(code.data);
+      } else { _qrScanLoop=requestAnimationFrame(scan); }
+    } else {
+      if(statusEl) statusEl.textContent='⏳ Loading scanner…';
+      _qrScanLoop=requestAnimationFrame(scan);
+    }
+  }
+  video.addEventListener('loadeddata', ()=>{ _qrScanLoop=requestAnimationFrame(scan); }, {once:true});
+  if(video.readyState>=2) _qrScanLoop=requestAnimationFrame(scan);
+}
+
+function _onQRDetected(text){
+  stopQRScanner();
+  // Haptic feedback
+  if(navigator.vibrate) navigator.vibrate(80);
+  const resultEl   = document.getElementById('qrScanResult');
+  const resultText = document.getElementById('qrScanResultText');
+  const actionsEl  = document.getElementById('qrScanActions');
+  if(!resultEl||!resultText||!actionsEl) return;
+  resultText.textContent = text;
+  resultEl.style.display = 'block';
+  // Determine content type and build action buttons
+  let actions = '';
+  const isURL = /^https?:\/\//i.test(text);
+  const isAttendX = isURL && (text.includes('?session=') || text.includes('attendex'));
+  const isTel = /^tel:/i.test(text) || /^\+?\d{7,15}$/.test(text.replace(/[\s\-]/g,''));
+  const isEmail = /^mailto:/i.test(text) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text);
+  if(isAttendX){
+    actions += `<button onclick="window.location.href='${text.replace(/'/g,'%27')}'" style="flex:1;padding:10px 14px;background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;border:none;border-radius:var(--r1);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;">✓ Mark Attendance</button>`;
+  } else if(isURL){
+    actions += `<button onclick="window.open('${text.replace(/'/g,'%27')}','_blank')" style="flex:1;padding:10px 14px;background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;border:none;border-radius:var(--r1);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;">🌐 Open Link</button>`;
+    actions += `<button onclick="navigator.clipboard&&navigator.clipboard.writeText('${text.replace(/'/g,'%27')}').then(()=>toast('Copied','ok'))" style="padding:10px 14px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);font-family:var(--mono);font-size:12px;cursor:pointer;color:var(--text);">📋 Copy</button>`;
+  } else if(isEmail){
+    const mail = text.replace(/^mailto:/i,'');
+    actions += `<button onclick="window.open('mailto:${mail}')" style="flex:1;padding:10px 14px;background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff;border:none;border-radius:var(--r1);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;">✉ Send Email</button>`;
+  } else if(isTel){
+    const tel = text.replace(/^tel:/i,'').replace(/[\s\-]/g,'');
+    actions += `<button onclick="window.open('tel:${tel}')" style="flex:1;padding:10px 14px;background:linear-gradient(135deg,var(--green),#2ECC71);color:#fff;border:none;border-radius:var(--r1);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;">📞 Call</button>`;
+    actions += `<button onclick="window.open('https://wa.me/${tel.replace(/^\+/,'')}')" style="padding:10px 14px;background:#25D366;color:#fff;border:none;border-radius:var(--r1);font-family:var(--head);font-size:12px;font-weight:700;cursor:pointer;">WhatsApp</button>`;
+  } else {
+    actions += `<button onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById('qrScanResultText').textContent).then(()=>toast('Copied','ok'))" style="flex:1;padding:10px 14px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);font-family:var(--mono);font-size:12px;cursor:pointer;color:var(--text);">📋 Copy Text</button>`;
+  }
+  actionsEl.innerHTML = actions;
+}
+
+function stopQRScanner(){
+  if(_qrScanLoop){ cancelAnimationFrame(_qrScanLoop); _qrScanLoop=null; }
+  if(_qrStream){ _qrStream.getTracks().forEach(t=>t.stop()); _qrStream=null; }
+  const liveEl  = document.getElementById('qrScanLive');
+  const startEl = document.getElementById('qrScanStart');
+  const video   = document.getElementById('qrVideo');
+  if(liveEl)  liveEl.style.display='none';
+  if(startEl) startEl.style.display='block';
+  if(video)   video.srcObject=null;
+}
+
+async function scanQRFromFile(input){
+  const file = input.files[0]; if(!file) return;
+  await _ensureJsQR().catch(()=>{});
+  if(!window.jsQR){ toast('Scanner library not loaded. Try again.','err'); return; }
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = ()=>{
+    const canvas = document.createElement('canvas');
+    canvas.width=img.width; canvas.height=img.height;
+    const ctx=canvas.getContext('2d');
+    ctx.drawImage(img,0,0);
+    const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code=jsQR(imgData.data,canvas.width,canvas.height);
+    URL.revokeObjectURL(url);
+    if(code){ _onQRDetected(code.data); }
+    else { toast('No QR code found in image. Try a clearer photo.','warn'); }
+  };
+  img.src = url;
+}
 
 function showLogin(){
   S.pinInput=''; S_regPin=''; S_recPin='';
@@ -3769,9 +4159,8 @@ function downloadSessionQR() {
   const canvas = document.querySelector('#qrInlineOut canvas');
   if(!canvas){toast('QR not ready yet','warn');return;}
   const a=document.createElement('a');
-  a.download='session-qr.png';
-  a.href=canvas.toDataURL('image/png');
-  a.click();
+  a.download='session-qr.png'; a.href=canvas.toDataURL('image/png');
+  a.style.display='none'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
   toast('QR PNG downloaded','ok');
 }
 function printSessionQR() {
@@ -4059,15 +4448,22 @@ async function changePin(){
   toast('PIN updated','ok');
 }
 function clearData(){
-  showConf('⚠️','Clear All Data?','Permanently delete all sessions and attendance records.',()=>{
+  showConf('⚠️','Clear All Session Data?','Permanently delete ALL sessions and attendance records, including any currently active session.',()=>{
     clearAllData().then(()=>{
+      // Stop dynamic QR if running
+      stopDynQR();
+      S.activeSessionId = null;
+      // Reset session creation UI
       document.getElementById('linkOut').classList.remove('show');
       document.getElementById('qrInline').classList.remove('show');
       document.getElementById('liveMon').classList.remove('show');
       document.getElementById('genLink').value = '';
-      document.getElementById('qrInlineOut').innerHTML = '';
-      S.activeSessionId = null;
-      refreshDash(); closeSet(); toast('All data cleared','warn');
+      const qo = document.getElementById('qrInlineOut'); if(qo) qo.innerHTML='';
+      const dynOut = document.getElementById('dynQROut'); if(dynOut) dynOut.innerHTML='';
+      const panel = document.getElementById('dynQRPanel'); if(panel) panel.classList.remove('active');
+      const cd = document.getElementById('dynQRCountdown'); if(cd){ cd.textContent='—'; cd.className='qr-countdown'; }
+      const fill = document.getElementById('dynQRFill'); if(fill) fill.style.width='100%';
+      refreshDash(); closeSet(); toast('All session data cleared','warn');
     });
   });
 }
@@ -4220,16 +4616,45 @@ async function getClientIP(){
 let _dynQRInterval = null;
 let _dynQRToken = null;
 let _dynQRExpiry = 0;
-const DYN_QR_TTL = 30; // seconds
+let DYN_QR_TTL = 30; // default seconds — admin can change this
+
+/* ── SET DYNAMIC QR ROTATION TIME ── */
+function setDynTTL(secs, btn){
+  DYN_QR_TTL = secs;
+  document.querySelectorAll('#ttl30,#ttl60,#ttl120,#ttl300').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('customTTL').value = '';
+  _updateDynTTLLabel(secs);
+}
+function setDynTTLCustom(val){
+  const n = parseInt(val);
+  if(!n||n<10) return;
+  DYN_QR_TTL = n;
+  document.querySelectorAll('#ttl30,#ttl60,#ttl120,#ttl300').forEach(b=>b.classList.remove('active'));
+  _updateDynTTLLabel(n);
+}
+function _updateDynTTLLabel(secs){
+  const label = secs>=60 ? (secs%60===0?(secs/60)+'min':Math.floor(secs/60)+'m'+(secs%60)+'s') : secs+'s';
+  const el = document.getElementById('dynTTLLabel');
+  const pr = document.getElementById('dynTTLPreview');
+  if(el) el.textContent = label;
+  if(pr) pr.textContent = label;
+}
 
 function setSessionMode(mode, btn){
   document.querySelectorAll('.sec-mode-btn').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   S._sessionMode = mode;
-  const panel = document.getElementById('dynQRPanel');
-  if(panel) panel.classList.toggle('active', mode==='dynamic');
+  const panel      = document.getElementById('dynQRPanel');
+  const staticInfo = document.getElementById('staticQRInfo');
+  const dynInfo    = document.getElementById('dynamicQRInfo');
+  const timingRow  = document.getElementById('dynQRTimingRow');
+  if(panel)      panel.classList.remove('active'); // hide until session created
+  if(staticInfo) staticInfo.style.display = mode==='static'  ? 'block' : 'none';
+  if(dynInfo)    dynInfo.style.display    = mode==='dynamic' ? 'block' : 'none';
+  if(timingRow)  timingRow.style.display  = mode==='dynamic' ? 'block' : 'none';
   if(mode==='dynamic'){
-    toast('Dynamic QR mode: QR rotates every 30s — screenshot sharing blocked','info');
+    toast('Dynamic QR mode: QR rotates on your chosen interval','info');
   }
 }
 
@@ -4243,6 +4668,11 @@ function startDynQR(sid, link){
   if(_dynQRInterval) clearInterval(_dynQRInterval);
   _rotateDynQR(sid, link);
   _dynQRInterval = setInterval(()=>_rotateDynQR(sid, link), DYN_QR_TTL*1000);
+  // Update label to show actual interval set by admin
+  const lbl = document.getElementById('dynQRLabel');
+  const secs = DYN_QR_TTL;
+  const label = secs>=60?(secs%60===0?(secs/60)+'min':Math.floor(secs/60)+'m'+(secs%60)+'s'):secs+'s';
+  if(lbl) lbl.textContent = 'QR rotates every '+label+' — screenshot reuse blocked';
 }
 
 function _rotateDynQR(sid, baseLink){
@@ -4588,27 +5018,26 @@ function submitAttend(){
 /* ── PDF GENERATION ── */
 function autoGenPDF(sess){ if(sess)setTimeout(()=>genPDF(sess.id),800); }
 
-/* Mobile-safe PDF save */
+/* Direct download on ALL devices — phone, tablet, desktop */
 function mobileSavePDF(doc, filename){
-  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-  if(isMobile){
-    // On mobile: open PDF in new tab so user can save from browser menu
+  try {
+    // Always use blob + <a download> — works on Android, iOS Safari, Chrome, desktop
     const blob = doc.output('blob');
     const url  = URL.createObjectURL(blob);
-    const win  = window.open(url, '_blank');
-    if(!win){
-      // Popup blocked — fallback: use data URI
-      const dataUri = doc.output('datauristring');
-      const a = document.createElement('a');
-      a.href = dataUri;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = filename;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // Revoke after short delay to ensure download starts
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  } catch(e) {
+    // Last-resort fallback: jsPDF native save
+    try { doc.save(filename); } catch(e2) {
+      toast('Download failed — try a different browser','err');
     }
-    setTimeout(()=>URL.revokeObjectURL(url), 10000);
-  } else {
-    doc.save(filename);
   }
 }
 function dlSessionPDF(sid){ genPDF(sid); }
@@ -5127,7 +5556,9 @@ function generateQR(){
 function dlPNG(){
   const c=document.querySelector('#qr-output canvas');
   if(!c){toast('Generate a QR first','warn');return;}
-  const a=document.createElement('a'); a.download='qr-code.png'; a.href=c.toDataURL('image/png'); a.click();
+  const a=document.createElement('a');
+  a.download='qr-code.png'; a.href=c.toDataURL('image/png');
+  a.style.display='none'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
   S.qrStats.dl++; updQRStats(); toast('PNG downloaded','ok');
 }
 function dlSVG(){
@@ -5137,8 +5568,10 @@ function dlSVG(){
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><image href="${c.toDataURL('image/png')}" width="${size}" height="${size}"/></svg>`;
   const blob=new Blob([svg],{type:'image/svg+xml'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.download='qr-code.svg'; a.href=url; a.click();
-  URL.revokeObjectURL(url);
+  const a=document.createElement('a');
+  a.download='qr-code.svg'; a.href=url;
+  a.style.display='none'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
   S.qrStats.dl++; updQRStats(); toast('SVG downloaded','ok');
 }
 function copyQRLink(){
