@@ -1,0 +1,36 @@
+{
+  "name": "AttendX PRO",
+  "short_name": "AttendX",
+  "description": "Smart Attendance Management Platform — VALIDE EdTech",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060a14",
+  "theme_color": "#1a5cff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "icons": [
+    { "src": "/icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "maskable any" },
+    { "src": "/icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "maskable any" },
+    { "src": "/icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "maskable any" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable any" },
+    { "src": "/icons/badge-72.png", "sizes": "72x72",   "type": "image/png", "purpose": "monochrome"   }
+  ],
+  "gcm_sender_id": "731988308422",
+  "shortcuts": [
+    {
+      "name": "Mark Attendance",
+      "short_name": "Attend",
+      "url": "/?quick=attend",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "View Dashboard",
+      "short_name": "Dashboard",
+      "url": "/",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ],
+  "categories": ["education", "productivity"]
+}

@@ -185,6 +185,7 @@ self.addEventListener('fetch', e => {
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDT2evTvU6_exbLTY8kIiO9n-mrF7vg4hs",
@@ -211,6 +212,42 @@ self.addEventListener('fetch', e => {
   window._fsDeleteDoc= deleteDoc;
   window._firebaseReady = true;
   document.dispatchEvent(new Event('firebaseReady'));
+
+  // ── FCM: Initialize messaging ──────────────────────────────────────────────
+  // FCM requires a registered service worker at /firebase-messaging-sw.js
+  try {
+    const messaging = getMessaging(app);
+    window._fcmMessaging = messaging;
+
+    // Handle foreground messages (app is open)
+    onMessage(messaging, (payload) => {
+      console.log('[AttendX FCM] Foreground message:', payload);
+      const { title, body, type } = payload.data || payload.notification || {};
+      // Show as in-app toast
+      if(typeof window._fcmForegroundToast === 'function'){
+        window._fcmForegroundToast({ title, body, type: type || 'general' });
+      }
+      // Write to Firestore so the notification panel updates
+      if(window._db && window._fsDoc && window._fsSetDoc && window._fsColl){
+        const ref = window._fsDoc(window._fsColl(window._db,'notifications'));
+        window._fsSetDoc(ref, {
+          to: payload.data?.to || '__self__',
+          from: payload.data?.from || 'system',
+          fromName: payload.data?.fromName || 'AttendX',
+          type: payload.data?.type || 'push',
+          title: title || 'AttendX',
+          body: body || '',
+          read: false,
+          ts: Date.now()
+        }).catch(()=>{});
+      }
+    });
+
+    window._fcmReady = true;
+    document.dispatchEvent(new Event('fcmReady'));
+  } catch(e) {
+    console.warn('[AttendX FCM] Not available:', e.message);
+  }
 </script>
 <!-- FingerprintJS -->
 <script src="https://cdn.jsdelivr.net/npm/@fingerprintjs/fingerprintjs@4/dist/fp.umd.min.js"></script>
@@ -2803,7 +2840,7 @@ img, video, iframe { max-width: 100%; }
             </select></div>
             <p class="hint">Higher = more robust, slightly denser pattern.</p>
           </div>
-          <!-- Universal QR Expiry — shown for all tabs except Session/Link which has its own -->
+          <!-- Universal QR Expiry — shown for all tabs except Session/Link (which has its own) -->
           <div class="field" id="qr-global-expiry-row" style="display:none;">
             <label>⏱ QR Expiry</label>
             <div class="sel-wrap"><select id="qr-global-expiry">
@@ -2834,7 +2871,7 @@ img, video, iframe { max-width: 100%; }
             <div class="qr-type-badge" id="qrTypeBadge">🔗 Session QR</div>
             <div class="qr-url-prev" id="qrUrlPrev"></div>
           </div>
-          <!-- Expiry status badge — shown after generation when expiry is set -->
+          <!-- Expiry status badge — shown after generation -->
           <div id="qrExpiryBadge" style="display:none;width:100%;margin-bottom:2px;">
             <div id="qrExpiryBadgeInner" style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;font-size:11px;font-family:var(--mono);font-weight:600;letter-spacing:0.3px;border:1px solid;"></div>
           </div>
@@ -3201,6 +3238,35 @@ img, video, iframe { max-width: 100%; }
     </div>
   </div>
 </footer>
+
+<!-- ═══════════════ PUSH PERMISSION PROMPT ═══════════════ -->
+<div id="pushPermPrompt" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:9000;align-items:center;justify-content:center;padding:16px;">
+  <div style="width:100%;max-width:400px;background:var(--s1);border:1px solid var(--line2);border-radius:var(--r4);box-shadow:0 24px 80px rgba(0,0,0,0.45);padding:36px 32px;text-align:center;animation:slideIn 0.28s ease both;position:relative;">
+    <!-- Bell animation -->
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--blue3);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px;position:relative;animation:pushBell 2s ease-in-out infinite;">🔔
+      <span style="position:absolute;top:-3px;right:-3px;width:18px;height:18px;background:var(--red);border:2px solid var(--s1);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:800;">!</span>
+    </div>
+    <div style="font-family:var(--head);font-size:20px;font-weight:800;color:var(--text);margin-bottom:10px;">Stay Notified</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:22px;">Enable push notifications to receive attendance alerts, session updates, and admin messages — even when AttendX is closed.</div>
+    <!-- Feature list -->
+    <div style="display:flex;flex-direction:column;gap:8px;text-align:left;margin-bottom:26px;">
+      <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);">
+        <span style="width:26px;height:26px;border-radius:7px;background:var(--blue3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">✅</span>Attendance reminders &amp; session alerts
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);">
+        <span style="width:26px;height:26px;border-radius:7px;background:var(--blue3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">📢</span>Admin announcements &amp; emergency alerts
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text2);">
+        <span style="width:26px;height:26px;border-radius:7px;background:var(--blue3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">📵</span>Works even when the app is closed
+      </div>
+    </div>
+    <button onclick="grantPushPermission()" style="width:100%;padding:13px;background:var(--blue);color:#fff;border:none;border-radius:var(--r2);font-family:var(--head);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px;transition:opacity .15s;">🔔 Enable Notifications</button>
+    <button onclick="dismissPushPrompt()" style="width:100%;background:none;border:none;color:var(--text3);font-size:12px;font-family:var(--body);cursor:pointer;padding:6px;">Remind me later</button>
+  </div>
+</div>
+<style>
+@keyframes pushBell{0%,100%{transform:rotate(0)}10%,30%{transform:rotate(-12deg)}20%,40%{transform:rotate(12deg)}50%{transform:rotate(0)}}
+</style>
 
 <!-- ═══════════════ NOTIFICATION PANEL ═══════════════ -->
 <div class="overlay" id="notifPanel" onclick="if(event.target===this)closeNotifPanel()" style="align-items:flex-start;justify-content:flex-end;padding:72px 16px 0;">
@@ -3944,6 +4010,8 @@ async function tryLogin() {
   closeLoginModal();
   showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
   startNotifListener();
+  // Smart push permission prompt on first login interaction
+  showPushPermPromptIfNeeded();
 
   // Check trial reminders on login (send if needed)
   checkAndSendTrialReminder(admin, username);
@@ -4095,6 +4163,8 @@ function trySuperLogin(){
     closeLoginModal();
     showPage('super'); loadAdminList(); loadSuperSessions();
     startNotifListener();
+    S.currentAdmin = '__super__';
+    showPushPermPromptIfNeeded();
   } else {
     showAlert('superAlert','err','Incorrect password.');
     document.getElementById('superPwd').value='';
@@ -4107,6 +4177,7 @@ function superGoToDash(){
   S.currentAdmin = '__super__';
   showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
   startNotifListener();
+  showPushPermPromptIfNeeded();
 }
 
 function backToSuperPanel(){
@@ -5874,9 +5945,8 @@ function qrTab(t,btn){
   btn.classList.add('active');
   document.querySelectorAll('.err-msg').forEach(e=>e.classList.remove('show'));
   // Show global expiry row for all tabs except 'link' (which has its own expiry field)
-  const globalExpiryRow = document.getElementById('qr-global-expiry-row');
-  if(globalExpiryRow) globalExpiryRow.style.display = (t === 'link') ? 'none' : 'block';
-  // Hide expiry badge when switching tabs
+  const globalRow = document.getElementById('qr-global-expiry-row');
+  if(globalRow) globalRow.style.display = (t === 'link') ? 'none' : 'block';
   const eb = document.getElementById('qrExpiryBadge');
   if(eb) eb.style.display = 'none';
 }
@@ -6085,16 +6155,15 @@ function generateQR(){
 
   S.qrLink=link;
 
-  // ── Apply global expiry for all non-link tabs ──────────────────────────────
-  // (Link tab has its own per-tab expiry field already handled above)
+  // ── Apply global expiry for all non-link tabs ─────────────────────────────
   let _qrFinalExpiry = 0;
   if(qrCurrentTab !== 'link'){
     const globalDays = parseInt(document.getElementById('qr-global-expiry')?.value) || 0;
     if(globalDays > 0){
       _qrFinalExpiry = Date.now() + globalDays * 24 * 60 * 60 * 1000;
-      // Wrap link in expiry redirect (skip for vcard/note — raw content, can't redirect)
+      // Wrap in expiry redirect (not for vcard/note — raw content)
       if(qrCurrentTab !== 'vcard' && qrCurrentTab !== 'note'){
-        link = 'https://attendex-pro.vercel.app?qr_link=' + encodeURIComponent(link) + '&qr_exp=' + _qrFinalExpiry;
+        link = location.origin + location.pathname + '?qr_link=' + encodeURIComponent(link) + '&qr_exp=' + _qrFinalExpiry;
       }
     }
   } else {
@@ -6110,7 +6179,6 @@ function generateQR(){
   const out=document.getElementById('qr-output');
   out.innerHTML='';
 
-  // QRCode lib has a limit — warn if content is very large (data URLs)
   const encodedLen = encodeURIComponent(link).length;
   if(encodedLen > 2800){
     toast('Content is very large — use a smaller image or shorter text for best scan results','warn');
@@ -6131,25 +6199,23 @@ function generateQR(){
   document.getElementById('qrEmpty').style.display='none';
   document.getElementById('qrResult').classList.add('show');
 
-  // ── Expiry badge ────────────────────────────────────────────────────────────
+  // ── Expiry badge ──────────────────────────────────────────────────────────
   const eb = document.getElementById('qrExpiryBadge');
   const ebi = document.getElementById('qrExpiryBadgeInner');
   if(eb && ebi){
     if(_qrFinalExpiry > 0){
       const st = _qrExpiryStatus(_qrFinalExpiry);
-      const days = Math.ceil((_qrFinalExpiry - Date.now()) / 86400000);
-      ebi.textContent = st.icon + ' Expires in ' + days + ' day' + (days!==1?'s':'');
+      ebi.textContent = st.icon + ' ' + st.label;
       ebi.style.color = st.color;
-      ebi.style.background = _qrFinalExpiry < Date.now() ? 'var(--red2)' : 'var(--green2)';
-      ebi.style.borderColor = _qrFinalExpiry < Date.now() ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)';
-      eb.style.display = 'block';
+      ebi.style.background = st.expired ? 'rgba(239,68,68,0.08)' : 'rgba(16,185,129,0.08)';
+      ebi.style.borderColor = st.expired ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)';
     } else {
       ebi.textContent = '✓ Permanent — no expiry';
       ebi.style.color = 'var(--text3)';
       ebi.style.background = 'var(--s2)';
       ebi.style.borderColor = 'var(--line)';
-      eb.style.display = 'block';
     }
+    eb.style.display = 'block';
   }
 
   S.qrStats.total++;
@@ -7808,6 +7874,16 @@ async function superSendNotif(){
     }
     document.getElementById('notifMsgInput').value='';
     toast('Notification sent ✓','ok');
+    // ── Fire real push notification via Vercel ──
+    const pushTargetId = target === '__all__' ? null : target;
+    _sendPushViaVercel({
+      targetType: target === '__all__' ? 'role' : 'user',
+      targetId: target === '__all__' ? 'admin' : pushTargetId,
+      title: '📢 Message from Super Admin',
+      body: msg,
+      type: 'announcement',
+      url: '/'
+    });
     loadNotifAdminTargets();
   } catch(e){
     toast('Failed: '+e.message,'err');
@@ -7879,6 +7955,15 @@ async function adminSendToSuper(){
     });
     document.getElementById('adminMsgInput').value = '';
     toast('Message sent to Super Admin ✓','ok');
+    // ── Fire real push to super admin via Vercel ──
+    _sendPushViaVercel({
+      targetType: 'user',
+      targetId: '__super__',
+      title: '✉️ Message from ' + S.currentAdmin,
+      body: msg,
+      type: 'message',
+      url: '/'
+    });
     loadAdminMsgQuota();
   } catch(e){
     toast('Failed: '+e.message,'err');
@@ -8017,6 +8102,171 @@ async function notifyNewAdmin(adminName, adminUsername, phone){
       ts: Date.now()
     });
   } catch(e){}
+}
+
+/* ══════════════════════════════════════════════════════════
+   REAL-TIME PUSH NOTIFICATION SYSTEM (FCM + Web Push)
+   KЭL ♛ PHANTOM — VALIDE EdTech
+   ─────────────────────────────────────────────────────────
+   How it works:
+   1. On login → smart permission prompt appears
+   2. On grant → SW registers + FCM token fetched + saved to Firestore
+   3. When superSendNotif() / adminSendToSuper() runs → Vercel API sends push
+   4. FCM delivers to browser even when app is closed
+   5. Foreground messages → in-app toast + notification panel updates
+════════════════════════════════════════════════════════════ */
+
+// ── CONFIG (fill in after Firebase Console setup) ───────────────────────────
+const FCM_VAPID_KEY    = 'YOUR_FCM_WEB_PUSH_VAPID_KEY_HERE';  // Firebase Console → Project Settings → Cloud Messaging → Web Push Certificates → Key pair
+const PUSH_API_ENDPOINT = 'https://YOUR-PROJECT.vercel.app/api/send-notification'; // Your Vercel deploy URL
+
+// ── FCM TOKEN MANAGEMENT ────────────────────────────────────────────────────
+let _fcmToken = null;
+let _fcmInited = false;
+
+async function initFCM(){
+  if(_fcmInited) return;
+  if(!('serviceWorker' in navigator) || !('Notification' in window)) return;
+  if(!window._fcmMessaging) return;
+
+  try {
+    // Register the FCM-specific service worker
+    const swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    console.log('[AttendX FCM] SW registered');
+
+    // Get FCM token
+    const { getToken } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js');
+    const token = await getToken(window._fcmMessaging, {
+      vapidKey: FCM_VAPID_KEY,
+      serviceWorkerRegistration: swReg
+    });
+
+    if(token){
+      _fcmToken = token;
+      _fcmInited = true;
+      console.log('[AttendX FCM] Token obtained ✅');
+      // Save token to Firestore under current admin's record
+      await _saveFCMToken(token);
+    }
+  } catch(e){
+    console.warn('[AttendX FCM] Token error:', e.message);
+  }
+}
+
+async function _saveFCMToken(token){
+  if(!window._db || !S.currentAdmin) return;
+  const userId = S.currentAdmin === '__super__' ? '__super__' : S.currentAdmin;
+  try {
+    const ref = window._fsDoc(window._db, 'push_tokens', userId);
+    await window._fsSetDoc(ref, {
+      token,
+      userId,
+      role: S.currentAdmin === '__super__' ? 'super' : 'admin',
+      updatedAt: Date.now(),
+      userAgent: navigator.userAgent.substring(0,100)
+    }, { merge: true });
+  } catch(e){ console.warn('[AttendX FCM] Token save failed:', e.message); }
+}
+
+// ── PERMISSION PROMPT (smart — on first meaningful login action) ─────────────
+function showPushPermPromptIfNeeded(){
+  if(Notification.permission === 'granted'){
+    initFCM();
+    return;
+  }
+  if(Notification.permission === 'denied') return;
+  const asked = localStorage.getItem('attendx_push_asked');
+  const dismissedAt = parseInt(localStorage.getItem('attendx_push_dismissed') || '0');
+  const remindCooldown = 24 * 60 * 60 * 1000; // 24 hours
+  if(asked === 'granted') return;
+  if(dismissedAt && Date.now() - dismissedAt < remindCooldown) return;
+  // Show after 2s delay (feels natural, not aggressive)
+  setTimeout(()=>{
+    const el = document.getElementById('pushPermPrompt');
+    if(el){ el.style.display = 'flex'; }
+  }, 2000);
+}
+
+async function grantPushPermission(){
+  const el = document.getElementById('pushPermPrompt');
+  if(el) el.style.display = 'none';
+  const result = await Notification.requestPermission();
+  localStorage.setItem('attendx_push_asked', result);
+  if(result === 'granted'){
+    toast('🔔 Push notifications enabled!','ok');
+    await initFCM();
+  } else {
+    toast('Notifications blocked — you can change this in browser settings','warn');
+  }
+}
+
+function dismissPushPrompt(){
+  const el = document.getElementById('pushPermPrompt');
+  if(el) el.style.display = 'none';
+  localStorage.setItem('attendx_push_dismissed', Date.now().toString());
+  toast('You can enable notifications later from the 🔔 bell menu','info');
+}
+
+// ── IN-APP FOREGROUND TOAST FOR FCM ─────────────────────────────────────────
+window._fcmForegroundToast = function({ title, body, type }){
+  // Use the existing toast system + also show a richer in-app notification banner
+  toast(`🔔 ${title}: ${body}`, 'info');
+  // Show floating banner at top
+  _showFCMBanner({ title, body, type });
+};
+
+function _showFCMBanner({ title, body, type }){
+  const existing = document.getElementById('fcmBanner');
+  if(existing) existing.remove();
+
+  const typeIcon = { emergency:'🚨', attendance:'✅', session:'📚', announcement:'📢', message:'💬' };
+  const icon = typeIcon[type] || '🔔';
+  const banner = document.createElement('div');
+  banner.id = 'fcmBanner';
+  banner.style.cssText = `
+    position:fixed;top:68px;right:16px;z-index:8999;
+    background:var(--s1);border:1px solid var(--line2);
+    border-radius:var(--r3);padding:14px 16px;
+    max-width:340px;min-width:260px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.35);
+    display:flex;gap:12px;align-items:flex-start;
+    animation:slideIn 0.28s ease both;
+    cursor:pointer;
+  `;
+  banner.innerHTML = `
+    <span style="font-size:22px;flex-shrink:0;line-height:1;">${icon}</span>
+    <div style="flex:1;min-width:0;">
+      <div style="font-family:var(--head);font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;">${title||'AttendX'}</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.4;">${body||''}</div>
+    </div>
+    <button onclick="this.closest('#fcmBanner').remove()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3);padding:0;flex-shrink:0;">✕</button>
+  `;
+  banner.onclick = (e) => { if(e.target.tagName!=='BUTTON'){ banner.remove(); openNotifPanel(); } };
+  document.body.appendChild(banner);
+  setTimeout(()=>{ if(banner.parentNode) banner.remove(); }, 6000);
+}
+
+// ── SEND PUSH VIA VERCEL API ─────────────────────────────────────────────────
+// Called internally when super sends to admin or admin sends to super
+async function _sendPushViaVercel({ targetType, targetId, title, body, type, url }){
+  if(PUSH_API_ENDPOINT.includes('YOUR-PROJECT')) return; // Not configured yet
+  try {
+    await fetch(PUSH_API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetType, targetId, title, body, type: type||'general', url: url||'/' })
+    });
+  } catch(e){ console.warn('[AttendX Push] API call failed:', e.message); }
+}
+
+// ── QR TOOL EXPIRY SUPPORT ───────────────────────────────────────────────────
+// Global expiry row show/hide is handled in qrTab()
+// _qrExpiryStatus helper used by generateQR()
+function _qrExpiryStatus(ts){
+  const diff = ts - Date.now();
+  if(diff <= 0) return { icon:'⛔', color:'var(--red)' };
+  if(diff < 86400000) return { icon:'⚠️', color:'var(--gold)' };
+  return { icon:'⏱', color:'var(--green)' };
 }
 
 /* ── BOOT ── */
