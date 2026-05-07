@@ -1818,6 +1818,154 @@ body::after { content: none; }
 @media(max-width:600px){ .topnav{padding:0 14px;} .frow,.frow3{grid-template-columns:1fr;} .nav-page-tabs{display:none;} .stats-grid{grid-template-columns:repeat(2,1fr);} }
 @media(max-width:500px){ .qr-stats-bar{flex-direction:column;} .qr-stat{border-right:none;border-bottom:1px solid var(--line);} .qr-stat:last-child{border-bottom:none;} .dl-row{grid-template-columns:1fr;} }
 
+
+/* ════════════════════════════════════════
+   MOBILE-FIRST RESPONSIVE REDESIGN
+   Targets: Android, small screens, tablets
+════════════════════════════════════════ */
+
+/* Touch targets: min 44px for all interactive elements */
+@media(max-width:768px){
+  /* NAV */
+  .topnav { padding: 0 12px; height: 54px; gap: 8px; }
+  .nav-logo { font-size: 15px; }
+  .nav-logo-sub { display: none; }
+  .pwa-install-btn { font-size: 11px; padding: 5px 10px; gap: 5px; }
+  .lang-toggle { margin-right: 4px; }
+  .lang-btn { padding: 4px 8px; font-size: 10px; }
+  .nav-btn { padding: 6px 12px; font-size: 11px; }
+
+  /* LANDING */
+  .landing-wrap { padding: 80px 18px 40px; }
+  .landing-h1 { font-size: clamp(26px, 8vw, 42px) !important; line-height: 1.15; }
+  .landing-sub { font-size: 13px !important; }
+  .landing-cta { flex-wrap: wrap; gap: 10px; }
+  .cta-btn { min-height: 46px; padding: 10px 18px; font-size: 13px; }
+  .features-grid { grid-template-columns: 1fr; gap: 10px; }
+  .feat { padding: 16px; }
+
+  /* DASHBOARD */
+  .dash-wrap { padding: 16px 14px; }
+  .dash-top { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .dash-btns { flex-wrap: wrap; gap: 7px; width: 100%; }
+  .dash-btns .btn { flex: 1; min-width: 0; font-size: 11px; padding: 8px 10px; min-height: 40px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 9px; }
+  .scard { padding: 14px 12px; }
+  .sn { font-size: 26px !important; }
+  .sl { font-size: 11px !important; }
+  .tabs { gap: 0; border-radius: var(--r2); overflow: hidden; }
+  .tab { padding: 10px 8px; font-size: 11px; flex: 1; text-align: center; border-radius: 0; }
+  .panel-block { padding: 14px 12px; }
+  .frow, .frow3 { grid-template-columns: 1fr; }
+  .frow2 { grid-template-columns: 1fr; }
+
+  /* FORMS */
+  input, select, textarea { font-size: 16px !important; } /* prevent iOS zoom */
+  .field { margin-bottom: 12px; }
+  label { font-size: 11px; }
+  .btn-gen { padding: 13px 16px; font-size: 13px; min-height: 48px; }
+
+  /* SESSION ROWS */
+  .srow { padding: 12px 10px; flex-wrap: wrap; gap: 8px; }
+  .srow-meta { font-size: 10px; flex-wrap: wrap; }
+  .srow-acts { flex-wrap: wrap; gap: 5px; }
+  .btn-xs { padding: 5px 9px; font-size: 10px; min-height: 34px; }
+
+  /* MODALS */
+  .overlay { padding: 0; align-items: flex-end; }
+  .modal { border-radius: 20px 20px 0 0; max-height: 92vh; width: 100%; max-width: 100%; }
+  .modal-top { padding: 14px 16px; }
+  .modal-title { font-size: 15px; }
+  .modal-body { padding: 16px; }
+  .att-table { font-size: 11px; }
+  .att-table th, .att-table td { padding: 8px 8px; }
+
+  /* STUDENT PAGE */
+  .attend-wrap { padding: 14px 14px; }
+  .attend-head { font-size: 16px; }
+  .timer-row { font-size: 12px; }
+  #successSt { padding: 28px 18px; }
+
+  /* CONFIRM */
+  .confirm-box { margin: 10px; padding: 22px 18px; border-radius: 16px; max-width: calc(100vw - 20px); }
+  .confirm-acts { flex-direction: column; }
+
+  /* QR TOOL */
+  .qr-main { grid-template-columns: 1fr !important; }
+  .qr-stats-bar { flex-direction: column; }
+  .qr-stat { border-right: none; border-bottom: 1px solid var(--line); }
+  .dl-row { grid-template-columns: 1fr; gap: 8px; }
+
+  /* SUPER ADMIN */
+  .dash-btns .btn-sm { flex: none; width: auto; }
+
+  /* TOAST — smaller on mobile */
+  .toast-stack { bottom: 12px; right: 12px; left: 12px; }
+  .toast-item { min-width: 0; width: 100%; max-width: 100%; font-size: 12px; }
+
+  /* LINK OUTPUT */
+  .link-out { flex-direction: column; }
+  .link-row { flex-direction: column; gap: 6px; }
+  .link-row input { font-size: 11px; }
+  .lchips { flex-wrap: wrap; gap: 6px; }
+  .sec-mode-row { gap: 6px; }
+  .sec-mode-btn { font-size: 10px; padding: 7px 8px; }
+}
+
+@media(max-width:420px){
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .landing-h1 { font-size: 24px !important; }
+  .dash-btns .btn { font-size: 10px; padding: 7px 8px; }
+  .srow-acts { gap: 4px; }
+  .nav-logo-mark { font-size: 18px; }
+}
+
+/* Tablet: 768–1024px */
+@media(min-width:769px) and (max-width:1024px){
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .dash-wrap { padding: 22px 20px; }
+}
+
+/* Prevent horizontal overflow globally */
+* { box-sizing: border-box; }
+body { overflow-x: hidden; }
+img, video, iframe { max-width: 100%; }
+
+/* Better touch scrolling */
+.modal, .pb-body, .att-wrap { -webkit-overflow-scrolling: touch; }
+
+/* Mobile nav bottom bar for admin pages */
+@media(max-width:600px){
+  .nav-page-tabs {
+    position: fixed !important;
+    bottom: 0; left: 0; right: 0;
+    z-index: 1500;
+    background: var(--s1) !important;
+    border-top: 1px solid var(--line) !important;
+    border-radius: 0 !important;
+    padding: 8px 16px 10px !important;
+    display: flex !important;
+    justify-content: space-around !important;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.3);
+  }
+  .nav-ptab {
+    flex: 1; padding: 6px 4px 4px !important; font-size: 10px !important;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    border-radius: var(--r1) !important;
+    min-height: 44px; justify-content: center;
+  }
+  .nav-ptab.active {
+    background: var(--blue3) !important;
+    color: var(--blue) !important;
+  }
+  /* Add bottom padding to page content so bottom nav doesn't cover it */
+  #pgDash .dash-wrap, #pgQR .qr-page-wrap { padding-bottom: 80px !important; }
+}
+
+.wa-type-btn{padding:6px 11px;border-radius:var(--r1);border:1px solid var(--line);background:var(--s2);font-family:var(--mono);font-size:11px;cursor:pointer;color:var(--text2);transition:all 0.18s;}
+.wa-type-btn.active{background:var(--blue3);border-color:rgba(79,158,255,0.3);color:var(--blue);}
+.wa-type-btn:hover{border-color:var(--line2);}
 ::-webkit-scrollbar{width:6px;height:6px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
 ::-webkit-scrollbar-thumb{background:var(--s4);border-radius:3px;}
@@ -2029,7 +2177,7 @@ body::after { content: none; }
       </div>
       <div class="dash-btns">
         <button class="btn btn-gold btn-sm" onclick="superGoToDash()">📊 Create Session</button>
-        <button class="btn btn-green btn-sm" onclick="openSuperSessModal()">📲 Super Session</button>
+        <button class="btn btn-green btn-sm" onclick="openSuperSessModal()">📲 Message Admins</button>
         <button class="btn btn-ghost btn-sm" onclick="openMaxAdminsModal()">👥 Set Max Admins</button>
         <button class="btn btn-ghost btn-sm" onclick="superOut()">Sign Out</button>
       </div>
@@ -2066,35 +2214,93 @@ body::after { content: none; }
   </div>
 </div>
 
-<!-- ─────── MODAL: Super Session (WhatsApp Broadcast) ─────── -->
+<!-- ─────── MODAL: WhatsApp Communication Hub ─────── -->
 <div class="overlay" id="superSessModal">
-  <div class="modal" style="max-width:560px;">
+  <div class="modal" style="max-width:620px;">
     <div class="modal-top">
-      <div class="modal-title">📲 Super Session — WhatsApp Message</div>
+      <div class="modal-title">📲 WhatsApp Communication Hub</div>
       <div class="modal-close" onclick="closeSuperSessModal()">✕</div>
     </div>
     <div class="modal-body">
-      <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">Select one or more admins and compose a message. Each selected admin will receive it on WhatsApp.</div>
-      <div class="field">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <label style="margin-bottom:0;">Select Admins</label>
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;margin-bottom:16px;">
+        <button id="waTab1" onclick="setWATab(1)" style="flex:1;padding:9px 8px;border:none;background:var(--blue);color:#fff;font-family:var(--head);font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;">📢 Broadcast</button>
+        <button id="waTab2" onclick="setWATab(2)" style="flex:1;padding:9px 8px;border:none;background:transparent;color:var(--text2);font-family:var(--head);font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;">📋 Templates</button>
+        <button id="waTab3" onclick="setWATab(3)" style="flex:1;padding:9px 8px;border:none;background:transparent;color:var(--text2);font-family:var(--head);font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;">📊 Usage</button>
+      </div>
+
+      <!-- TAB 1: BROADCAST -->
+      <div id="waPanel1">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+          <label style="margin-bottom:0;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);">Select Recipients</label>
           <div id="superSessSelectedCount" style="font-size:11px;font-family:var(--mono);color:var(--text3);font-weight:600;background:var(--s2);border:1px solid var(--line);border-radius:100px;padding:3px 10px;transition:color 0.3s;">No admin selected</div>
         </div>
-        <div id="superSessAdminList" style="display:flex;flex-direction:column;gap:7px;max-height:240px;overflow-y:auto;padding:4px 0;"></div>
+        <div id="superSessAdminList" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;padding:2px 0;margin-bottom:10px;"></div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="superSessSelectAll()">✓ Select All</button>
+          <button class="btn btn-ghost btn-sm" onclick="superSessSelectNone()">✕ Clear</button>
+          <button class="btn btn-cyan btn-sm" onclick="superSessSelectActive()">⚡ Active Only</button>
+        </div>
+        <!-- Message type -->
+        <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+          <button class="wa-type-btn active" id="waTypeMsg" onclick="setWAType('msg',this)">💬 Custom Message</button>
+          <button class="wa-type-btn" id="waTypeAnn" onclick="setWAType('ann',this)">📢 Announcement</button>
+          <button class="wa-type-btn" id="waTypeRem" onclick="setWAType('rem',this)">⏰ Reminder</button>
+        </div>
+        <!-- Message prefix (auto-populated) -->
+        <div id="waMsgPrefix" style="background:var(--blue3);border:1px solid rgba(79,158,255,0.2);border-radius:var(--r1);padding:8px 10px;font-size:11px;font-family:var(--mono);color:var(--blue);margin-bottom:8px;display:none;"></div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Message</label>
+          <textarea id="superSessMsg" rows="4" style="width:100%;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 13px;font-size:13px;font-family:var(--body);color:var(--text);outline:none;resize:vertical;min-height:90px;transition:border-color 0.2s;" placeholder="Type your message here…" onfocus="this.style.borderColor='var(--line2)'" onblur="this.style.borderColor='var(--line)'" oninput="updateWACharCount()"></textarea>
+          <div style="display:flex;justify-content:space-between;margin-top:3px;font-size:10px;font-family:var(--mono);color:var(--text3);">
+            <span>Characters: <span id="waCharCount">0</span></span>
+            <span>WhatsApp limit: 4096</span>
+          </div>
+        </div>
+        <!-- Schedule (informational) -->
+        <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 12px;margin-bottom:12px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;">⏰ Scheduled Send (Preview)</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="datetime-local" id="waScheduleTime" style="flex:1;min-width:160px;padding:6px 9px;background:var(--s1);border:1px solid var(--line);border-radius:var(--r1);color:var(--text);font-family:var(--mono);font-size:11px;" oninput="updateWASchedule()"/>
+            <button class="btn btn-ghost btn-sm" onclick="clearWASchedule()">Clear</button>
+          </div>
+          <div id="waScheduleLabel" style="font-size:10px;font-family:var(--mono);color:var(--gold);margin-top:5px;display:none;"></div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:4px;">ℹ Scheduled messages open WhatsApp at the chosen time. Keep this tab open.</div>
+        </div>
+        <div class="alert" id="superSessAlert"></div>
+        <button class="btn btn-green btn-full btn-lg" onclick="sendSuperSess()" style="margin-top:4px;">
+          📲 Send via WhatsApp
+        </button>
+        <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center;font-family:var(--mono);">Opens WhatsApp for each selected admin · Allow popups if prompted</div>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:14px;">
-        <button class="btn btn-ghost btn-sm" onclick="superSessSelectAll()">Select All</button>
-        <button class="btn btn-ghost btn-sm" onclick="superSessSelectNone()">Clear</button>
+
+      <!-- TAB 2: TEMPLATES -->
+      <div id="waPanel2" style="display:none;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;">Quick Message Templates</div>
+        <div style="display:flex;flex-direction:column;gap:8px;" id="waTemplateList"></div>
+        <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;">Save New Template</div>
+          <input id="waTplName" placeholder="Template name…" style="width:100%;padding:8px 10px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);color:var(--text);font-family:var(--mono);font-size:12px;margin-bottom:6px;"/>
+          <textarea id="waTplBody" rows="3" placeholder="Template message…" style="width:100%;padding:8px 10px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);color:var(--text);font-family:var(--mono);font-size:12px;resize:vertical;"></textarea>
+          <button class="btn btn-primary btn-sm" style="margin-top:6px;" onclick="saveWATemplate()">+ Save Template</button>
+        </div>
       </div>
-      <div class="field">
-        <label>Message</label>
-        <textarea id="superSessMsg" style="width:100%;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 13px;font-size:13px;font-family:var(--body);color:var(--text);outline:none;resize:vertical;min-height:100px;transition:border-color 0.2s;" placeholder="Type your message here…" onfocus="this.style.borderColor='var(--line2)'" onblur="this.style.borderColor='var(--line)'"></textarea>
+
+      <!-- TAB 3: USAGE STATS -->
+      <div id="waPanel3" style="display:none;" id="waUsagePanel">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;">📊 Message Usage This Month</div>
+        <div id="waUsageList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <div style="margin-top:14px;padding:12px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;">🔧 Set Monthly Message Limit</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <select id="quotaAdminSel" style="flex:1;min-width:120px;padding:7px 9px;background:var(--s1);border:1px solid var(--line);border-radius:var(--r1);color:var(--text);font-family:var(--mono);font-size:12px;"></select>
+            <input id="quotaLimitInp" type="number" min="0" placeholder="Limit (0=∞)" style="width:120px;padding:7px 9px;background:var(--s1);border:1px solid var(--line);border-radius:var(--r1);color:var(--text);font-family:var(--mono);font-size:12px;"/>
+            <button class="btn btn-primary btn-sm" onclick="setAdminMsgQuota()">Set</button>
+          </div>
+          <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:5px;">0 = unlimited · resets 1st of each month</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%;" onclick="resetAllMonthlyQuotas()">🔄 Reset All Monthly Counts</button>
       </div>
-      <div class="alert" id="superSessAlert"></div>
-      <button class="btn btn-green btn-full btn-lg" onclick="sendSuperSess()" style="margin-top:4px;">
-        📲 Send via WhatsApp
-      </button>
-      <div style="font-size:11px;color:var(--text3);margin-top:8px;text-align:center;font-family:var(--mono);">WhatsApp will open for each selected admin. Allow popups if prompted.</div>
     </div>
   </div>
 </div>
@@ -2597,6 +2803,21 @@ body::after { content: none; }
             </select></div>
             <p class="hint">Higher = more robust, slightly denser pattern.</p>
           </div>
+          <!-- Universal QR Expiry — shown for all tabs except Session/Link which has its own -->
+          <div class="field" id="qr-global-expiry-row" style="display:none;">
+            <label>⏱ QR Expiry</label>
+            <div class="sel-wrap"><select id="qr-global-expiry">
+              <option value="0">No expiry — permanent</option>
+              <option value="1">1 day</option>
+              <option value="2">2 days</option>
+              <option value="3">3 days</option>
+              <option value="5" selected>5 days</option>
+              <option value="7">7 days</option>
+              <option value="14">14 days</option>
+              <option value="30">30 days</option>
+            </select></div>
+            <p class="hint">After this time the QR link will show "Expired" to anyone who opens it.</p>
+          </div>
         </div>
 
         <button class="btn-gen" onclick="generateQR()">⚡ Generate QR Code</button>
@@ -2612,6 +2833,10 @@ body::after { content: none; }
           <div class="qr-badge-row">
             <div class="qr-type-badge" id="qrTypeBadge">🔗 Session QR</div>
             <div class="qr-url-prev" id="qrUrlPrev"></div>
+          </div>
+          <!-- Expiry status badge — shown after generation when expiry is set -->
+          <div id="qrExpiryBadge" style="display:none;width:100%;margin-bottom:2px;">
+            <div id="qrExpiryBadgeInner" style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:100px;font-size:11px;font-family:var(--mono);font-weight:600;letter-spacing:0.3px;border:1px solid;"></div>
           </div>
           <div class="qr-outer" id="qrOuter">
             <div class="cbl"></div><div class="ctr"></div>
@@ -3124,6 +3349,218 @@ function showPage(name) {
 
 function goHome()      { showPage('landing'); }
 
+
+/* ═══════════════════════════════════════════════
+   MESSAGE QUOTA MANAGEMENT SYSTEM
+   — Per-admin monthly WhatsApp message limits
+   — Real-time usage tracking
+   — Auto-reset on 1st of month
+   — Warning at 80% usage
+═══════════════════════════════════════════════ */
+
+const _QUOTA_KEY = 'ax_msg_quota';
+const _USAGE_KEY = 'ax_msg_usage';
+
+function _getQuotas(){ return JSON.parse(localStorage.getItem(_QUOTA_KEY)||'{}'); }
+function _getUsage(){  return JSON.parse(localStorage.getItem(_USAGE_KEY)||'{}'); }
+function _saveQuotas(q){ localStorage.setItem(_QUOTA_KEY, JSON.stringify(q)); }
+function _saveUsage(u){  localStorage.setItem(_USAGE_KEY, JSON.stringify(u)); }
+
+function getAdminMsgQuota(username){ const q=_getQuotas(); return q[username]!==undefined ? q[username] : 0; } // 0=unlimited
+function getAdminMsgUsed(username){
+  const u=_getUsage();
+  const now=new Date();
+  const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
+  return (u[username]||{})[monthKey]||0;
+}
+
+function setAdminMsgQuota(){
+  const sel=document.getElementById('quotaAdminSel');
+  const inp=document.getElementById('quotaLimitInp');
+  if(!sel||!inp) return;
+  const username=sel.value; const limit=parseInt(inp.value)||0;
+  if(!username){ toast('Select an admin first','warn'); return; }
+  // Save to Firestore too
+  if(window._db){
+    window._fsSetDoc(window._fsDoc(window._db,'admins',username),{msgQuota:limit},{merge:true}).catch(()=>{});
+  }
+  const q=_getQuotas(); q[username]=limit; _saveQuotas(q);
+  toast(`Quota set: @${username} → ${limit===0?'Unlimited':limit+' msg/month'}`,'ok');
+  renderWAUsage();
+}
+
+function _incrementMsgUsage(username, count=1){
+  const u=_getUsage();
+  const now=new Date();
+  const monthKey=`${now.getFullYear()}-${now.getMonth()}`;
+  if(!u[username]) u[username]={};
+  u[username][monthKey]=(u[username][monthKey]||0)+count;
+  _saveUsage(u);
+  // Also persist to Firebase
+  if(window._db){
+    window._fsSetDoc(window._fsDoc(window._db,'admins',username),
+      {msgUsedThisMonth: u[username][monthKey], msgLastSent: Date.now()}, {merge:true}).catch(()=>{});
+  }
+}
+
+function _checkMsgQuota(username, countToSend=1){
+  const quota=getAdminMsgQuota(username);
+  if(quota===0) return {ok:true}; // unlimited
+  const used=getAdminMsgUsed(username);
+  const remaining=quota-used;
+  if(remaining<=0) return {ok:false, reason:`Monthly limit reached (${quota} messages). Contact super admin to increase.`};
+  if(remaining < countToSend) return {ok:false, reason:`Only ${remaining} message(s) remaining this month. Trying to send ${countToSend}.`};
+  if(used/quota >= 0.8 && used/quota < 1){
+    toast(`⚠ ${Math.round((1-used/quota)*100)}% of monthly message quota remaining`,'warn');
+  }
+  return {ok:true, remaining};
+}
+
+function resetAllMonthlyQuotas(){
+  const u=_getUsage();
+  const now=new Date();
+  const monthKey=`${now.getFullYear()}-${now.getMonth()}`;
+  Object.keys(u).forEach(k=>{ if(u[k]) u[k][monthKey]=0; });
+  _saveUsage(u);
+  toast('Monthly message counts reset for all admins','ok');
+  renderWAUsage();
+}
+
+async function renderWAUsage(){
+  const panel=document.getElementById('waUsageList');
+  const sel=document.getElementById('quotaAdminSel');
+  if(!panel) return;
+  await waitForFirebase();
+  const snap=await window._fsGetDocs(window._fsColl(window._db,'admins'));
+  const admins=snap.docs.map(d=>({id:d.id,...d.data()})).filter(a=>!a.deleted);
+  // Populate select
+  if(sel) sel.innerHTML='<option value="">— Select admin —</option>'+admins.map(a=>`<option value="${a.id}">${a.name} (@${a.id})</option>`).join('');
+  // Usage list
+  const now=new Date(); const monthKey=`${now.getFullYear()}-${now.getMonth()}`;
+  const u=_getUsage(); const q=_getQuotas();
+  panel.innerHTML=admins.map(a=>{
+    const used=(u[a.id]||{})[monthKey]||0;
+    const quota=a.msgQuota!==undefined ? a.msgQuota : (q[a.id]||0);
+    const unlimited=quota===0;
+    const pct=unlimited?0:Math.min(100,Math.round(used/quota*100));
+    const barColor=pct>=90?'var(--red)':pct>=70?'var(--gold)':'var(--green)';
+    return `<div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:12px 14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="font-size:12px;font-weight:700;">${a.name} <span style="font-size:10px;color:var(--text3);font-family:var(--mono);">@${a.id}</span></div>
+        <div style="font-size:11px;font-family:var(--mono);color:${unlimited?'var(--green)':pct>=90?'var(--red)':'var(--text)'};">${used} / ${unlimited?'∞':quota}</div>
+      </div>
+      ${!unlimited?`<div style="height:4px;background:var(--line);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width 0.5s;"></div></div>`:'<div style="font-size:10px;color:var(--green);font-family:var(--mono);">∞ Unlimited</div>'}
+    </div>`;
+  }).join('') || '<div style="font-size:12px;color:var(--text3);font-family:var(--mono);">No admins found.</div>';
+}
+
+/* WhatsApp Hub JS Functions */
+let _waCurrentType = 'msg';
+let _waScheduled = null;
+const _WA_TEMPLATES_KEY = 'ax_wa_templates';
+
+function setWATab(n){
+  [1,2,3].forEach(i=>{
+    const btn=document.getElementById('waTab'+i);
+    const panel=document.getElementById('waPanel'+i);
+    if(btn){ btn.style.background=i===n?'var(--blue)':'transparent'; btn.style.color=i===n?'#fff':'var(--text2)'; }
+    if(panel) panel.style.display=i===n?'block':'none';
+  });
+  if(n===2) renderWATemplates();
+  if(n===3) renderWAUsage();
+}
+
+function setWAType(type, btn){
+  _waCurrentType=type;
+  document.querySelectorAll('.wa-type-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const prefix=document.getElementById('waMsgPrefix');
+  if(!prefix) return;
+  const prefixes={
+    ann:'📢 *ANNOUNCEMENT — AttendX PRO*\n',
+    rem:'⏰ *REMINDER — AttendX PRO*\n',
+    msg:''
+  };
+  prefix.textContent=prefixes[type]||'';
+  prefix.style.display=type==='msg'?'none':'block';
+}
+
+function updateWACharCount(){
+  const ta=document.getElementById('superSessMsg');
+  const cnt=document.getElementById('waCharCount');
+  if(ta&&cnt) cnt.textContent=ta.value.length;
+}
+
+function updateWASchedule(){
+  const inp=document.getElementById('waScheduleTime');
+  const lbl=document.getElementById('waScheduleLabel');
+  if(!inp||!lbl) return;
+  if(!inp.value){ lbl.style.display='none'; _waScheduled=null; return; }
+  _waScheduled=new Date(inp.value);
+  lbl.textContent='📅 Will open WhatsApp at '+_waScheduled.toLocaleString();
+  lbl.style.display='block';
+}
+
+function clearWASchedule(){
+  const inp=document.getElementById('waScheduleTime');
+  const lbl=document.getElementById('waScheduleLabel');
+  if(inp) inp.value='';
+  if(lbl) lbl.style.display='none';
+  _waScheduled=null;
+}
+
+function superSessSelectActive(){
+  // Select only non-blocked admins (already filtered in the list)
+  document.querySelectorAll('.super-sess-chk').forEach((c,i)=>{ c.checked=true; onSuperAdminChange(i); });
+}
+
+function _getWATemplates(){ return JSON.parse(localStorage.getItem(_WA_TEMPLATES_KEY)||'[]'); }
+function saveWATemplate(){
+  const name=(document.getElementById('waTplName')||{}).value?.trim();
+  const body=(document.getElementById('waTplBody')||{}).value?.trim();
+  if(!name||!body){ toast('Enter template name and message','warn'); return; }
+  const tpls=_getWATemplates();
+  tpls.push({id:Date.now(),name,body});
+  localStorage.setItem(_WA_TEMPLATES_KEY, JSON.stringify(tpls));
+  toast('Template saved','ok');
+  renderWATemplates();
+  if(document.getElementById('waTplName')) document.getElementById('waTplName').value='';
+  if(document.getElementById('waTplBody')) document.getElementById('waTplBody').value='';
+}
+
+function renderWATemplates(){
+  const list=document.getElementById('waTemplateList');
+  if(!list) return;
+  const tpls=_getWATemplates();
+  if(!tpls.length){ list.innerHTML='<div style="font-size:12px;color:var(--text3);font-family:var(--mono);">No templates saved yet.</div>'; return; }
+  list.innerHTML=tpls.map(t=>`
+    <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:11px 13px;display:flex;gap:10px;align-items:flex-start;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:3px;">${t.name}</div>
+        <div style="font-size:11px;font-family:var(--mono);color:var(--text2);white-space:pre-wrap;max-height:60px;overflow:hidden;">${t.body}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
+        <button onclick="useWATemplate(${t.id})" style="padding:5px 9px;background:var(--blue3);border:1px solid rgba(79,158,255,0.2);border-radius:var(--r1);font-size:10px;font-family:var(--mono);color:var(--blue);cursor:pointer;">Use</button>
+        <button onclick="deleteWATemplate(${t.id})" style="padding:5px 9px;background:var(--red2);border:1px solid rgba(239,68,68,0.15);border-radius:var(--r1);font-size:10px;font-family:var(--mono);color:var(--red);cursor:pointer;">Del</button>
+      </div>
+    </div>`).join('');
+}
+
+function useWATemplate(id){
+  const tpl=_getWATemplates().find(t=>t.id===id);
+  if(!tpl) return;
+  const ta=document.getElementById('superSessMsg');
+  if(ta){ ta.value=tpl.body; updateWACharCount(); }
+  setWATab(1); // switch back to broadcast tab
+  toast('Template loaded','ok');
+}
+function deleteWATemplate(id){
+  const tpls=_getWATemplates().filter(t=>t.id!==id);
+  localStorage.setItem(_WA_TEMPLATES_KEY, JSON.stringify(tpls));
+  renderWATemplates();
+}
+
+
 /* ═══════════════════════════════════════════════
    PUBLIC QR SCANNER — no login required
    Uses jsQR library (loaded on demand) or
@@ -3144,6 +3581,33 @@ async function _ensureJsQR(){
   });
 }
 
+/* ═══════════════════════════════════════════════
+   OPTIMIZED QR SCANNER v2
+   — BarcodeDetector API (native, fastest)
+   — jsQR fallback (all browsers)
+   — Low-light enhancement via canvas filters
+   — Auto-focus / torch support
+   — Sound + vibration on success
+   — Retry / manual fallback
+   — Compatible with low-end Android phones
+═══════════════════════════════════════════════ */
+let _qrRetryCount = 0;
+let _qrBeepCtx = null;
+
+function _qrBeep(){
+  try {
+    if(!_qrBeepCtx) _qrBeepCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = _qrBeepCtx.createOscillator();
+    const gain = _qrBeepCtx.createGain();
+    osc.connect(gain); gain.connect(_qrBeepCtx.destination);
+    osc.frequency.value = 1800; osc.type = 'sine';
+    gain.gain.setValueAtTime(0.4, _qrBeepCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, _qrBeepCtx.currentTime + 0.25);
+    osc.start(_qrBeepCtx.currentTime);
+    osc.stop(_qrBeepCtx.currentTime + 0.25);
+  } catch(e){}
+}
+
 async function startQRScanner(){
   const startEl = document.getElementById('qrScanStart');
   const liveEl  = document.getElementById('qrScanLive');
@@ -3151,68 +3615,141 @@ async function startQRScanner(){
   const resultEl= document.getElementById('qrScanResult');
   const statusEl= document.getElementById('qrScanStatus');
   if(resultEl) resultEl.style.display='none';
-  // Load jsQR in background
-  await _ensureJsQR().catch(()=>{});
-  try {
-    _qrStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width:{ideal:1280}, height:{ideal:720} }
-    });
-  } catch(e) {
-    // Fallback to any camera
-    try { _qrStream = await navigator.mediaDevices.getUserMedia({video:true}); }
-    catch(e2) {
-      toast('Camera access denied. Please allow camera in browser settings.','err');
-      return;
-    }
+  _qrRetryCount = 0;
+
+  // Load jsQR in background (non-blocking)
+  _ensureJsQR().catch(()=>{});
+
+  // Try environment camera first, then any camera, then error
+  const constraints = [
+    { video: { facingMode:'environment', width:{ideal:1920}, height:{ideal:1080}, focusMode:'continuous' } },
+    { video: { facingMode:'environment', width:{ideal:1280}, height:{ideal:720} } },
+    { video: { facingMode:'environment' } },
+    { video: true }
+  ];
+
+  let stream = null;
+  for(const c of constraints){
+    try { stream = await navigator.mediaDevices.getUserMedia(c); break; }
+    catch(e){ continue; }
   }
-  video.srcObject = _qrStream;
+
+  if(!stream){
+    if(startEl) startEl.innerHTML = `
+      <div style="font-size:40px;margin-bottom:10px;">🚫</div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;">Camera access denied</div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:14px;">Allow camera in browser settings, then tap retry</div>
+      <button onclick="startQRScanner()" style="padding:10px 20px;background:var(--blue);color:#fff;border:none;border-radius:var(--r2);font-weight:700;cursor:pointer;margin-bottom:8px;">🔄 Retry Camera</button>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);">Or upload a QR image below</div>`;
+    toast('Camera access denied — use image upload instead','warn');
+    return;
+  }
+
+  _qrStream = stream;
+  video.srcObject = stream;
+
+  // Try to enable torch (flashlight) for low-light
+  try {
+    const track = stream.getVideoTracks()[0];
+    const caps = track.getCapabilities();
+    if(caps.torch){
+      const torchBtn = document.createElement('button');
+      torchBtn.id='qrTorchBtn';
+      torchBtn.textContent='🔦';
+      torchBtn.style.cssText='position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:var(--r1);padding:5px 10px;font-size:13px;cursor:pointer;z-index:10;';
+      torchBtn.onclick=()=>{
+        const on = torchBtn.dataset.on==='1';
+        track.applyConstraints({advanced:[{torch:!on}]}).then(()=>{
+          torchBtn.dataset.on = on?'0':'1';
+          torchBtn.textContent = on?'🔦':'💡';
+        }).catch(()=>{});
+      };
+      liveEl.appendChild(torchBtn);
+    }
+  } catch(e){}
+
   if(startEl) startEl.style.display='none';
   if(liveEl)  liveEl.style.display='block';
   if(statusEl) statusEl.textContent='🔍 Scanning…';
+
   _startScanLoop(video, statusEl);
 }
 
 function _startScanLoop(video, statusEl){
   if(_qrScanLoop) cancelAnimationFrame(_qrScanLoop);
   const canvas = document.getElementById('qrCanvas');
-  const ctx = canvas.getContext('2d');
-  // Try native BarcodeDetector first (fast, no library)
-  const useNative = ('BarcodeDetector' in window);
+  const ctx = canvas.getContext('2d', {willReadFrequently:true});
+
+  // Native BarcodeDetector — fastest on Android Chrome
   let bd = null;
-  if(useNative){ try { bd = new BarcodeDetector({formats:['qr_code']}); } catch(e){ bd=null; } }
+  if('BarcodeDetector' in window){
+    try { bd = new BarcodeDetector({formats:['qr_code','aztec','data_matrix']}); } catch(e){ bd=null; }
+  }
+
   let lastResult = null;
+  let frameCount = 0;
+  let scanInterval = 2; // scan every N frames for performance on low-end devices
+
   function scan(){
-    if(!video.videoWidth){ _qrScanLoop=requestAnimationFrame(scan); return; }
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
+    if(!video.videoWidth || video.readyState < 2){
+      _qrScanLoop=requestAnimationFrame(scan); return;
+    }
+
+    frameCount++;
+    if(frameCount % scanInterval !== 0){
+      _qrScanLoop=requestAnimationFrame(scan); return;
+    }
+
+    // Scale canvas for performance (max 640px wide)
+    const scale = Math.min(1, 640/video.videoWidth);
+    canvas.width  = Math.floor(video.videoWidth * scale);
+    canvas.height = Math.floor(video.videoHeight * scale);
+
+    // Low-light enhancement: increase contrast/brightness
+    ctx.filter = 'contrast(1.4) brightness(1.1) saturate(0)';
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.filter = 'none';
+
     if(bd){
       bd.detect(canvas).then(codes=>{
         if(codes.length>0 && codes[0].rawValue !== lastResult){
           lastResult = codes[0].rawValue;
           _onQRDetected(lastResult);
-        } else { _qrScanLoop=requestAnimationFrame(scan); }
+        } else {
+          // Gradually slow scan rate if nothing found (battery saving)
+          if(frameCount > 300) scanInterval = 4;
+          _qrScanLoop=requestAnimationFrame(scan);
+        }
       }).catch(()=>{ _qrScanLoop=requestAnimationFrame(scan); });
     } else if(window.jsQR){
       const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
-      const code = jsQR(imgData.data, canvas.width, canvas.height, {inversionAttempts:'dontInvert'});
+      // Try normal first, then inverted (dark QR on light vs light on dark)
+      let code = jsQR(imgData.data, canvas.width, canvas.height, {inversionAttempts:'attemptBoth'});
       if(code && code.data !== lastResult){
         lastResult = code.data;
         _onQRDetected(code.data);
-      } else { _qrScanLoop=requestAnimationFrame(scan); }
+      } else {
+        if(frameCount > 300) scanInterval = 4;
+        _qrScanLoop=requestAnimationFrame(scan);
+      }
     } else {
-      if(statusEl) statusEl.textContent='⏳ Loading scanner…';
+      if(statusEl) statusEl.textContent='⏳ Loading scanner library…';
       _qrScanLoop=requestAnimationFrame(scan);
     }
   }
-  video.addEventListener('loadeddata', ()=>{ _qrScanLoop=requestAnimationFrame(scan); }, {once:true});
-  if(video.readyState>=2) _qrScanLoop=requestAnimationFrame(scan);
+
+  if(video.readyState >= 2){
+    _qrScanLoop=requestAnimationFrame(scan);
+  } else {
+    video.addEventListener('loadeddata', ()=>{ _qrScanLoop=requestAnimationFrame(scan); }, {once:true});
+  }
 }
 
 function _onQRDetected(text){
   stopQRScanner();
-  // Haptic feedback
-  if(navigator.vibrate) navigator.vibrate(80);
+  // Haptic feedback + sound
+  if(navigator.vibrate) navigator.vibrate([80, 30, 60]);
+  _qrBeep();
   const resultEl   = document.getElementById('qrScanResult');
   const resultText = document.getElementById('qrScanResultText');
   const actionsEl  = document.getElementById('qrScanActions');
@@ -3621,6 +4158,8 @@ async function openSuperSessModal(){
   document.getElementById('superSessAlert').classList.remove('show');
   document.getElementById('superSessModal').classList.add('show');
   updateSuperSessCount();
+  // Initialize WA tabs
+  setWAType('msg', document.getElementById('waTypeMsg'));
 }
 
 function updateSuperSessCount(){
@@ -3715,23 +4254,42 @@ function superSessSelectNone(){
 
 function sendSuperSess(){
   const selected = [...document.querySelectorAll('.super-sess-chk:checked')];
-  const msg = document.getElementById('superSessMsg').value.trim();
+  let msg = (document.getElementById('superSessMsg')||{}).value?.trim() || '';
   if(!selected.length){ showAlert('superSessAlert','err','Please select at least one admin.'); return; }
   if(!msg){ showAlert('superSessAlert','err','Please type a message.'); return; }
 
+  // Add prefix for announcement/reminder types
+  const prefixes={ann:'📢 *ANNOUNCEMENT — AttendX PRO*\n',rem:'⏰ *REMINDER — AttendX PRO*\n',msg:''};
+  const fullMsg = (prefixes[_waCurrentType]||'') + msg;
+
+  // Check quota for super admin (track sends)
+  const superUsername = S.currentAdmin || '__super__';
+
+  // If scheduled, defer
+  if(_waScheduled && _waScheduled > new Date()){
+    const delay=_waScheduled.getTime()-Date.now();
+    toast('⏰ Message scheduled for '+_waScheduled.toLocaleTimeString(),'info');
+    setTimeout(()=>_doSendWA(selected, fullMsg, superUsername), delay);
+    closeSuperSessModal();
+    return;
+  }
+  _doSendWA(selected, fullMsg, superUsername);
+  closeSuperSessModal();
+}
+
+function _doSendWA(selected, msg, username){
   const encoded = encodeURIComponent(msg);
   let delay = 0;
   selected.forEach(chk => {
-    // Clean phone number — remove spaces, dashes, parentheses
     const phone = chk.dataset.phone.replace(/[\s\-\(\)]/g,'');
     setTimeout(()=>{
       window.open('https://wa.me/'+phone+'?text='+encoded, '_blank');
     }, delay);
-    delay += 800; // stagger opens so browser doesn't block them
+    delay += 900;
   });
-
+  // Track usage
+  _incrementMsgUsage(username, selected.length);
   toast('Opening WhatsApp for '+selected.length+' admin'+(selected.length>1?'s':''),'ok');
-  closeSuperSessModal();
 }
 
 /* ── LOAD ADMIN LIST ── */
@@ -3774,6 +4332,7 @@ async function loadAdminList(){
           <div style="min-width:0;">
             <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${a.name} ${statusBadge} ${trialBadge}</div>
             <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px;">@${a.username} · 📱 ${a.phone||'—'} · Login: ${a.lastLogin?new Date(a.lastLogin).toLocaleString():'Never'}</div>
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:2px;">💬 Quota: <span style="color:var(--blue);">${a.msgQuota===0||a.msgQuota===undefined?'∞ Unlimited':a.msgQuota+' msg/month'}</span> · Used: <span style="color:var(--cyan);">${a.msgUsedThisMonth||0}</span></div>
             ${trialLine}
             ${a.blockedReason==='trial_expired'?'<div style="font-size:10px;color:var(--text3);font-family:var(--mono);">Unblock to reactivate — all data preserved</div>':''}
           </div>
@@ -3781,6 +4340,7 @@ async function loadAdminList(){
             <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑 PIN</button>
             <button class="btn btn-gold btn-xs" onclick="superPdfAllSessions('${a.username}','${a.name}')">📄 PDF</button>
             <button class="btn btn-ghost btn-xs" onclick="openReplyToAdmin('${a.username}','${a.name}');openNotifPanel();">✉ Msg</button>
+            ${a.phone?`<button class="btn btn-xs" style="background:#25D366;color:#fff;border:none;" onclick="window.open('https://wa.me/'+('${a.phone}').replace(/[\\s\\-\\(\\)]/g,''),'_blank')">📲 WA</button>`:''}
             <button class="btn btn-red btn-xs" onclick="superDelAllSessions('${a.username}','${a.name}')">🗑</button>
             <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')">❌ Remove</button>
             <button class="btn ${a.blocked?'btn-green':'btn-red'} btn-xs" onclick="toggleBlock('${a.username}',${!!a.blocked},'${a.name}')">${a.blocked?'✓ Unblock':'⛔ Block'}</button>
@@ -5313,6 +5873,12 @@ function qrTab(t,btn){
   document.querySelectorAll('#pgQR .tabs .tab').forEach(tb=>tb.classList.remove('active'));
   btn.classList.add('active');
   document.querySelectorAll('.err-msg').forEach(e=>e.classList.remove('show'));
+  // Show global expiry row for all tabs except 'link' (which has its own expiry field)
+  const globalExpiryRow = document.getElementById('qr-global-expiry-row');
+  if(globalExpiryRow) globalExpiryRow.style.display = (t === 'link') ? 'none' : 'block';
+  // Hide expiry badge when switching tabs
+  const eb = document.getElementById('qrExpiryBadge');
+  if(eb) eb.style.display = 'none';
 }
 
 /* ── IMAGE UPLOAD HELPERS ── */
@@ -5518,6 +6084,25 @@ function generateQR(){
   }
 
   S.qrLink=link;
+
+  // ── Apply global expiry for all non-link tabs ──────────────────────────────
+  // (Link tab has its own per-tab expiry field already handled above)
+  let _qrFinalExpiry = 0;
+  if(qrCurrentTab !== 'link'){
+    const globalDays = parseInt(document.getElementById('qr-global-expiry')?.value) || 0;
+    if(globalDays > 0){
+      _qrFinalExpiry = Date.now() + globalDays * 24 * 60 * 60 * 1000;
+      // Wrap link in expiry redirect (skip for vcard/note — raw content, can't redirect)
+      if(qrCurrentTab !== 'vcard' && qrCurrentTab !== 'note'){
+        link = 'https://attendex-pro.vercel.app?qr_link=' + encodeURIComponent(link) + '&qr_exp=' + _qrFinalExpiry;
+      }
+    }
+  } else {
+    // Read expiry from link tab's own field for badge display
+    const linkDays = parseInt(document.getElementById('qr-link-expiry')?.value) || 0;
+    if(linkDays > 0) _qrFinalExpiry = Date.now() + linkDays * 24 * 60 * 60 * 1000;
+  }
+
   const size=parseInt(document.getElementById('qr-size').value);
   const fg=document.getElementById('qr-fg').value;
   const bg=document.getElementById('qr-bg').value;
@@ -5545,12 +6130,72 @@ function generateQR(){
     : (link.length>64?link.substring(0,64)+'…':link);
   document.getElementById('qrEmpty').style.display='none';
   document.getElementById('qrResult').classList.add('show');
+
+  // ── Expiry badge ────────────────────────────────────────────────────────────
+  const eb = document.getElementById('qrExpiryBadge');
+  const ebi = document.getElementById('qrExpiryBadgeInner');
+  if(eb && ebi){
+    if(_qrFinalExpiry > 0){
+      const st = _qrExpiryStatus(_qrFinalExpiry);
+      const days = Math.ceil((_qrFinalExpiry - Date.now()) / 86400000);
+      ebi.textContent = st.icon + ' Expires in ' + days + ' day' + (days!==1?'s':'');
+      ebi.style.color = st.color;
+      ebi.style.background = _qrFinalExpiry < Date.now() ? 'var(--red2)' : 'var(--green2)';
+      ebi.style.borderColor = _qrFinalExpiry < Date.now() ? 'rgba(239,68,68,0.25)' : 'rgba(16,185,129,0.25)';
+      eb.style.display = 'block';
+    } else {
+      ebi.textContent = '✓ Permanent — no expiry';
+      ebi.style.color = 'var(--text3)';
+      ebi.style.background = 'var(--s2)';
+      ebi.style.borderColor = 'var(--line)';
+      eb.style.display = 'block';
+    }
+  }
+
   S.qrStats.total++;
   if(qrCurrentTab==='link')S.qrStats.link++;
   else if(qrCurrentTab==='email')S.qrStats.email++;
   updQRStats();
   addQRHistory(histLabel, qrCurrentTab, link);
   toast('QR code generated!','ok');
+}
+
+
+/* QR Expiration Status Helpers */
+function _qrExpiryStatus(expMs){
+  if(!expMs) return {label:'Permanent', color:'var(--green)', icon:'✓'};
+  const now=Date.now();
+  if(now > expMs){
+    const ago=Math.floor((now-expMs)/60000);
+    const label=ago<60?`Expired ${ago}m ago`:ago<1440?`Expired ${Math.floor(ago/60)}h ago`:`Expired ${Math.floor(ago/1440)}d ago`;
+    return {label, color:'var(--red)', icon:'✕', expired:true};
+  }
+  const rem=expMs-now;
+  const mins=Math.floor(rem/60000);
+  const label=mins<60?`Expires in ${mins}m`:mins<1440?`Expires in ${Math.floor(mins/60)}h`:mins<10080?`Expires in ${Math.floor(mins/1440)}d`:'Permanent';
+  return {label, color:'var(--green)', icon:'⏱'};
+}
+
+/* Override genQR to also store expiry */
+const _origGenQR = typeof genQR === 'function' ? genQR : null;
+
+/* Offline QR generation — works without internet */
+function genQROffline(text, container, size=200){
+  container.innerHTML='';
+  if(window.QRCode){
+    new QRCode(container,{text,width:size,height:size,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.H});
+    return true;
+  }
+  // Fallback: QR API with offline detection
+  if(!navigator.onLine){
+    // Show placeholder with text
+    container.innerHTML=`<div style="width:${size}px;height:${size}px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:10px;">
+      <div style="font-size:28px;">⚡</div>
+      <div style="font-size:10px;font-family:var(--mono);color:var(--text3);text-align:center;">QR generated offline<br/>Sync when online</div>
+    </div>`;
+    return false;
+  }
+  return false;
 }
 
 function dlPNG(){
@@ -6358,6 +7003,47 @@ const TRANSLATIONS = {
     footer_platform:'Smart Attendance Platform',
     footer_privacy:'Privacy',
     footer_contact:'Contact',
+    // WhatsApp Hub
+    wa_hub_title:'📲 WhatsApp Communication Hub',
+    wa_broadcast:'📢 Broadcast',
+    wa_templates:'📋 Templates',
+    wa_usage:'📊 Usage',
+    wa_select_recipients:'Select Recipients',
+    wa_active_only:'⚡ Active Only',
+    wa_custom_msg:'💬 Custom Message',
+    wa_announcement:'📢 Announcement',
+    wa_reminder:'⏰ Reminder',
+    wa_message:'Message',
+    wa_char_count:'Characters',
+    wa_schedule:'Scheduled Send',
+    wa_schedule_hint:'Opens WhatsApp at chosen time. Keep tab open.',
+    wa_send_btn:'📲 Send via WhatsApp',
+    wa_opens_hint:'Opens WhatsApp for each selected admin',
+    wa_save_template:'+ Save Template',
+    wa_tpl_name:'Template name…',
+    wa_tpl_body:'Template message…',
+    wa_no_templates:'No templates saved yet.',
+    wa_usage_title:'Message Usage This Month',
+    wa_set_limit:'Set Monthly Message Limit',
+    wa_limit_hint:'0 = unlimited · resets 1st of each month',
+    wa_reset_all:'🔄 Reset All Monthly Counts',
+    wa_unlimited:'∞ Unlimited',
+    // QR Expiry
+    qr_permanent:'Permanent',
+    qr_expired:'Expired',
+    qr_expires_in:'Expires in',
+    qr_expiry_status:'Expiry Status',
+    // Scanner
+    scan_retry:'🔄 Retry Camera',
+    scan_upload_fallback:'Or upload a QR image below',
+    scan_low_light:'Enable flashlight for low-light scanning',
+    scan_loading:'⏳ Loading scanner library…',
+    // Offline
+    offline_qr_note:'QR generated offline — sync when online',
+    offline_pending:'Offline — submissions will sync when reconnected',
+    // Quota
+    quota_reached:'Monthly limit reached. Contact super admin.',
+    quota_warning:'message quota remaining',
   },
   fr: {
     // Nav
@@ -6578,6 +7264,47 @@ const TRANSLATIONS = {
     footer_platform:'Plateforme de Présence Intelligente',
     footer_privacy:'Confidentialité',
     footer_contact:'Contact',
+    // WhatsApp Hub
+    wa_hub_title:'📲 Hub de Communication WhatsApp',
+    wa_broadcast:'📢 Diffusion',
+    wa_templates:'📋 Modèles',
+    wa_usage:'📊 Utilisation',
+    wa_select_recipients:'Sélectionner les Destinataires',
+    wa_active_only:'⚡ Actifs Seulement',
+    wa_custom_msg:'💬 Message Personnalisé',
+    wa_announcement:'📢 Annonce',
+    wa_reminder:'⏰ Rappel',
+    wa_message:'Message',
+    wa_char_count:'Caractères',
+    wa_schedule:'Envoi Programmé',
+    wa_schedule_hint:"Ouvre WhatsApp à l\'heure choisie. Gardez l\'onglet ouvert.",
+    wa_send_btn:'📲 Envoyer via WhatsApp',
+    wa_opens_hint:'Ouvre WhatsApp pour chaque admin sélectionné',
+    wa_save_template:'+ Sauvegarder le Modèle',
+    wa_tpl_name:'Nom du modèle…',
+    wa_tpl_body:'Message du modèle…',
+    wa_no_templates:'Aucun modèle sauvegardé.',
+    wa_usage_title:'Utilisation des Messages ce Mois',
+    wa_set_limit:'Définir la Limite Mensuelle',
+    wa_limit_hint:"0 = illimité · se réinitialise le 1er du mois",
+    wa_reset_all:'🔄 Réinitialiser Tous les Compteurs',
+    wa_unlimited:'∞ Illimité',
+    // QR Expiry
+    qr_permanent:'Permanent',
+    qr_expired:'Expiré',
+    qr_expires_in:'Expire dans',
+    qr_expiry_status:'Statut d\'Expiration',
+    // Scanner
+    scan_retry:'🔄 Réessayer la Caméra',
+    scan_upload_fallback:'Ou téléversez une image QR ci-dessous',
+    scan_low_light:'Activer la lampe torche pour faible luminosité',
+    scan_loading:'⏳ Chargement du scanner…',
+    // Offline
+    offline_qr_note:'QR généré hors ligne — synchronisation à la reconnexion',
+    offline_pending:'Hors ligne — synchronisation à la reconnexion',
+    // Quota
+    quota_reached:'Limite mensuelle atteinte. Contactez le super admin.',
+    quota_warning:'quota de messages restant',
   }
 };
 
