@@ -1985,6 +1985,9 @@ img, video, iframe { max-width: 100%; }
   .nav-right { gap: 4px; }
   .nav-btn { padding: 5px 8px; font-size: 11px; }
   .lang-toggle { margin-right: 2px; flex-shrink: 0; }
+  /* Hide long text buttons on mobile — keep only Admin Login */
+  .nav-btn-solid { display: none; }
+  .nav-btn-ghost { padding: 5px 10px; font-size: 11px; }
 
   /* ── LANDING ── */
   .landing { padding: 32px 16px 60px; }
@@ -1997,14 +2000,18 @@ img, video, iframe { max-width: 100%; }
   .feat { padding: 16px 14px; }
 
   /* ── LOGIN ── */
-  .login-wrap { padding: 16px 12px; align-items: flex-start; padding-top: 20px; }
-  .login-card { padding: 24px 18px; border-radius: 20px; }
+  .login-wrap { padding: 12px; align-items: flex-start; padding-top: 16px; }
+  .login-card { padding: 20px 16px; border-radius: 20px; width: 100%; }
   .login-title { font-size: 18px; }
-  .login-sub { font-size: 12px; }
+  .login-sub { font-size: 12px; margin-bottom: 16px; }
   .numpad { gap: 7px; }
   .nk { padding: 13px; font-size: 16px; }
   .pin-dots { gap: 10px; }
   .pin-dot { width: 12px; height: 12px; }
+  /* Make sure username input is fully visible */
+  #loginStepAdmin .field { margin-bottom: 12px; }
+  #loginStepAdmin input { font-size: 16px; padding: 12px; width: 100%; }
+  #loginStepAdmin label { font-size: 10px; }
 
   /* ── DASHBOARD ── */
   .dash-wrap { padding: 16px 12px 80px; }
@@ -4012,7 +4019,15 @@ const SUPER_PWD = 'AttendX@2025';
 let S_regPin = '';
 let S_recPin = '';
 
-function navTo(pg)  { showPage(pg); if(pg==='dash'){ refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); } }
+function navTo(pg){
+  // Guard — must be logged in to access dash or qr
+  if((pg==='dash'||pg==='qr') && !S.loggedIn){
+    showLogin();
+    return;
+  }
+  showPage(pg);
+  if(pg==='dash'){ refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); }
+}
 function adminOut() { S.loggedIn=false; S.currentAdmin=null; if(S.liveInt)clearInterval(S.liveInt); stopDynQR(); stopNotifListener(); showPage('landing'); }
 
 function showLoginStep(step){
