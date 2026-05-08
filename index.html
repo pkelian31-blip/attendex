@@ -1979,11 +1979,12 @@ img, video, iframe { max-width: 100%; }
 @media(max-width:480px){
 
   /* ── NAV ── */
-  .topnav { padding: 0 10px; height: 52px; }
+  .topnav { padding: 0 10px; height: 52px; overflow: visible; }
   .nav-wordmark { font-size: 15px; }
   .nav-pro { display: none; }
-  .lang-toggle { margin-right: 4px; }
-  .lang-btn { padding: 3px 8px; font-size: 10px; }
+  .nav-right { gap: 4px; }
+  .nav-btn { padding: 5px 8px; font-size: 11px; }
+  .lang-toggle { margin-right: 2px; flex-shrink: 0; }
 
   /* ── LANDING ── */
   .landing { padding: 32px 16px 60px; }
@@ -2074,8 +2075,8 @@ img, video, iframe { max-width: 100%; }
   .site-footer { flex-direction: column; gap: 10px; padding: 16px 14px; text-align: center; }
   .footer-links { flex-wrap: wrap; justify-content: center; gap: 10px; }
 
-  /* ── LANG TOGGLE in nav ── */
-  .lang-toggle { order: -1; }
+  /* ── LANG TOGGLE in nav — always visible ── */
+  .lang-toggle { margin-right: 2px; flex-shrink: 0; order: 0; }
 
   /* ── PDF THEME PICKER ── */
   #pdfThemeModal .confirm-box { padding: 16px 12px; }
@@ -2085,9 +2086,9 @@ img, video, iframe { max-width: 100%; }
   #contactModal .confirm-box { padding: 16px 12px; }
 }
 
-/* Mobile nav bottom bar for admin pages */
+/* Mobile nav bottom bar — only shown when admin is logged in */
 @media(max-width:600px){
-  .nav-page-tabs {
+  .nav-page-tabs.admin-active {
     position: fixed !important;
     bottom: 0; left: 0; right: 0;
     z-index: 1500;
@@ -2097,7 +2098,7 @@ img, video, iframe { max-width: 100%; }
     padding: 8px 16px 10px !important;
     display: flex !important;
     justify-content: space-around !important;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.3);
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.08);
   }
   .nav-ptab {
     flex: 1; padding: 6px 4px 4px !important; font-size: 10px !important;
@@ -2109,7 +2110,6 @@ img, video, iframe { max-width: 100%; }
     background: var(--blue3) !important;
     color: var(--blue) !important;
   }
-  /* Add bottom padding to page content so bottom nav doesn't cover it */
   #pgDash .dash-wrap, #pgQR .qr-page-wrap { padding-bottom: 80px !important; }
 }
 
@@ -3503,6 +3503,7 @@ function showPage(name) {
 
   if (name === 'dash' || name === 'qr') {
     navTabs.style.display = 'flex';
+    navTabs.classList.add('admin-active');
     if(S.currentAdmin === '__super__'){
       navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showSettings()">⚙</button><button class="nav-btn nav-btn-ghost" id="notifBtnNav" onclick="openNotifPanel()" style="position:relative;">🔔<span id="notifBadgeNav" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-family:var(--mono);border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;display:none;"></span></button><button class="nav-btn" style="background:var(--gold);color:#fff;border:none;padding:6px 14px;border-radius:var(--r1);font-weight:700;cursor:pointer;" onclick="backToSuperPanel()">🛡 Super Panel</button>`;
     } else {
@@ -3511,16 +3512,16 @@ function showPage(name) {
     ntDash.classList.toggle('active', name==='dash');
     ntQR.classList.toggle('active',  name==='qr');
   } else if (name === 'super') {
-    navTabs.style.display = 'none';
+    navTabs.style.display = 'none'; navTabs.classList.remove('admin-active');
     navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" id="notifBtnNav" onclick="openNotifPanel()" style="position:relative;">🔔<span id="notifBadgeNav" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-family:var(--mono);border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;display:none;"></span></button><button class="nav-btn nav-btn-ghost" onclick="superOut()">Sign Out</button>`;
   } else if (name === 'student') {
-    navTabs.style.display = 'none';
+    navTabs.style.display = 'none'; navTabs.classList.remove('admin-active');
     navRight.innerHTML = '';
   } else if (name === 'qrscanner') {
-    navTabs.style.display = 'none';
+    navTabs.style.display = 'none'; navTabs.classList.remove('admin-active');
     navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showPage('landing')">← Home</button>`;
   } else {
-    navTabs.style.display = 'none';
+    navTabs.style.display = 'none'; navTabs.classList.remove('admin-active');
     navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showLogin()">Admin Login</button><button class="nav-btn nav-btn-solid" onclick="showLogin()">Get Started →</button>`;
   }
   document.getElementById('siteFooter').style.display = (name === 'student'||name==='qrscanner') ? 'none' : '';
