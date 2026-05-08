@@ -184,7 +184,7 @@ self.addEventListener('fetch', e => {
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, query, where, onSnapshot, getDocs, deleteDoc, orderBy, limit, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
   const firebaseConfig = {
@@ -210,6 +210,9 @@ self.addEventListener('fetch', e => {
   window._fsOnSnap   = onSnapshot;
   window._fsGetDocs  = getDocs;
   window._fsDeleteDoc= deleteDoc;
+  window._fsOrderBy  = orderBy;
+  window._fsLimit    = limit;
+  window._fsAddDoc   = addDoc;
   window._firebaseReady = true;
   document.dispatchEvent(new Event('firebaseReady'));
   // Check for expired 2-day blocks and auto-unblock
@@ -2200,6 +2203,7 @@ img, video, iframe { max-width: 100%; }
       <button class="cta-btn cta-primary" onclick="showLogin()">Open Admin Panel →</button>
       <button class="cta-btn cta-outline" onclick="showLogin()">View Demo</button>
       <button class="cta-btn cta-outline" onclick="openContact()" style="border-color:var(--blue);color:var(--blue);">✦ Contact Us</button>
+      <button class="cta-btn cta-outline" onclick="openVisitorMsgModal()" style="border-color:var(--cyan);color:var(--cyan);">📬 Message an Admin</button>
       <button class="cta-btn cta-outline" onclick="installPWA()" style="border-color:var(--green);color:var(--green);" title="Install as app">📲 Install App</button>
     </div>
     <div class="features-grid a-fadeup d4">
@@ -2234,10 +2238,47 @@ img, video, iframe { max-width: 100%; }
         <div class="feat-desc">Works offline — submissions saved locally and auto-synced when connection returns. Install as app on any device.</div>
       </div>
     </div>
+
+    <!-- ── VISITOR NOTIFICATION OPT-IN ── -->
+    <div id="visitorNotifBanner" style="display:none;background:linear-gradient(135deg,var(--blue3),var(--s2));border:1px solid var(--line2);border-radius:var(--r3);padding:16px 18px;margin:0 0 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <span style="font-size:22px;flex-shrink:0;">🔔</span>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-family:var(--head);font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;">Stay in the loop</div>
+        <div style="font-size:11px;color:var(--text3);">Get notified about new features &amp; updates from AttendX PRO.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-shrink:0;">
+        <button class="btn btn-primary btn-xs" onclick="visitorSubscribePush()">Enable Notifications</button>
+        <button class="btn btn-ghost btn-xs" onclick="dismissVisitorNotifBanner()">Not now</button>
+      </div>
+    </div>
+
+    <!-- ── PUBLIC CHAT BOARD ── -->
+    <div style="max-width:720px;margin:0 auto 40px;" id="landingChatSection">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">💬</div>
+        <div>
+          <div style="font-family:var(--head);font-size:15px;font-weight:800;color:var(--text);">Community Board</div>
+          <div style="font-size:11px;color:var(--text3);">Open to everyone — share thoughts, ask questions</div>
+        </div>
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden;">
+        <div id="landingChatMessages" style="max-height:280px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;">
+          <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono);">Loading messages…</div>
+        </div>
+        <div style="border-top:1px solid var(--line);padding:12px 14px;background:var(--s2);">
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <input id="landingChatName" placeholder="Your name (or Anonymous)" style="flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s1);color:var(--text);font-family:var(--body);font-size:12px;"/>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-end;">
+            <textarea id="landingChatInput" rows="2" placeholder="Write a message… (Ctrl+Enter to send)" style="flex:1;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s1);color:var(--text);font-family:var(--body);font-size:13px;resize:none;" onkeydown="if(event.ctrlKey&&event.key==='Enter')sendLandingChatMsg()"></textarea>
+            <button class="btn btn-primary" style="padding:10px 14px;align-self:flex-end;" onclick="sendLandingChatMsg()">➤ Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
-
-<!-- ─────── LOGIN ─────── -->
 <!-- ═══════════════ LOGIN MODAL OVERLAY ═══════════════ -->
 <div class="overlay" id="loginModal" onclick="loginModalOutsideClick(event)">
   <div id="loginModalInner" onclick="event.stopPropagation()">
@@ -2348,24 +2389,148 @@ img, video, iframe { max-width: 100%; }
         <button class="btn btn-ghost btn-sm" onclick="superOut()">Sign Out</button>
       </div>
     </div>
-    <div class="panel-block a-fadeup d1" style="margin-bottom:18px;">
-      <div class="pb-head">
-        <div class="pb-title"><div class="pb-icon" style="background:var(--gold2);">👥</div>Registered Admins</div>
-        <span id="adminCount" style="font-size:10px;color:var(--text3);font-family:var(--mono);">0 / 10 admins</span>
-      </div>
-      <div class="pb-body" id="adminList"></div>
+
+    <!-- ── SUPER ADMIN TABS ── -->
+    <div class="tabs a-fadeup" style="margin-bottom:18px;">
+      <button class="tab active" id="stab-admins" onclick="superTab('admins')">👥 Admins</button>
+      <button class="tab" id="stab-sessions" onclick="superTab('sessions')">📋 Sessions</button>
+      <button class="tab" id="stab-analytics" onclick="superTab('analytics')">📊 Analytics</button>
+      <button class="tab" id="stab-chat" onclick="superTab('chat')">💬 Chat</button>
+      <button class="tab" id="stab-inbox" onclick="superTab('inbox')" style="position:relative;">📬 Inbox<span id="inboxBadge" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--red);border-radius:50%;"></span></button>
     </div>
-    <div class="panel-block a-fadeup d2">
-      <div class="pb-head">
-        <div class="pb-title"><div class="pb-icon" style="background:var(--blue3);">📋</div>All Sessions (Today)</div>
-        <span id="superSessCount" style="font-size:10px;color:var(--text3);font-family:var(--mono);"></span>
+
+    <!-- ── TAB: ADMINS ── -->
+    <div id="stab-content-admins">
+      <div class="panel-block a-fadeup d1" style="margin-bottom:18px;">
+        <div class="pb-head">
+          <div class="pb-title"><div class="pb-icon" style="background:var(--gold2);">👥</div>Registered Admins</div>
+          <span id="adminCount" style="font-size:10px;color:var(--text3);font-family:var(--mono);">0 / 10 admins</span>
+        </div>
+        <div class="pb-body" id="adminList"></div>
       </div>
-      <div class="pb-body" id="superSessList"></div>
     </div>
+
+    <!-- ── TAB: SESSIONS ── -->
+    <div id="stab-content-sessions" style="display:none;">
+      <div class="panel-block a-fadeup d1">
+        <div class="pb-head">
+          <div class="pb-title"><div class="pb-icon" style="background:var(--blue3);">📋</div>All Sessions (Today)</div>
+          <span id="superSessCount" style="font-size:10px;color:var(--text3);font-family:var(--mono);"></span>
+        </div>
+        <div class="pb-body" id="superSessList"></div>
+      </div>
+    </div>
+
+    <!-- ── TAB: ANALYTICS ── -->
+    <div id="stab-content-analytics" style="display:none;">
+      <div class="panel-block a-fadeup d1" style="margin-bottom:16px;">
+        <div class="pb-head">
+          <div class="pb-title"><div class="pb-icon" style="background:var(--cyan2);">👁</div>Visitor Overview</div>
+          <button class="btn btn-ghost btn-xs" onclick="exportVisitorReport()">⬇ Export CSV</button>
+        </div>
+        <div class="pb-body">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;">
+            <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:14px 12px;text-align:center;">
+              <div style="font-size:22px;font-weight:800;color:var(--blue);" id="visitorTotalCount">—</div>
+              <div style="font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-top:3px;">Total Visits</div>
+            </div>
+            <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:14px 12px;text-align:center;">
+              <div style="font-size:22px;font-weight:800;color:var(--green);" id="visitorMonthCount">—</div>
+              <div style="font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-top:3px;">This Month</div>
+            </div>
+            <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:14px 12px;text-align:center;">
+              <div style="font-size:22px;font-weight:800;color:var(--gold);" id="visitorTodayCount">—</div>
+              <div style="font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-top:3px;">Today</div>
+            </div>
+          </div>
+          <!-- Bar chart -->
+          <div style="font-family:var(--head);font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Monthly Visitors</div>
+          <div id="visitorBarChart" style="display:flex;align-items:flex-end;gap:6px;height:120px;padding:0 4px;"></div>
+          <div id="visitorBarLabels" style="display:flex;gap:6px;margin-top:4px;padding:0 4px;"></div>
+          <!-- Notify visitors -->
+          <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:16px;">
+            <div style="font-family:var(--head);font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">📢 Broadcast to Visitors</div>
+            <div class="field" style="margin-bottom:8px;">
+              <label>Message to all subscribed visitors</label>
+              <textarea id="visitorBroadcastMsg" rows="2" placeholder="e.g. New features just dropped — check them out!" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:vertical;"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="broadcastToVisitors()">📢 Send to All Visitors</button>
+            <div class="alert" id="visitorBroadcastAlert" style="margin-top:8px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: CHAT ── -->
+    <div id="stab-content-chat" style="display:none;">
+      <!-- Sub-tabs: Public / Admin-only -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button id="chtab-public" class="btn btn-primary btn-xs" onclick="switchChatBoard('public')" style="flex:1;">🌐 Public Board</button>
+        <button id="chtab-admin" class="btn btn-ghost btn-xs" onclick="switchChatBoard('admin')" style="flex:1;">🔒 Admin Board</button>
+      </div>
+
+      <!-- Public chat board -->
+      <div id="chatboard-public">
+        <div class="panel-block a-fadeup" style="margin-bottom:14px;">
+          <div class="pb-head">
+            <div class="pb-title"><div class="pb-icon" style="background:var(--cyan2);">🌐</div>Public Chat Board</div>
+            <span style="font-size:9px;color:var(--text3);font-family:var(--mono);">Anyone can post</span>
+          </div>
+          <div class="pb-body" style="padding-bottom:8px;">
+            <div id="publicChatMessages" style="max-height:320px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:8px;"></div>
+            <div style="display:flex;gap:8px;align-items:flex-end;">
+              <div style="flex:1;">
+                <input id="publicChatName" placeholder="Your name (or leave blank for Anonymous)" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:12px;margin-bottom:6px;"/>
+                <textarea id="publicChatInput" rows="2" placeholder="Write a message…" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:none;" onkeydown="if(event.ctrlKey&&event.key==='Enter')sendPublicChatMsg()"></textarea>
+              </div>
+              <button class="btn btn-primary" style="padding:10px 14px;align-self:flex-end;" onclick="sendPublicChatMsg()">➤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin-only chat board -->
+      <div id="chatboard-admin" style="display:none;">
+        <div class="panel-block a-fadeup" style="margin-bottom:14px;">
+          <div class="pb-head">
+            <div class="pb-title"><div class="pb-icon" style="background:var(--gold2);">🔒</div>Admin-Only Board</div>
+            <span style="font-size:9px;color:var(--text3);font-family:var(--mono);">Admins &amp; Super Admin only</span>
+          </div>
+          <div class="pb-body" style="padding-bottom:8px;">
+            <div id="adminChatMessages" style="max-height:320px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:8px;"></div>
+            <div style="display:flex;gap:8px;align-items:flex-end;">
+              <textarea id="adminChatInput" rows="2" placeholder="Message to all admins…" style="flex:1;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:none;" onkeydown="if(event.ctrlKey&&event.key==='Enter')sendAdminChatMsg()"></textarea>
+              <button class="btn btn-gold" style="padding:10px 14px;align-self:flex-end;" onclick="sendAdminChatMsg()">➤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: INBOX ── -->
+    <div id="stab-content-inbox" style="display:none;">
+      <div class="panel-block a-fadeup">
+        <div class="pb-head">
+          <div class="pb-title"><div class="pb-icon" style="background:var(--blue3);">📬</div>Visitor Inbox</div>
+          <span id="inboxUnreadLabel" style="font-size:10px;color:var(--text3);font-family:var(--mono);"></span>
+        </div>
+        <div class="pb-body">
+          <!-- Filter bar -->
+          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-xs" id="inboxFilter-all" onclick="setInboxFilter('all')" style="flex:1;">All</button>
+            <button class="btn btn-ghost btn-xs" id="inboxFilter-unread" onclick="setInboxFilter('unread')" style="flex:1;">Unread</button>
+            <button class="btn btn-ghost btn-xs" id="inboxFilter-replied" onclick="setInboxFilter('replied')" style="flex:1;">Replied</button>
+          </div>
+          <div id="visitorInboxList" style="display:flex;flex-direction:column;gap:10px;">
+            <div style="text-align:center;padding:28px;color:var(--text3);font-size:12px;font-family:var(--mono);">Loading inbox…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- ─────── MODAL: Reset Admin PIN ─────── -->
 <div class="overlay" id="resetPinModal">
   <div class="confirm-box" style="max-width:360px;text-align:left;">
     <div style="font-size:24px;text-align:center;margin-bottom:10px;">🔑</div>
@@ -3117,6 +3282,10 @@ img, video, iframe { max-width: 100%; }
               <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
               Print
             </button>
+            <button class="btn-share" onclick="openWAShareModal()" style="background:rgba(37,211,102,0.12);color:#25D366;border-color:rgba(37,211,102,0.3);">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+              WhatsApp
+            </button>
           </div>
           <!-- History -->
           <div class="qr-hist" id="qrHist" style="display:none;">
@@ -3345,8 +3514,8 @@ img, video, iframe { max-width: 100%; }
       <div class="divider" id="settingsActionPinDivider" style="display:none;"></div>
       <div class="set-sec">
         <div class="set-sec-title">Data Management</div>
-        <button class="btn btn-red" onclick="clearData()">🗑 Clear All Session Data</button>
-        <div style="font-size:11px;color:var(--text3);margin-top:7px;font-family:var(--mono);">Permanently removes all session and attendance records.</div>
+        <button class="btn btn-red" onclick="clearData()">🗑 Clear All Data (Sessions + Notifications)</button>
+        <div style="font-size:11px;color:var(--text3);margin-top:7px;font-family:var(--mono);">Permanently removes all session, attendance records, and all notifications. This is the only way to bulk-delete notifications.</div>
       </div>
       <div class="divider"></div>
       <div class="set-sec" style="margin-bottom:0;">
@@ -3419,7 +3588,145 @@ img, video, iframe { max-width: 100%; }
         <span style="font-size:16px;color:var(--text3);">→</span>
       </a>
     </div>
+    <button class="btn btn-primary btn-full" onclick="closeContact();openVisitorMsgModal()" style="margin-bottom:8px;">📬 Send Message to an Admin</button>
     <button class="btn btn-ghost btn-full" onclick="closeContact()">Close</button>
+  </div>
+</div>
+
+<!-- ══════════ QR WHATSAPP SHARE MODAL ══════════ -->
+<div class="overlay" id="waShareModal" onclick="if(event.target===this)closeWAShareModal()">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-top">
+      <div class="modal-title" style="color:#25D366;">📲 Share QR via WhatsApp</div>
+      <button class="modal-close" onclick="closeWAShareModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- QR preview -->
+      <div style="text-align:center;margin-bottom:16px;">
+        <div id="waQRPreview" style="display:inline-block;padding:10px;background:#fff;border-radius:12px;border:1px solid var(--line);box-shadow:0 2px 12px rgba(0,0,0,0.08);"></div>
+      </div>
+      <div class="field" style="margin-bottom:10px;">
+        <label>Recipient WhatsApp Number <span style="color:var(--red);">*</span></label>
+        <div style="display:flex;gap:8px;">
+          <select id="waCountryCode" style="padding:10px 8px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--mono);font-size:12px;min-width:90px;">
+            <option value="237">🇨🇲 +237</option>
+            <option value="33">🇫🇷 +33</option>
+            <option value="1">🇺🇸 +1</option>
+            <option value="44">🇬🇧 +44</option>
+            <option value="234">🇳🇬 +234</option>
+            <option value="221">🇸🇳 +221</option>
+            <option value="225">🇨🇮 +225</option>
+            <option value="243">🇨🇩 +243</option>
+            <option value="27">🇿🇦 +27</option>
+            <option value="254">🇰🇪 +254</option>
+            <option value="212">🇲🇦 +212</option>
+            <option value="213">🇩🇿 +213</option>
+          </select>
+          <input id="waPhoneNumber" type="tel" placeholder="6XXXXXXXX" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--mono);font-size:13px;" inputmode="numeric"/>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label>Message (optional)</label>
+        <textarea id="waShareMessage" rows="3" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:vertical;"></textarea>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:4px;">The QR code image will be sent to this WhatsApp chat.</div>
+      </div>
+      <button class="btn btn-full" onclick="sendQRViaWA()" style="background:#25D366;color:#fff;border:none;font-weight:700;font-size:14px;padding:13px;border-radius:var(--r2);box-shadow:0 4px 16px rgba(37,211,102,0.35);">
+        📲 Open WhatsApp Chat
+      </button>
+      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);text-align:center;margin-top:10px;line-height:1.6;">
+        WhatsApp will open. Save the QR image first (↓ PNG), then attach it in the chat.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ QR SCAN RESULT MODAL ══════════ -->
+<div class="overlay" id="qrScanResultModal" onclick="if(event.target===this)closeQRScanResult()">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-top">
+      <div class="modal-title" id="qrScanResultTitle">QR Code Content</div>
+      <button class="modal-close" onclick="closeQRScanResult()">✕</button>
+    </div>
+    <div class="modal-body" id="qrScanResultBody">
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ VISITOR MESSAGE MODAL ══════════ -->
+<div class="overlay" id="visitorMsgModal" onclick="if(event.target===this)closeVisitorMsgModal()">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-top">
+      <div class="modal-title">📬 Message an Admin</div>
+      <button class="modal-close" onclick="closeVisitorMsgModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:16px;line-height:1.6;">
+        Choose which admin to contact. They will see your message in their inbox and can reply to you.
+      </div>
+
+      <!-- Step 1: pick admin -->
+      <div id="vMsgStep1">
+        <div style="font-family:var(--head);font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">1 — Choose an Admin</div>
+        <div id="vMsgAdminPicker" style="display:flex;flex-direction:column;gap:7px;max-height:200px;overflow-y:auto;margin-bottom:14px;">
+          <div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;font-family:var(--mono);">Loading admins…</div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="vMsgGoStep2()">Continue →</button>
+      </div>
+
+      <!-- Step 2: compose -->
+      <div id="vMsgStep2" style="display:none;">
+        <div style="display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:10px 12px;margin-bottom:14px;">
+          <span style="font-size:20px;">👤</span>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--text);" id="vMsgSelectedName">—</div>
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">Selected admin</div>
+          </div>
+          <button class="btn btn-ghost btn-xs" onclick="vMsgBackStep1()" style="margin-left:auto;">← Change</button>
+        </div>
+        <div style="font-family:var(--head);font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">2 — Your Details &amp; Message</div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Your Name <span style="color:var(--red);">*</span></label>
+          <input id="vMsgSenderName" placeholder="e.g. Jean Paul" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;"/>
+        </div>
+        <div class="field" style="margin-bottom:10px;">
+          <label>Your Email <span style="color:var(--red);">*</span></label>
+          <input id="vMsgSenderEmail" type="email" placeholder="e.g. jean@school.cm" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;"/>
+        </div>
+        <div class="field" style="margin-bottom:14px;">
+          <label>Message <span style="color:var(--red);">*</span></label>
+          <textarea id="vMsgBody" rows="4" placeholder="Write your message here…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:vertical;"></textarea>
+        </div>
+        <div class="alert" id="vMsgAlert" style="margin-bottom:10px;"></div>
+        <button class="btn btn-primary btn-full" onclick="sendVisitorMsg()">📬 Send Message</button>
+      </div>
+
+      <!-- Step 3: success -->
+      <div id="vMsgStep3" style="display:none;text-align:center;padding:20px 0;">
+        <div style="font-size:48px;margin-bottom:12px;">✅</div>
+        <div style="font-family:var(--head);font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px;">Message Sent!</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:20px;">The admin will receive your message and can reply.</div>
+        <button class="btn btn-primary" onclick="closeVisitorMsgModal()">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ INBOX REPLY MODAL ══════════ -->
+<div class="overlay" id="inboxReplyModal" onclick="if(event.target===this)closeInboxReply()">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-top">
+      <div class="modal-title">↩ Reply to Visitor</div>
+      <button class="modal-close" onclick="closeInboxReply()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="inboxReplyContext" style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:12px;margin-bottom:14px;font-size:12px;color:var(--text2);line-height:1.6;"></div>
+      <div class="field" style="margin-bottom:14px;">
+        <label>Your Reply</label>
+        <textarea id="inboxReplyText" rows="4" placeholder="Type your reply…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:vertical;"></textarea>
+      </div>
+      <div class="alert" id="inboxReplyAlert" style="margin-bottom:10px;"></div>
+      <button class="btn btn-primary btn-full" onclick="sendInboxReply()">Send Reply</button>
+    </div>
   </div>
 </div>
 
@@ -3582,13 +3889,25 @@ function init() {
   const sid     = p.get('session');
   const qrLink  = p.get('qr_link');
   const qrExp   = p.get('qr_exp');
+  const axToken = p.get('ax');
+
+  // ── New encrypted QR token ──
+  if(axToken){
+    history.replaceState({}, '', location.pathname);
+    if (sid) {
+      loadStudentPage(sid);
+    } else {
+      showPage('landing');
+    }
+    setTimeout(()=>_checkQRScanOnLoad(), 400);
+    return;
+  }
 
   if(qrLink){
-    // This is a timed QR redirect
+    // Legacy timed QR redirect
     if(qrExp && Date.now() > parseInt(qrExp)){
       showQRExpired();
     } else {
-      // Valid — redirect to the actual link
       window.location.replace(decodeURIComponent(qrLink));
     }
     return;
@@ -4418,7 +4737,7 @@ function trySuperLogin(){
   const pwd = document.getElementById('superPwd').value;
   if(pwd === SUPER_PWD){
     closeLoginModal();
-    showPage('super'); loadAdminList(); loadSuperSessions();
+    showPage('super'); loadAdminList(); loadSuperSessions(); loadInbox();
     startNotifListener();
     S.currentAdmin = '__super__';
     showPushPermPromptIfNeeded();
@@ -4438,7 +4757,7 @@ function superGoToDash(){
 }
 
 function backToSuperPanel(){
-  showPage('super'); loadAdminList(); loadSuperSessions();
+  showPage('super'); loadAdminList(); loadSuperSessions(); loadInbox();
 }
 
 /* ── MAX ADMINS SETTING ── */
@@ -5603,7 +5922,7 @@ async function changePin(){
   toast('PIN updated','ok');
 }
 function clearData(){
-  showConf('⚠️','Clear All Session Data?','Permanently delete ALL sessions and attendance records, including any currently active session.',()=>{
+  showConf('⚠️','Clear All Data?','Permanently delete ALL sessions, attendance records, and ALL notifications. This cannot be undone.',()=>{
     clearAllData().then(()=>{
       // Stop dynamic QR if running
       stopDynQR();
@@ -6580,9 +6899,7 @@ img.embed{max-width:100%;border-radius:12px;margin:16px 0;border:1px solid #e2e8
 }
 
 /* ── GENERATE QR ── */
-function generateQR(){
-  let link='', badge='', histLabel='';
-  document.querySelectorAll('.err-msg').forEach(e=>e.classList.remove('show'));
+function _generateQRCore(){
 
   if(qrCurrentTab==='link'){
     link=document.getElementById('qr-link-url').value.trim();
@@ -6948,8 +7265,13 @@ async function deleteSess(sid){
 
 async function clearAllData(){
   await waitForFirebase();
+  // Delete all sessions
   const snap = await window._fsGetDocs(window._fsColl(window._db,'sessions'));
   for(const d of snap.docs) await deleteSess(d.id);
+  // Delete all notifications
+  const nSnap = await window._fsGetDocs(window._fsColl(window._db,'notifications'));
+  for(const d of nSnap.docs) await window._fsDeleteDoc(window._fsDoc(window._db,'notifications',d.id));
+  toast('🗑 All sessions & notifications cleared','warn');
 }
 
 /* ── REALTIME LISTENER ── */
@@ -8840,10 +9162,920 @@ function _qrExpiryStatus(ts){
   return { icon:'⏱', color:'var(--green)' };
 }
 
+
+/* ══════════════════════════════════════════════════════
+   SUPER ADMIN TABS
+══════════════════════════════════════════════════════ */
+function superTab(tab){
+  ['admins','sessions','analytics','chat','inbox'].forEach(t=>{
+    document.getElementById('stab-'+t)?.classList.toggle('active', t===tab);
+    const c = document.getElementById('stab-content-'+t);
+    if(c) c.style.display = t===tab ? 'block' : 'none';
+  });
+  if(tab==='analytics') loadVisitorAnalytics();
+  if(tab==='chat'){ loadPublicChat(); loadAdminChat(); }
+  if(tab==='sessions') loadSuperSessions();
+  if(tab==='inbox') loadInbox();
+}
+
+/* ══════════════════════════════════════════════════════
+   VISITOR TRACKING
+══════════════════════════════════════════════════════ */
+async function trackVisitor(){
+  await waitForFirebase();
+  try {
+    const vid = _getVisitorId();
+    const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+    const monthKey = today.slice(0,7); // YYYY-MM
+    const ref = window._fsDoc(window._db,'visitors',vid);
+    const snap = await window._fsGetDoc(ref);
+    const data = snap.exists() ? snap.data() : {};
+    const visits = (data.visits||0) + 1;
+    const months = data.months || {};
+    months[monthKey] = (months[monthKey]||0) + 1;
+    const days = data.days || {};
+    days[today] = (days[today]||0) + 1;
+    await window._fsSetDoc(ref,{
+      vid, visits, months, days,
+      lastVisit: Date.now(),
+      firstVisit: data.firstVisit || Date.now(),
+      ua: navigator.userAgent.substring(0,120)
+    },{merge:true});
+    // Aggregate counter
+    const aggRef = window._fsDoc(window._db,'visitor_stats','aggregate');
+    const aggSnap = await window._fsGetDoc(aggRef);
+    const agg = aggSnap.exists() ? aggSnap.data() : {};
+    const aggMonths = agg.months || {};
+    aggMonths[monthKey] = (aggMonths[monthKey]||0) + 1;
+    const aggDays = agg.days || {};
+    aggDays[today] = (aggDays[today]||0) + 1;
+    await window._fsSetDoc(aggRef,{
+      total: (agg.total||0)+1,
+      months: aggMonths,
+      days: aggDays,
+      updatedAt: Date.now()
+    },{merge:true});
+  } catch(e){ console.warn('[AttendX] Visitor track error:',e.message); }
+}
+
+function _getVisitorId(){
+  let vid = localStorage.getItem('ax_vid');
+  if(!vid){
+    vid = 'v_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+    localStorage.setItem('ax_vid', vid);
+  }
+  return vid;
+}
+
+async function loadVisitorAnalytics(){
+  await waitForFirebase();
+  try {
+    const aggRef = window._fsDoc(window._db,'visitor_stats','aggregate');
+    const snap = await window._fsGetDoc(aggRef);
+    if(!snap.exists()){
+      document.getElementById('visitorTotalCount').textContent='0';
+      document.getElementById('visitorMonthCount').textContent='0';
+      document.getElementById('visitorTodayCount').textContent='0';
+      _renderVisitorBarChart({});
+      return;
+    }
+    const data = snap.data();
+    const today = new Date().toISOString().slice(0,10);
+    const monthKey = today.slice(0,7);
+    document.getElementById('visitorTotalCount').textContent = (data.total||0).toLocaleString();
+    document.getElementById('visitorMonthCount').textContent = ((data.months||{})[monthKey]||0).toLocaleString();
+    document.getElementById('visitorTodayCount').textContent = ((data.days||{})[today]||0).toLocaleString();
+    _renderVisitorBarChart(data.months||{});
+  } catch(e){ console.warn('[AttendX] Analytics load error:',e.message); }
+}
+
+function _renderVisitorBarChart(months){
+  const chart = document.getElementById('visitorBarChart');
+  const labels = document.getElementById('visitorBarLabels');
+  if(!chart||!labels) return;
+  // Get last 8 months
+  const keys = [];
+  const d = new Date();
+  for(let i=7;i>=0;i--){
+    const dd = new Date(d.getFullYear(), d.getMonth()-i, 1);
+    keys.push(dd.toISOString().slice(0,7));
+  }
+  const vals = keys.map(k=>months[k]||0);
+  const max = Math.max(...vals,1);
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  chart.innerHTML = vals.map((v,i)=>{
+    const pct = Math.max(4, Math.round((v/max)*100));
+    const isCurrentMonth = keys[i]===new Date().toISOString().slice(0,7);
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;">
+      <div style="font-size:9px;color:var(--text3);font-family:var(--mono);">${v||''}</div>
+      <div style="width:100%;height:${pct}%;background:${isCurrentMonth?'linear-gradient(180deg,var(--blue),var(--cyan))':'var(--blue3)'};border-radius:4px 4px 0 0;border:1px solid ${isCurrentMonth?'var(--blue)':'var(--line)'};transition:height 0.6s ease;min-height:4px;"></div>
+    </div>`;
+  }).join('');
+  labels.innerHTML = keys.map(k=>{
+    const [y,m] = k.split('-');
+    return `<div style="flex:1;text-align:center;font-size:8px;color:var(--text3);font-family:var(--mono);">${monthNames[parseInt(m)-1]}<br/>${y.slice(2)}</div>`;
+  }).join('');
+}
+
+async function exportVisitorReport(){
+  await waitForFirebase();
+  try {
+    const snap = await window._fsGetDoc(window._fsDoc(window._db,'visitor_stats','aggregate'));
+    if(!snap.exists()){ toast('No visitor data yet','warn'); return; }
+    const data = snap.data();
+    const months = data.months||{};
+    let csv = 'Month,Visitors\n';
+    Object.keys(months).sort().forEach(k=>{ csv+=k+','+months[k]+'\n'; });
+    csv += '\nTotal,'+data.total+'\n';
+    const blob = new Blob([csv],{type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download='AttendX_Visitor_Report.csv'; a.click();
+    toast('✓ Report exported','ok');
+  } catch(e){ toast('Export failed: '+e.message,'err'); }
+}
+
+/* ══════════════════════════════════════════════════════
+   VISITOR PUSH NOTIFICATIONS
+══════════════════════════════════════════════════════ */
+function _checkVisitorNotifBanner(){
+  if(S.loggedIn) return; // logged-in users handled separately
+  if(Notification.permission==='granted'||Notification.permission==='denied') return;
+  const dismissed = parseInt(localStorage.getItem('ax_visitor_notif_dismissed')||'0');
+  if(Date.now()-dismissed < 3*24*60*60*1000) return; // 3 day cooldown
+  setTimeout(()=>{
+    const el = document.getElementById('visitorNotifBanner');
+    if(el) el.style.display='flex';
+  }, 4000);
+}
+
+async function visitorSubscribePush(){
+  const el = document.getElementById('visitorNotifBanner');
+  if(el) el.style.display='none';
+  const result = await Notification.requestPermission();
+  localStorage.setItem('ax_visitor_notif_asked', result);
+  if(result==='granted'){
+    toast('🔔 You\'ll receive updates from AttendX PRO!','ok');
+    // Save visitor subscription token
+    await _saveVisitorPushToken();
+  } else {
+    toast('Notifications blocked — you can change this in browser settings','warn');
+  }
+}
+
+async function _saveVisitorPushToken(){
+  await waitForFirebase();
+  try {
+    const vid = _getVisitorId();
+    await window._fsSetDoc(window._fsDoc(window._db,'visitor_tokens',vid),{
+      vid, subscribedAt: Date.now(),
+      ua: navigator.userAgent.substring(0,100),
+      notifPermission: 'granted'
+    },{merge:true});
+  } catch(e){ console.warn('[AttendX] Visitor token save failed:',e.message); }
+}
+
+function dismissVisitorNotifBanner(){
+  const el = document.getElementById('visitorNotifBanner');
+  if(el) el.style.display='none';
+  localStorage.setItem('ax_visitor_notif_dismissed', Date.now().toString());
+}
+
+async function broadcastToVisitors(){
+  const msg = document.getElementById('visitorBroadcastMsg')?.value.trim();
+  if(!msg){ showAlert('visitorBroadcastAlert','err','Please enter a message.'); return; }
+  await waitForFirebase();
+  try {
+    // Save broadcast as a notification all visitors will see
+    await window._fsAddDoc(window._fsColl(window._db,'visitor_broadcasts'),{
+      message: msg,
+      sentAt: Date.now(),
+      sentBy: '__super__',
+      type: 'broadcast'
+    });
+    // Also show as in-app notification on landing
+    showAlert('visitorBroadcastAlert','ok','✓ Broadcast saved — visitors will see it on next visit.');
+    document.getElementById('visitorBroadcastMsg').value='';
+  } catch(e){ showAlert('visitorBroadcastAlert','err','Failed: '+e.message); }
+}
+
+/* ══════════════════════════════════════════════════════
+   CHAT BOARDS
+══════════════════════════════════════════════════════ */
+let _publicChatUnsub = null;
+let _adminChatUnsub  = null;
+let _landingChatUnsub = null;
+
+function switchChatBoard(board){
+  document.getElementById('chatboard-public').style.display = board==='public'?'block':'none';
+  document.getElementById('chatboard-admin').style.display  = board==='admin'?'block':'none';
+  document.getElementById('chtab-public').className = board==='public'?'btn btn-primary btn-xs':'btn btn-ghost btn-xs';
+  document.getElementById('chtab-admin').className  = board==='admin'?'btn btn-gold btn-xs':'btn btn-ghost btn-xs';
+  document.getElementById('chtab-public').style.flex='1';
+  document.getElementById('chtab-admin').style.flex='1';
+}
+
+function _chatMsgHtml(msg, isMine){
+  const senderColor = msg.role==='super'?'var(--gold)':msg.role==='admin'?'var(--blue)':'var(--text3)';
+  const roleBadge = msg.role==='super'
+    ?'<span style="font-size:9px;background:rgba(226,185,106,0.15);color:var(--gold);border:1px solid rgba(226,185,106,0.25);border-radius:4px;padding:1px 5px;margin-left:4px;">SUPER</span>'
+    :msg.role==='admin'
+    ?'<span style="font-size:9px;background:var(--blue3);color:var(--blue);border:1px solid rgba(59,130,246,0.2);border-radius:4px;padding:1px 5px;margin-left:4px;">ADMIN</span>'
+    :'<span style="font-size:9px;background:var(--s3);color:var(--text3);border:1px solid var(--line);border-radius:4px;padding:1px 5px;margin-left:4px;">VISITOR</span>';
+  const time = msg.at ? new Date(msg.at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
+  return `<div style="background:${isMine?'var(--blue3)':'var(--s2)'};border:1px solid ${isMine?'rgba(59,130,246,0.2)':'var(--line)'};border-radius:var(--r2);padding:10px 12px;${isMine?'margin-left:20px;':'margin-right:20px;'}">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
+      <span style="font-size:11px;font-weight:700;color:${senderColor};">${_esc(msg.name||'Anonymous')}</span>
+      ${roleBadge}
+      <span style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-left:auto;">${time}</span>
+    </div>
+    <div style="font-size:13px;color:var(--text);line-height:1.5;">${_esc(msg.text||'')}</div>
+  </div>`;
+}
+
+function _esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── PUBLIC CHAT (Super Admin panel view) ──
+function loadPublicChat(){
+  if(_publicChatUnsub) return; // already subscribed
+  waitForFirebase().then(()=>{
+    const q = window._fsQuery(
+      window._fsColl(window._db,'chat_public'),
+      window._fsOrderBy('at','asc'),
+      window._fsLimit(80)
+    );
+    _publicChatUnsub = window._fsOnSnap(q, snap=>{
+      const msgs = snap.docs.map(d=>d.data());
+      const container = document.getElementById('publicChatMessages');
+      if(!container) return;
+      if(!msgs.length){
+        container.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;font-family:var(--mono);">No messages yet. Be the first to post!</div>';
+        return;
+      }
+      const myId = S.currentAdmin||_getVisitorId();
+      container.innerHTML = msgs.map(m=>_chatMsgHtml(m, m.senderId===myId)).join('');
+      container.scrollTop = container.scrollHeight;
+    });
+  });
+}
+
+async function sendPublicChatMsg(){
+  const input = document.getElementById('publicChatInput');
+  const nameEl = document.getElementById('publicChatName');
+  const text = input?.value.trim();
+  if(!text) return;
+  await waitForFirebase();
+  const name = nameEl?.value.trim() || (S.currentAdmin==='__super__'?'Super Admin':S.currentAdmin||'Anonymous');
+  const role = S.currentAdmin==='__super__'?'super':S.currentAdmin?'admin':'visitor';
+  await window._fsAddDoc(window._fsColl(window._db,'chat_public'),{
+    name, text, role,
+    senderId: S.currentAdmin||_getVisitorId(),
+    at: Date.now()
+  });
+  if(input) input.value='';
+}
+
+// ── ADMIN-ONLY CHAT ──
+function loadAdminChat(){
+  if(_adminChatUnsub) return;
+  waitForFirebase().then(()=>{
+    const q = window._fsQuery(
+      window._fsColl(window._db,'chat_admin'),
+      window._fsOrderBy('at','asc'),
+      window._fsLimit(80)
+    );
+    _adminChatUnsub = window._fsOnSnap(q, snap=>{
+      const msgs = snap.docs.map(d=>d.data());
+      const container = document.getElementById('adminChatMessages');
+      if(!container) return;
+      if(!msgs.length){
+        container.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;font-family:var(--mono);">No admin messages yet.</div>';
+        return;
+      }
+      container.innerHTML = msgs.map(m=>_chatMsgHtml(m, m.senderId===S.currentAdmin)).join('');
+      container.scrollTop = container.scrollHeight;
+    });
+  });
+}
+
+async function sendAdminChatMsg(){
+  const input = document.getElementById('adminChatInput');
+  const text = input?.value.trim();
+  if(!text){ toast('Type a message first','warn'); return; }
+  if(!S.currentAdmin){ toast('You must be logged in to post here','err'); return; }
+  await waitForFirebase();
+  const name = S.currentAdmin==='__super__'?'Super Admin':S.currentAdmin;
+  const role = S.currentAdmin==='__super__'?'super':'admin';
+  await window._fsAddDoc(window._fsColl(window._db,'chat_admin'),{
+    name, text, role,
+    senderId: S.currentAdmin,
+    at: Date.now()
+  });
+  if(input) input.value='';
+}
+
+// ── LANDING PAGE PUBLIC CHAT ──
+function loadLandingChat(){
+  if(_landingChatUnsub) return;
+  waitForFirebase().then(()=>{
+    const q = window._fsQuery(
+      window._fsColl(window._db,'chat_public'),
+      window._fsOrderBy('at','asc'),
+      window._fsLimit(50)
+    );
+    _landingChatUnsub = window._fsOnSnap(q, snap=>{
+      const msgs = snap.docs.map(d=>d.data());
+      const container = document.getElementById('landingChatMessages');
+      if(!container) return;
+      if(!msgs.length){
+        container.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;font-family:var(--mono);">No messages yet — say hi! 👋</div>';
+        return;
+      }
+      const myId = _getVisitorId();
+      container.innerHTML = msgs.map(m=>_chatMsgHtml(m, m.senderId===myId)).join('');
+      container.scrollTop = container.scrollHeight;
+    });
+  });
+}
+
+async function sendLandingChatMsg(){
+  const input = document.getElementById('landingChatInput');
+  const nameEl = document.getElementById('landingChatName');
+  const text = input?.value.trim();
+  if(!text) return;
+  await waitForFirebase();
+  const name = nameEl?.value.trim() || 'Anonymous';
+  await window._fsAddDoc(window._fsColl(window._db,'chat_public'),{
+    name, text,
+    role: 'visitor',
+    senderId: _getVisitorId(),
+    at: Date.now()
+  });
+  if(input) input.value='';
+}
+
+/* ══════════════════════════════════════════════════════
+   EXPOSE MISSING FIRESTORE QUERY HELPERS
+══════════════════════════════════════════════════════ */
+// These are needed for chat realtime queries; patch them in after firebase loads
+document.addEventListener('firebaseReady', ()=>{
+  trackVisitor();
+  _checkVisitorNotifBanner();
+  loadLandingChat();
+});
+
+
+/* ══════════════════════════════════════════════════════
+   VISITOR MESSAGE MODAL
+══════════════════════════════════════════════════════ */
+let _vMsgSelectedAdmin = null; // { username, name }
+let _inboxCurrentMsg   = null; // message being replied to
+let _inboxFilter       = 'all';
+let _inboxUnsub        = null;
+
+async function openVisitorMsgModal(){
+  _vMsgSelectedAdmin = null;
+  document.getElementById('visitorMsgModal').classList.add('show');
+  _showVMsgStep(1);
+  // Load admin list for picker
+  await waitForFirebase();
+  try {
+    const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
+    const admins = snap.docs.map(d=>d.data()).filter(a=>!a.deleted && !a.blocked);
+    const picker = document.getElementById('vMsgAdminPicker');
+    if(!admins.length){
+      picker.innerHTML='<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;font-family:var(--mono);">No admins available right now.</div>';
+      return;
+    }
+    picker.innerHTML = admins.map(a=>`
+      <div class="vMsg-admin-opt" data-username="${a.username}" data-name="${a.name||a.username}"
+        onclick="vMsgSelectAdmin('${a.username}','${_esc(a.name||a.username)}')"
+        style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--line);border-radius:var(--r2);cursor:pointer;transition:all 0.15s;background:var(--s2);"
+        onmouseover="this.style.borderColor='var(--blue)';this.style.background='var(--blue3)'"
+        onmouseout="if(!this.classList.contains('selected')){this.style.borderColor='var(--line)';this.style.background='var(--s2)'}">
+        <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">👤</div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);">${_esc(a.name||a.username)}</div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">@${a.username}</div>
+        </div>
+        <div style="margin-left:auto;width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;" id="vMsgDot_${a.username}"></div>
+      </div>`).join('');
+  } catch(e){ console.warn('vMsg admin load error:',e.message); }
+}
+
+function vMsgSelectAdmin(username, name){
+  _vMsgSelectedAdmin = { username, name };
+  document.querySelectorAll('.vMsg-admin-opt').forEach(el=>{
+    const sel = el.dataset.username === username;
+    el.classList.toggle('selected', sel);
+    el.style.borderColor = sel ? 'var(--blue)' : 'var(--line)';
+    el.style.background  = sel ? 'var(--blue3)' : 'var(--s2)';
+    const dot = document.getElementById('vMsgDot_'+el.dataset.username);
+    if(dot) dot.style.background = sel ? 'var(--blue)' : '';
+  });
+}
+
+function vMsgGoStep2(){
+  if(!_vMsgSelectedAdmin){ toast('Please select an admin first','warn'); return; }
+  document.getElementById('vMsgSelectedName').textContent = _vMsgSelectedAdmin.name;
+  _showVMsgStep(2);
+}
+
+function vMsgBackStep1(){
+  _showVMsgStep(1);
+}
+
+function _showVMsgStep(n){
+  [1,2,3].forEach(i=>{
+    const el = document.getElementById('vMsgStep'+i);
+    if(el) el.style.display = i===n ? 'block' : 'none';
+  });
+}
+
+async function sendVisitorMsg(){
+  const name  = document.getElementById('vMsgSenderName')?.value.trim();
+  const email = document.getElementById('vMsgSenderEmail')?.value.trim();
+  const body  = document.getElementById('vMsgBody')?.value.trim();
+  if(!name || !email || !body){
+    showAlert('vMsgAlert','err','Please fill in all fields.'); return;
+  }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    showAlert('vMsgAlert','err','Please enter a valid email address.'); return;
+  }
+  if(!_vMsgSelectedAdmin){ showAlert('vMsgAlert','err','No admin selected.'); return; }
+  await waitForFirebase();
+  try {
+    await window._fsAddDoc(window._fsColl(window._db,'visitor_inbox'),{
+      toAdmin: _vMsgSelectedAdmin.username,
+      toAdminName: _vMsgSelectedAdmin.name,
+      fromName: name,
+      fromEmail: email,
+      message: body,
+      sentAt: Date.now(),
+      read: false,
+      replied: false,
+      replyText: '',
+      vid: _getVisitorId()
+    });
+    _showVMsgStep(3);
+  } catch(e){ showAlert('vMsgAlert','err','Failed to send: '+e.message); }
+}
+
+function closeVisitorMsgModal(){
+  document.getElementById('visitorMsgModal').classList.remove('show');
+  // Reset fields
+  ['vMsgSenderName','vMsgSenderEmail','vMsgBody'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value='';
+  });
+  _vMsgSelectedAdmin = null;
+}
+
+/* ══════════════════════════════════════════════════════
+   VISITOR INBOX (Super Admin Panel)
+══════════════════════════════════════════════════════ */
+function loadInbox(){
+  if(_inboxUnsub) _inboxUnsub(); // reset listener
+  waitForFirebase().then(()=>{
+    const q = window._fsQuery(
+      window._fsColl(window._db,'visitor_inbox'),
+      window._fsOrderBy('sentAt','desc')
+    );
+    _inboxUnsub = window._fsOnSnap(q, snap=>{
+      const all = snap.docs.map(d=>({id:d.id,...d.data()}));
+      // Update badge
+      const unread = all.filter(m=>!m.read).length;
+      const badge = document.getElementById('inboxBadge');
+      if(badge) badge.style.display = unread > 0 ? 'block' : 'none';
+      const label = document.getElementById('inboxUnreadLabel');
+      if(label) label.textContent = unread > 0 ? unread+' unread' : all.length+' messages';
+      _renderInbox(all);
+    });
+  });
+}
+
+function _renderInbox(all){
+  let msgs = all;
+  if(_inboxFilter==='unread')   msgs = all.filter(m=>!m.read);
+  if(_inboxFilter==='replied')  msgs = all.filter(m=>m.replied);
+  const container = document.getElementById('visitorInboxList');
+  if(!container) return;
+  if(!msgs.length){
+    container.innerHTML=`<div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;font-family:var(--mono);">${_inboxFilter==='unread'?'No unread messages 🎉':_inboxFilter==='replied'?'No replied messages yet.':'Inbox is empty.'}</div>`;
+    return;
+  }
+  container.innerHTML = msgs.map(m=>{
+    const time = new Date(m.sentAt).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    const statusBadge = m.replied
+      ? '<span style="font-size:9px;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);border-radius:4px;padding:1px 6px;">REPLIED</span>'
+      : m.read
+      ? '<span style="font-size:9px;background:var(--s3);color:var(--text3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;">READ</span>'
+      : '<span style="font-size:9px;background:var(--blue3);color:var(--blue);border:1px solid rgba(59,130,246,0.25);border-radius:4px;padding:1px 6px;font-weight:700;">NEW</span>';
+    return `<div style="background:${!m.read?'var(--s2)':'var(--s1)'};border:1px solid ${!m.read?'var(--line2)':'var(--line)'};border-radius:var(--r2);padding:13px 14px;">
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px;">
+            <span style="font-size:13px;font-weight:700;color:var(--text);">${_esc(m.fromName)}</span>
+            ${statusBadge}
+            <span style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-left:auto;">${time}</span>
+          </div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">✉ ${_esc(m.fromEmail)} → to <strong style="color:var(--blue);">@${_esc(m.toAdmin)}</strong></div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6;background:var(--s3);border-radius:var(--r1);padding:9px 11px;margin-bottom:10px;">${_esc(m.message)}</div>
+      ${m.replied && m.replyText ? `<div style="font-size:11px;color:var(--green);background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.15);border-radius:var(--r1);padding:8px 11px;margin-bottom:10px;"><span style="font-weight:700;">↩ Reply sent:</span> ${_esc(m.replyText)}</div>` : ''}
+      <div style="display:flex;gap:7px;flex-wrap:wrap;">
+        ${!m.replied ? `<button class="btn btn-primary btn-xs" onclick="openInboxReply('${m.id}','${_esc(m.fromName)}','${_esc(m.fromEmail)}','${_esc(m.message).replace(/'/g,'&#39;')}')">↩ Reply</button>` : ''}
+        ${!m.read ? `<button class="btn btn-ghost btn-xs" onclick="markInboxRead('${m.id}')">✓ Mark Read</button>` : ''}
+        <button class="btn btn-red btn-xs" onclick="deleteInboxMsg('${m.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setInboxFilter(f){
+  _inboxFilter = f;
+  ['all','unread','replied'].forEach(ff=>{
+    const el = document.getElementById('inboxFilter-'+ff);
+    if(el) el.className = ff===f ? 'btn btn-primary btn-xs' : 'btn btn-ghost btn-xs';
+  });
+  // Re-render with current data
+  waitForFirebase().then(async ()=>{
+    const snap = await window._fsGetDocs(window._fsQuery(
+      window._fsColl(window._db,'visitor_inbox'),
+      window._fsOrderBy('sentAt','desc')
+    ));
+    _renderInbox(snap.docs.map(d=>({id:d.id,...d.data()})));
+  });
+}
+
+async function markInboxRead(id){
+  await waitForFirebase();
+  await window._fsSetDoc(window._fsDoc(window._db,'visitor_inbox',id),{read:true},{merge:true});
+}
+
+async function deleteInboxMsg(id){
+  await waitForFirebase();
+  await window._fsDeleteDoc(window._fsDoc(window._db,'visitor_inbox',id));
+  toast('Message deleted','warn');
+}
+
+function openInboxReply(id, fromName, fromEmail, origMsg){
+  _inboxCurrentMsg = { id, fromName, fromEmail, origMsg };
+  const ctx = document.getElementById('inboxReplyContext');
+  if(ctx) ctx.innerHTML = `<strong style="color:var(--text);">From:</strong> ${_esc(fromName)} (${_esc(fromEmail)})<br/><strong style="color:var(--text);">Message:</strong> ${_esc(origMsg)}`;
+  const ta = document.getElementById('inboxReplyText');
+  if(ta) ta.value = '';
+  document.getElementById('inboxReplyModal').classList.add('show');
+  // Also mark as read
+  markInboxRead(id);
+}
+
+function closeInboxReply(){
+  document.getElementById('inboxReplyModal').classList.remove('show');
+  _inboxCurrentMsg = null;
+}
+
+async function sendInboxReply(){
+  if(!_inboxCurrentMsg){ closeInboxReply(); return; }
+  const text = document.getElementById('inboxReplyText')?.value.trim();
+  if(!text){ showAlert('inboxReplyAlert','err','Please write a reply.'); return; }
+  await waitForFirebase();
+  try {
+    await window._fsSetDoc(window._fsDoc(window._db,'visitor_inbox',_inboxCurrentMsg.id),{
+      replied: true,
+      read: true,
+      replyText: text,
+      repliedAt: Date.now()
+    },{merge:true});
+    // Save notification for audit trail
+    await window._fsAddDoc(window._fsColl(window._db,'notifications'),{
+      type:'inbox_reply',
+      toVisitor: _inboxCurrentMsg.fromEmail,
+      fromAdmin: S.currentAdmin,
+      message: text,
+      sentAt: Date.now()
+    });
+    toast('✓ Reply sent to '+_inboxCurrentMsg.fromName,'ok');
+    closeInboxReply();
+  } catch(e){ showAlert('inboxReplyAlert','err','Failed: '+e.message); }
+}
+
+/* ── Wire inbox into superTab ── */
+
+
+/* ══════════════════════════════════════════════════════
+   QR ENCRYPTION ENGINE
+   All QR payloads are AES-encrypted + base64 encoded.
+   The raw text encoded in the QR is always an opaque
+   token — the original content is never visible.
+══════════════════════════════════════════════════════ */
+const _QR_SECRET = 'AX_PRO_KЭL_PHANTOM_2025_v2'; // change to anything unique
+
+function _xorEncrypt(str, key){
+  let out = '';
+  for(let i=0;i<str.length;i++){
+    out += String.fromCharCode(str.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return out;
+}
+
+function qrEncodePayload(data){
+  // data = { type, content, expiry, label, meta }
+  const json = JSON.stringify(data);
+  const encrypted = _xorEncrypt(json, _QR_SECRET);
+  // base64 encode
+  const b64 = btoa(unescape(encodeURIComponent(encrypted)));
+  // Build a compact scoped URL that opens your platform
+  const base = location.origin + location.pathname;
+  return base + '?ax=' + encodeURIComponent(b64);
+}
+
+function qrDecodePayload(token){
+  try {
+    const encrypted = decodeURIComponent(escape(atob(token)));
+    const json = _xorEncrypt(encrypted, _QR_SECRET);
+    return JSON.parse(json);
+  } catch(e){
+    return null;
+  }
+}
+
+/* Check URL on page load for ?ax= token */
+function _checkQRScanOnLoad(){
+  const params = new URLSearchParams(location.search);
+  const ax = params.get('ax');
+  if(!ax) return;
+  // Clean URL without reload
+  history.replaceState({}, '', location.pathname);
+  const data = qrDecodePayload(ax);
+  if(!data){ showQRScanResult(null, ax); return; }
+  // Check expiry
+  if(data.expiry && Date.now() > data.expiry){
+    showQRScanResult('expired', data);
+    return;
+  }
+  showQRScanResult('ok', data);
+}
+
+function showQRScanResult(status, data){
+  const modal = document.getElementById('qrScanResultModal');
+  const title = document.getElementById('qrScanResultTitle');
+  const body  = document.getElementById('qrScanResultBody');
+  if(!modal||!title||!body) return;
+
+  if(status === 'expired'){
+    title.textContent = '⏰ QR Code Expired';
+    body.innerHTML = `
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:52px;margin-bottom:12px;">⏰</div>
+        <div style="font-family:var(--head);font-size:16px;font-weight:800;color:var(--red);margin-bottom:8px;">This QR Code Has Expired</div>
+        <div style="font-size:12px;color:var(--text3);line-height:1.6;">This QR code was valid until <strong>${new Date(data.expiry).toLocaleString()}</strong>.<br/>Please request a new one from the admin.</div>
+        <button class="btn btn-ghost" style="margin-top:16px;" onclick="closeQRScanResult()">Close</button>
+      </div>`;
+    modal.classList.add('show');
+    return;
+  }
+
+  if(!status || status === null){
+    title.textContent = '⚠️ Unrecognized QR Code';
+    body.innerHTML = `
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+        <div style="font-family:var(--head);font-size:15px;font-weight:800;color:var(--gold);margin-bottom:8px;">This QR was not generated by AttendX PRO</div>
+        <div style="font-size:12px;color:var(--text3);">The content could not be verified.</div>
+        <button class="btn btn-ghost" style="margin-top:16px;" onclick="closeQRScanResult()">Close</button>
+      </div>`;
+    modal.classList.add('show');
+    return;
+  }
+
+  // Build rich card based on type
+  title.textContent = _qrTypeIcon(data.type) + ' ' + (data.label || 'QR Code Content');
+
+  let contentHtml = '';
+
+  // Type-specific display
+  if(data.type === 'imgbed'){
+    contentHtml += `
+      <div style="text-align:center;margin-bottom:16px;">
+        <img src="${data.content}" style="max-width:100%;border-radius:12px;border:1px solid var(--line);box-shadow:0 4px 20px rgba(0,0,0,0.1);" alt="QR Image"/>
+      </div>
+      ${data.meta?.caption ? `<div style="font-size:13px;color:var(--text2);text-align:center;margin-bottom:12px;">${_esc(data.meta.caption)}</div>` : ''}
+      <a href="${data.content}" download="AttendX_QR_Image.png" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;">⬇ Download Image</a>`;
+  } else if(data.type === 'vcard'){
+    const v = data.meta||{};
+    contentHtml += `
+      <div style="display:flex;align-items:center;gap:14px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:14px;margin-bottom:14px;">
+        <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">👤</div>
+        <div>
+          <div style="font-family:var(--head);font-size:15px;font-weight:800;color:var(--text);">${_esc(v.name||'Contact')}</div>
+          ${v.org?`<div style="font-size:11px;color:var(--text3);">${_esc(v.org)}</div>`:''}
+          ${v.title?`<div style="font-size:11px;color:var(--blue);">${_esc(v.title)}</div>`:''}
+        </div>
+      </div>
+      ${v.phone?`<div style="display:flex;gap:10px;align-items:center;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 12px;margin-bottom:8px;"><span style="font-size:16px;">📱</span><div><div style="font-size:10px;color:var(--text3);font-family:var(--mono);">PHONE</div><div style="font-size:13px;font-weight:600;color:var(--text);">${_esc(v.phone)}</div></div><a href="tel:${_esc(v.phone)}" class="btn btn-ghost btn-xs" style="margin-left:auto;">Call</a></div>`:''}
+      ${v.email?`<div style="display:flex;gap:10px;align-items:center;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 12px;margin-bottom:8px;"><span style="font-size:16px;">✉️</span><div><div style="font-size:10px;color:var(--text3);font-family:var(--mono);">EMAIL</div><div style="font-size:13px;font-weight:600;color:var(--text);">${_esc(v.email)}</div></div><a href="mailto:${_esc(v.email)}" class="btn btn-ghost btn-xs" style="margin-left:auto;">Email</a></div>`:''}
+      ${v.url?`<div style="display:flex;gap:10px;align-items:center;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 12px;margin-bottom:14px;"><span style="font-size:16px;">🌐</span><div><div style="font-size:10px;color:var(--text3);font-family:var(--mono);">WEBSITE</div><div style="font-size:12px;color:var(--blue);">${_esc(v.url)}</div></div><a href="${_esc(v.url)}" target="_blank" class="btn btn-ghost btn-xs" style="margin-left:auto;">Open</a></div>`:''}
+      <a href="${_esc(data.content)}" download="contact.vcf" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;">⬇ Save Contact</a>`;
+  } else if(data.type === 'link' || data.type === 'web'){
+    contentHtml += `
+      <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:14px;margin-bottom:14px;word-break:break-all;font-size:12px;font-family:var(--mono);color:var(--blue);">🔗 ${_esc(data.content)}</div>
+      <a href="${_esc(data.content)}" target="_blank" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;">→ Open Link</a>`;
+  } else if(data.type === 'email'){
+    const m = data.meta||{};
+    contentHtml += `
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+        <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 12px;"><span style="font-size:10px;color:var(--text3);font-family:var(--mono);">TO</span><div style="font-size:13px;font-weight:600;color:var(--text);margin-top:2px;">${_esc(m.email||data.content)}</div></div>
+        ${m.subject?`<div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 12px;"><span style="font-size:10px;color:var(--text3);font-family:var(--mono);">SUBJECT</span><div style="font-size:13px;color:var(--text);margin-top:2px;">${_esc(m.subject)}</div></div>`:''}
+        ${m.body?`<div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 12px;"><span style="font-size:10px;color:var(--text3);font-family:var(--mono);">MESSAGE</span><div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5;">${_esc(m.body)}</div></div>`:''}
+      </div>
+      <a href="${_esc(data.content)}" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;">✉ Open in Mail</a>`;
+  } else if(data.type === 'note'){
+    contentHtml += `
+      <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:16px;margin-bottom:14px;font-size:14px;color:var(--text);line-height:1.7;white-space:pre-wrap;">${_esc(data.content)}</div>
+      <button class="btn btn-ghost btn-full" onclick="navigator.clipboard.writeText('${data.content.replace(/'/g,"\\'")}').then(()=>toast('Copied!','ok'))">📋 Copy Text</button>`;
+  } else {
+    // Generic fallback
+    const m = data.meta||{};
+    contentHtml += `
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+        ${Object.entries(m).filter(([k,v])=>v).map(([k,v])=>`
+          <div style="display:flex;gap:10px;align-items:flex-start;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);padding:10px 12px;">
+            <div style="flex:1;min-width:0;"><div style="font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;">${_esc(k)}</div><div style="font-size:13px;color:var(--text);margin-top:2px;word-break:break-all;">${_esc(String(v))}</div></div>
+          </div>`).join('')}
+      </div>
+      ${data.content && data.content.startsWith('http') ? `<a href="${_esc(data.content)}" target="_blank" class="btn btn-primary btn-full" style="display:block;text-align:center;text-decoration:none;">→ Open</a>` : ''}`;
+  }
+
+  // Expiry info row
+  if(data.expiry){
+    const st = _qrExpiryStatus(data.expiry);
+    contentHtml += `<div style="margin-top:12px;padding:8px 12px;border-radius:var(--r1);border:1px solid ${st.expired?'rgba(239,68,68,0.25)':'rgba(16,185,129,0.25)'};background:${st.expired?'rgba(239,68,68,0.06)':'rgba(16,185,129,0.06)'};font-size:11px;font-family:var(--mono);color:${st.color};">${st.icon} ${st.label}</div>`;
+  }
+
+  // Footer
+  contentHtml += `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:space-between;align-items:center;">
+    <span style="font-size:10px;color:var(--text3);font-family:var(--mono);">Generated by AttendX PRO · KЭL ♛ PHANTOM</span>
+    <button class="btn btn-ghost btn-xs" onclick="closeQRScanResult()">Close</button>
+  </div>`;
+
+  body.innerHTML = contentHtml;
+  modal.classList.add('show');
+}
+
+function _qrTypeIcon(type){
+  const icons = {link:'🔗',web:'🌐',email:'✉️',vcard:'👤',note:'📝',imgbed:'🖼',filelink:'📁',filecard:'📋'};
+  return icons[type]||'📄';
+}
+
+function closeQRScanResult(){
+  document.getElementById('qrScanResultModal')?.classList.remove('show');
+}
+
+/* ══════════════════════════════════════════════════════
+   UPDATED generateQR — encrypts all payloads
+══════════════════════════════════════════════════════ */
+function generateQR(){
+  // Run original logic first
+  _generateQRCore();
+  // Now re-encrypt the stored S.qrLink
+  if(!S.qrLink) return;
+  const type = qrCurrentTab;
+  const expiry = _getQRExpiry();
+  const meta = _getQRMeta(type);
+  const payload = {
+    type,
+    content: S.qrLink,
+    expiry: expiry || 0,
+    label: document.getElementById('qrTypeBadge')?.textContent || '',
+    meta,
+    by: S.currentAdmin || 'admin',
+    at: Date.now()
+  };
+  const encrypted = qrEncodePayload(payload);
+  S.qrEncryptedLink = encrypted;
+  // Re-render QR with encrypted payload
+  const out = document.getElementById('qr-output');
+  if(!out) return;
+  const size = parseInt(document.getElementById('qr-size')?.value)||200;
+  const fg   = document.getElementById('qr-fg')?.value||'#000000';
+  const bg   = document.getElementById('qr-bg')?.value||'#ffffff';
+  const ecl  = document.getElementById('qr-ecl')?.value||'H';
+  out.innerHTML = '';
+  try {
+    new QRCode(out,{text:encrypted,width:size,height:size,colorDark:fg,colorLight:bg,correctLevel:QRCode.CorrectLevel[ecl]});
+  } catch(e){
+    toast('Content too large to encrypt & encode. Try shorter content.','err');
+  }
+}
+
+function _getQRExpiry(){
+  if(qrCurrentTab==='link'){
+    const d = parseInt(document.getElementById('qr-link-expiry')?.value)||0;
+    return d>0 ? Date.now()+d*86400000 : 0;
+  }
+  const d = parseInt(document.getElementById('qr-global-expiry')?.value)||0;
+  return d>0 ? Date.now()+d*86400000 : 0;
+}
+
+function _getQRMeta(type){
+  try {
+    if(type==='vcard') return {
+      name:  document.getElementById('qr-vc-name')?.value.trim(),
+      phone: document.getElementById('qr-vc-phone')?.value.trim(),
+      email: document.getElementById('qr-vc-email')?.value.trim(),
+      org:   document.getElementById('qr-vc-org')?.value.trim(),
+      title: document.getElementById('qr-vc-title')?.value.trim(),
+      url:   document.getElementById('qr-vc-url')?.value.trim()
+    };
+    if(type==='email') return {
+      email:   document.getElementById('qr-em')?.value.trim(),
+      subject: document.getElementById('qr-sub')?.value.trim(),
+      body:    document.getElementById('qr-body')?.value.trim()
+    };
+    if(type==='imgbed') return {
+      caption: document.getElementById('qr-img-caption')?.value.trim()
+    };
+    if(type==='filelink') return {
+      name: document.getElementById('qr-fl-name')?.value.trim(),
+      desc: document.getElementById('qr-fl-desc')?.value.trim(),
+      type: document.getElementById('qr-fl-type')?.value
+    };
+    if(type==='filecard') return {
+      name:    document.getElementById('qr-fc-name')?.value.trim(),
+      type:    document.getElementById('qr-fc-type')?.value,
+      size:    document.getElementById('qr-fc-size')?.value.trim(),
+      desc:    document.getElementById('qr-fc-desc')?.value.trim(),
+      contact: document.getElementById('qr-fc-contact')?.value.trim()
+    };
+    if(type==='web') return {
+      label: document.getElementById('qr-urlabel')?.value.trim()
+    };
+  } catch(e){}
+  return {};
+}
+
+/* ══════════════════════════════════════════════════════
+   WHATSAPP SHARE
+══════════════════════════════════════════════════════ */
+function openWAShareModal(){
+  const modal = document.getElementById('waShareModal');
+  if(!modal){ toast('Modal not found','err'); return; }
+  // Clone current QR into preview
+  const preview = document.getElementById('waQRPreview');
+  const srcCanvas = document.querySelector('#qr-output canvas');
+  const srcImg    = document.querySelector('#qr-output img');
+  if(preview){
+    preview.innerHTML = '';
+    if(srcCanvas){
+      const clone = document.createElement('canvas');
+      clone.width  = srcCanvas.width;
+      clone.height = srcCanvas.height;
+      clone.getContext('2d').drawImage(srcCanvas,0,0);
+      clone.style.cssText = 'width:140px;height:140px;display:block;';
+      preview.appendChild(clone);
+    } else if(srcImg){
+      const img = new Image();
+      img.src = srcImg.src;
+      img.style.cssText = 'width:140px;height:140px;display:block;';
+      preview.appendChild(img);
+    }
+  }
+  // Pre-fill default message
+  const label = document.getElementById('qrTypeBadge')?.textContent || 'QR Code';
+  document.getElementById('waShareMessage').value =
+    `Hello! Here is your ${label} generated by AttendX PRO.\n\nPlease scan the QR code image attached.\n\n— ${S.currentAdmin||'Admin'}`;
+  modal.classList.add('show');
+}
+
+function closeWAShareModal(){
+  document.getElementById('waShareModal')?.classList.remove('show');
+}
+
+async function sendQRViaWA(){
+  const cc    = document.getElementById('waCountryCode')?.value || '237';
+  const phone = document.getElementById('waPhoneNumber')?.value.trim().replace(/\D/g,'');
+  if(!phone){ toast('Please enter a WhatsApp number','warn'); return; }
+  const msg = document.getElementById('waShareMessage')?.value.trim();
+  const fullPhone = cc + phone;
+  // Build WA link with text
+  const waUrl = 'https://wa.me/'+fullPhone+'?text='+encodeURIComponent(msg||'');
+  // Download QR first (so they can attach it)
+  dlPNG();
+  // Small delay then open WA
+  setTimeout(()=>{
+    window.open(waUrl,'_blank');
+    toast('✓ QR downloaded + WhatsApp opened','ok');
+    closeWAShareModal();
+  }, 800);
+}
+
 /* ── BOOT ── */
 buildBg(_currentBgTheme);
 init();
-setLang(_lang);
+// Wait for layout before setting lang slider width
+requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ setLang(_lang); }); });
 </script>
 </body>
 </html>
