@@ -8116,9 +8116,9 @@ async function notifyNewAdmin(adminName, adminUsername, phone){
    5. Foreground messages → in-app toast + notification panel updates
 ════════════════════════════════════════════════════════════ */
 
-// ── CONFIG (fill in after Firebase Console setup) ───────────────────────────
-const FCM_VAPID_KEY    = 'YOUR_FCM_WEB_PUSH_VAPID_KEY_HERE';  // Firebase Console → Project Settings → Cloud Messaging → Web Push Certificates → Key pair
-const PUSH_API_ENDPOINT = 'https://YOUR-PROJECT.vercel.app/api/send-notification'; // Your Vercel deploy URL
+// ── CONFIG ───────────────────────────────────────────────────────────────────
+const FCM_VAPID_KEY    = 'BHt-D1sgvo8WSaAFkE263vXQT7hXpeDJsS2Ike7gAKJ8VCi-yb1gOCoiuqKTWiLD65cIheG99cy9d5qw2JWmxpo';
+const PUSH_API_ENDPOINT = 'https://attendex-pro.vercel.app/api/send-notification';
 
 // ── FCM TOKEN MANAGEMENT ────────────────────────────────────────────────────
 let _fcmToken = null;
