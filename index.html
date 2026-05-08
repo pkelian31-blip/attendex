@@ -2067,6 +2067,12 @@ img, video, iframe { max-width: 100%; }
   .dash-top .dash-btns { width: 100%; }
   .dash-top .dash-btns .btn { flex: 1; min-width: 0; font-size: 10px; padding: 7px 6px; }
 
+  /* ── ADMIN LIST CARDS — mobile stack ── */
+  .admin-card-row { flex-direction: column !important; gap: 10px !important; }
+  .admin-card-info { min-width: 0; width: 100%; }
+  .admin-card-acts { display: flex !important; flex-wrap: wrap !important; gap: 6px !important; width: 100% !important; flex-shrink: unset !important; }
+  .admin-card-acts .btn { flex: 1; min-width: calc(33% - 6px); text-align: center; justify-content: center; font-size: 11px !important; padding: 7px 6px !important; min-height: 36px; }
+
   /* ── QR TOOL ── */
   .qr-wrap { padding: 16px 12px 80px; }
   .qr-h1 { font-size: 26px !important; }
@@ -3317,6 +3323,26 @@ img, video, iframe { max-width: 100%; }
         <div style="font-size:11px;color:var(--text3);margin-top:7px;font-family:var(--mono);">This theme will be used for all PDF downloads.</div>
       </div>
       <div class="divider"></div>
+      <!-- ACTION PIN — only visible to super admin (shown/hidden via JS) -->
+      <div class="set-sec" id="settingsActionPin" style="display:none;">
+        <div class="set-sec-title">🔐 Super Admin Action PIN</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:12px;line-height:1.6;">
+          This PIN is required to <strong style="color:var(--text);">delete or block admins</strong>. It is separate from your login PIN. Set it here once and keep it secret.
+        </div>
+        <div class="pin-grid">
+          <div class="field">
+            <label>Current PIN <span style="color:var(--text3);font-size:9px;">(leave blank if not set yet)</span></label>
+            <input id="currentActionPin" type="password" placeholder="Current action PIN" maxlength="8" inputmode="numeric"/>
+          </div>
+        </div>
+        <div class="pin-grid">
+          <div class="field"><label>New Action PIN <span style="color:var(--red);">*</span></label><input id="newActionPin" type="password" placeholder="Min 4 digits" maxlength="8" inputmode="numeric"/></div>
+          <div class="field"><label>Confirm New PIN <span style="color:var(--red);">*</span></label><input id="confirmActionPin" type="password" placeholder="Repeat" maxlength="8" inputmode="numeric"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveActionPin()">Save Action PIN</button>
+        <div class="alert" id="actionPinAlert"></div>
+      </div>
+      <div class="divider" id="settingsActionPinDivider" style="display:none;"></div>
       <div class="set-sec">
         <div class="set-sec-title">Data Management</div>
         <button class="btn btn-red" onclick="clearData()">🗑 Clear All Session Data</button>
@@ -4630,19 +4656,19 @@ async function loadAdminList(){
           :'<span class="badge" style="background:var(--red2);color:var(--red);border:1px solid rgba(239,68,68,0.2);">BLOCKED</span>')
         :'<span class="badge" style="background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,0.2);">ACTIVE</span>';
       return `<div style="background:var(--s2);border:1px solid ${a.blocked?'rgba(239,68,68,0.2)':'var(--line)'};border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-          <div style="min-width:0;">
+        <div class="admin-card-row" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+          <div class="admin-card-info" style="min-width:0;">
             <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${a.name} ${statusBadge} ${trialBadge}</div>
             <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px;">@${a.username} · 📱 ${a.phone||'—'} · Login: ${a.lastLogin?new Date(a.lastLogin).toLocaleString():'Never'}</div>
             <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:2px;">💬 Quota: <span style="color:var(--blue);">${a.msgQuota===0||a.msgQuota===undefined?'∞ Unlimited':a.msgQuota+' msg/month'}</span> · Used: <span style="color:var(--cyan);">${a.msgUsedThisMonth||0}</span></div>
             ${trialLine}
             ${a.blockedReason==='trial_expired'?'<div style="font-size:10px;color:var(--text3);font-family:var(--mono);">Unblock to reactivate — all data preserved</div>':''}
           </div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;">
+          <div class="admin-card-acts" style="display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;">
             <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑 PIN</button>
             <button class="btn btn-gold btn-xs" onclick="superPdfAllSessions('${a.username}','${a.name}')">📄 PDF</button>
             <button class="btn btn-ghost btn-xs" onclick="openReplyToAdmin('${a.username}','${a.name}');openNotifPanel();">✉ Msg</button>
-            ${a.phone?`<button class="btn btn-xs" style="background:#25D366;color:#fff;border:none;" onclick="window.open('https://wa.me/'+('${a.phone}').replace(/[\\s\\-\\(\\)]/g,''),'_blank')">📲 WA</button>`:''}
+            ${a.phone?`<button class="btn btn-xs" style="background:#25D366;color:#fff;border:none;" onclick="window.open('https://wa.me/'+('${a.phone}').replace(/[\\\\s\\\\-\\\\(\\\\)]/g,''),'_blank')">📲 WA</button>`:''}
             <button class="btn btn-red btn-xs" onclick="superDelAllSessions('${a.username}','${a.name}')">🗑</button>
             <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')">❌ Remove</button>
             <button class="btn ${a.blocked?'btn-green':'btn-red'} btn-xs" onclick="toggleBlock('${a.username}',${!!a.blocked},'${a.name}')">${a.blocked?'✓ Unblock':'⛔ Block'}</button>
@@ -4685,8 +4711,8 @@ async function loadAdminList(){
         }
       }
       return `<div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:13px 15px;margin-bottom:7px;">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-          <div style="min-width:0;flex:1;">
+        <div class="admin-card-row" style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+          <div class="admin-card-info" style="min-width:0;flex:1;">
             <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
               <span style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;display:inline-block;"></span>
               ${a.name}
@@ -4697,13 +4723,13 @@ async function loadAdminList(){
             <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;">Login: ${a.lastLogin?new Date(a.lastLogin).toLocaleString():'Never'} · 💬 ${a.msgQuota===0||a.msgQuota===undefined?'∞':a.msgQuota+' msg/mo'}</div>
             ${trialLine}
           </div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0;">
-            <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑</button>
-            <button class="btn btn-gold btn-xs" onclick="superPdfAllSessions('${a.username}','${a.name}')">📄</button>
-            <button class="btn btn-ghost btn-xs" onclick="openReplyToAdmin('${a.username}','${a.name}');openNotifPanel();">✉</button>
-            ${a.phone?`<button class="btn btn-xs" style="background:#25D366;color:#fff;border:none;" onclick="window.open('https://wa.me/'+('${a.phone}').replace(/[\s\-\(\)]/g,''),'_blank')">📲</button>`:''}
-            <button class="btn btn-red btn-xs" onclick="toggleBlock('${a.username}',false,'${a.name}')" title="Suspend for 2 days">⛔</button>
-            <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')" title="Remove admin">❌</button>
+          <div class="admin-card-acts" style="display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0;">
+            <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑 PIN</button>
+            <button class="btn btn-gold btn-xs" onclick="superPdfAllSessions('${a.username}','${a.name}')">📄 PDF</button>
+            <button class="btn btn-ghost btn-xs" onclick="openReplyToAdmin('${a.username}','${a.name}');openNotifPanel();">✉ Msg</button>
+            ${a.phone?`<button class="btn btn-xs" style="background:#25D366;color:#fff;border:none;" onclick="window.open('https://wa.me/'+('${a.phone}').replace(/[\s\-\(\)]/g,''),'_blank')">📲 WA</button>`:''}
+            <button class="btn btn-red btn-xs" onclick="toggleBlock('${a.username}',false,'${a.name}')" title="Suspend for 2 days">⛔ Block</button>
+            <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')" title="Remove admin">❌ Remove</button>
           </div>
         </div>
       </div>`;
@@ -4720,8 +4746,8 @@ async function loadAdminList(){
       const autoLabel = autoUnblock ? `Auto-reactivates: ${autoUnblock.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} at ${autoUnblock.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}` : 'Manual block — unblock required';
       const reasonLabel = a.blockedReason && a.blockedReason !== 'manual' ? a.blockedReason : 'No reason recorded';
       return `<div style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r2);padding:13px 15px;margin-bottom:7px;">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
-          <div style="min-width:0;flex:1;">
+        <div class="admin-card-row" style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+          <div class="admin-card-info" style="min-width:0;flex:1;">
             <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
               <span style="width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;display:inline-block;"></span>
               ${a.name}
@@ -4731,10 +4757,10 @@ async function loadAdminList(){
             <div style="font-size:10px;font-family:var(--mono);color:var(--gold);margin-top:3px;">📋 Reason: ${reasonLabel}</div>
             <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:2px;">⏰ ${autoLabel}</div>
           </div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0;">
+          <div class="admin-card-acts" style="display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0;">
             <button class="btn btn-green btn-xs" onclick="_doUnblockAdmin('${a.username}','${a.name}')">✓ Unblock</button>
-            <button class="btn btn-ghost btn-xs" onclick="openReplyToAdmin('${a.username}','${a.name}');openNotifPanel();">✉</button>
-            <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')" title="Remove admin">❌</button>
+            <button class="btn btn-ghost btn-xs" onclick="openReplyToAdmin('${a.username}','${a.name}');openNotifPanel();">✉ Msg</button>
+            <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')" title="Remove admin">❌ Remove</button>
           </div>
         </div>
       </div>`;
@@ -4748,9 +4774,9 @@ async function loadAdminList(){
     finalHtml += deletedAdmins.map(a => {
       const deletedDate = a.deletedAt ? new Date(a.deletedAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
       return `<div style="padding:10px 14px;border-bottom:1px solid rgba(239,68,68,0.08);">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
-          <div>
-            <div style="font-size:12px;font-weight:700;color:var(--text3);display:flex;align-items:center;gap:6px;">
+        <div class="admin-card-row" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div class="admin-card-info">
+            <div style="font-size:12px;font-weight:700;color:var(--text3);display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
               <span>🗑 ${a.name}</span>
               <span class="badge" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.15);font-size:9px;">REMOVED</span>
             </div>
@@ -4758,7 +4784,9 @@ async function loadAdminList(){
             <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:2px;">📋 Reason: ${a.deletionReason||'No reason recorded'}</div>
             <div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-top:2px;">✓ Phone number released for re-registration</div>
           </div>
-          <button class="btn btn-ghost btn-xs" style="font-size:10px;color:var(--red);" onclick="purgeDeletedAdmin('${a.username}','${a.name}')">🗑 Purge</button>
+          <div class="admin-card-acts" style="display:flex;flex-shrink:0;">
+            <button class="btn btn-ghost btn-xs" style="font-size:10px;color:var(--red);" onclick="purgeDeletedAdmin('${a.username}','${a.name}')">🗑 Purge</button>
+          </div>
         </div>
       </div>`;
     }).join('');
@@ -5544,7 +5572,10 @@ function showSettings(){
   document.getElementById('bgTheme').value = localStorage.getItem('ax_bg_theme') || 'school';
   // Show action PIN settings only for super admin
   const apSection = document.getElementById('settingsActionPin');
-  if(apSection) apSection.style.display = S.currentAdmin === '__super__' ? 'block' : 'none';
+  const apDivider = document.getElementById('settingsActionPinDivider');
+  const isSuperAdmin = S.currentAdmin === '__super__';
+  if(apSection) apSection.style.display = isSuperAdmin ? 'block' : 'none';
+  if(apDivider) apDivider.style.display = isSuperAdmin ? 'block' : 'none';
 }
 function closeSet(){
   const t = document.getElementById('pdfTheme').value;
