@@ -1972,6 +1972,119 @@ img, video, iframe { max-width: 100%; }
 /* Better touch scrolling */
 .modal, .pb-body, .att-wrap { -webkit-overflow-scrolling: touch; }
 
+/* ══════════════════════════════════════
+   MOBILE FIRST — Complete overhaul
+   Target: phones 320px–480px
+══════════════════════════════════════ */
+@media(max-width:480px){
+
+  /* ── NAV ── */
+  .topnav { padding: 0 10px; height: 52px; }
+  .nav-wordmark { font-size: 15px; }
+  .nav-pro { display: none; }
+  .lang-toggle { margin-right: 4px; }
+  .lang-btn { padding: 3px 8px; font-size: 10px; }
+
+  /* ── LANDING ── */
+  .landing { padding: 32px 16px 60px; }
+  .landing-chip { font-size: 9px; padding: 5px 12px; letter-spacing: 1.5px; }
+  .landing-h1 { font-size: clamp(32px,10vw,52px) !important; letter-spacing: -1px; }
+  .landing-sub { font-size: 14px; margin: 12px auto 28px; }
+  .landing-cta { gap: 8px; margin-bottom: 40px; }
+  .cta-btn { padding: 11px 18px; font-size: 13px; width: 100%; text-align: center; }
+  .features-grid { grid-template-columns: 1fr; gap: 10px; }
+  .feat { padding: 16px 14px; }
+
+  /* ── LOGIN ── */
+  .login-wrap { padding: 16px 12px; align-items: flex-start; padding-top: 20px; }
+  .login-card { padding: 24px 18px; border-radius: 20px; }
+  .login-title { font-size: 18px; }
+  .login-sub { font-size: 12px; }
+  .numpad { gap: 7px; }
+  .nk { padding: 13px; font-size: 16px; }
+  .pin-dots { gap: 10px; }
+  .pin-dot { width: 12px; height: 12px; }
+
+  /* ── DASHBOARD ── */
+  .dash-wrap { padding: 16px 12px 80px; }
+  .dash-top { flex-direction: column; gap: 10px; }
+  .dash-title { font-size: 20px; }
+  .dash-btns { flex-wrap: wrap; gap: 6px; }
+  .dash-btns .btn { font-size: 11px; padding: 6px 10px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .scard { padding: 12px 10px; }
+  .scard .sv { font-size: 22px; }
+  .scard .sl { font-size: 9px; }
+  .tabs { gap: 3px; padding: 3px; }
+  .tab { font-size: 9px; padding: 7px 6px; letter-spacing: 0.5px; }
+  .card { padding: 16px 14px; }
+  .frow, .frow3 { grid-template-columns: 1fr; }
+  .field input, .field select { font-size: 16px; padding: 11px 12px; } /* 16px prevents iOS zoom */
+  .field label { font-size: 9px; }
+  .btn-gen { font-size: 13px; padding: 13px; }
+  .link-inp { font-size: 10px; }
+  .lchip .lv { font-size: 16px; }
+  .lchip .ll { font-size: 9px; }
+
+  /* ── SESSION ROWS ── */
+  .srow { padding: 10px 12px; }
+  .srow-name { font-size: 12px; }
+  .srow-meta { font-size: 9px; }
+  .srow-acts { gap: 3px; }
+  .btn-xs { padding: 4px 8px; font-size: 10px; }
+
+  /* ── STUDENT PAGE ── */
+  .stu-wrap { padding: 16px 12px 80px; }
+  .sess-banner { padding: 14px 14px; }
+  .sb-subject { font-size: 18px; }
+  .sb-meta { font-size: 10px; }
+  .attend-card { padding: 16px 14px; }
+  .attend-head { font-size: 13px; }
+  .success-ring { width: 56px; height: 56px; font-size: 22px; }
+  .success-name { font-size: 16px; }
+
+  /* ── MODALS ── */
+  .overlay { padding: 0; align-items: flex-end; }
+  .modal { border-radius: 20px 20px 0 0; max-height: 94vh; max-width: 100%; }
+  .modal-top { padding: 12px 14px; }
+  .modal-title { font-size: 14px; }
+  .modal-body { padding: 14px; }
+  .confirm-box { margin: 8px; padding: 20px 16px; max-width: calc(100vw - 16px); border-radius: 16px; }
+  .confirm-acts { flex-direction: column; gap: 8px; }
+
+  /* ── SUPER ADMIN ── */
+  .dash-top .dash-btns { width: 100%; }
+  .dash-top .dash-btns .btn { flex: 1; min-width: 0; font-size: 10px; padding: 7px 6px; }
+
+  /* ── QR TOOL ── */
+  .qr-wrap { padding: 16px 12px 80px; }
+  .qr-h1 { font-size: 26px !important; }
+  .qr-main { grid-template-columns: 1fr; }
+  .qr-stats-bar { flex-direction: column; }
+  .qr-stat { border-right: none; border-bottom: 1px solid var(--line); }
+  .qr-stat:last-child { border-bottom: none; }
+  .dl-row { grid-template-columns: 1fr; }
+  .steps-grid { grid-template-columns: 1fr; }
+
+  /* ── TOAST ── */
+  .toast-stack { bottom: 70px; right: 10px; left: 10px; }
+  .toast-item { min-width: 0; width: 100%; font-size: 11px; }
+
+  /* ── FOOTER ── */
+  .site-footer { flex-direction: column; gap: 10px; padding: 16px 14px; text-align: center; }
+  .footer-links { flex-wrap: wrap; justify-content: center; gap: 10px; }
+
+  /* ── LANG TOGGLE in nav ── */
+  .lang-toggle { order: -1; }
+
+  /* ── PDF THEME PICKER ── */
+  #pdfThemeModal .confirm-box { padding: 16px 12px; }
+  #pdfThemeModal .confirm-box > div:nth-child(3) { grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* ── CONTACT MODAL ── */
+  #contactModal .confirm-box { padding: 16px 12px; }
+}
+
 /* Mobile nav bottom bar for admin pages */
 @media(max-width:600px){
   .nav-page-tabs {
