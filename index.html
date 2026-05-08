@@ -4631,11 +4631,11 @@ async function loadAdminList(){
   const list = document.getElementById('adminList');
   // Count only active (non-deleted) admins towards the limit
   document.getElementById('adminCount').textContent = admins.length+' / '+getMaxAdmins()+' admins';
+  const now = Date.now();
   let html = '';
   if(!admins.length){
     html='<div class="empty-st"><div class="ei">👥</div><div class="et">No admins registered yet.</div></div>';
   } else {
-    const now = Date.now();
     html = admins.map(a=>{
       let trialBadge='', trialLine='';
       if(a.trialEnd){
