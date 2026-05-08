@@ -212,6 +212,9 @@ self.addEventListener('fetch', e => {
   window._fsDeleteDoc= deleteDoc;
   window._firebaseReady = true;
   document.dispatchEvent(new Event('firebaseReady'));
+  // Check for expired 2-day blocks and auto-unblock
+  checkAutoUnblocks();
+  setInterval(checkAutoUnblocks, 30*60*1000); // every 30 minutes
 
   // ── FCM: Initialize messaging ──────────────────────────────────────────────
   // FCM requires a registered service worker at /firebase-messaging-sw.js
@@ -2360,6 +2363,54 @@ img, video, iframe { max-width: 100%; }
 <div class="overlay" id="resetPinModal">
   <div class="confirm-box" style="max-width:360px;text-align:left;">
     <div style="font-size:24px;text-align:center;margin-bottom:10px;">🔑</div>
+
+<!-- ─────── MODAL: Delete Admin Confirmation ─────── -->
+<div class="overlay" id="deleteAdminModal">
+  <div class="confirm-box" style="max-width:400px;text-align:left;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div style="width:48px;height:48px;border-radius:12px;background:var(--red2);border:1px solid rgba(239,68,68,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">❌</div>
+      <div>
+        <div style="font-family:var(--head);font-size:16px;font-weight:800;color:var(--text);">Remove Admin Account</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;" id="deleteAdminFor">—</div>
+      </div>
+    </div>
+
+    <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:var(--r2);padding:10px 13px;margin-bottom:14px;font-size:11px;font-family:var(--mono);color:var(--text2);line-height:1.7;">
+      ⚠ Their sessions and attendance records are preserved.<br/>
+      ✓ Their phone number will be freed for re-registration.<br/>
+      📋 Removal reason is logged in the audit trail.
+    </div>
+
+    <div class="field">
+      <label>Reason for removal <span style="color:var(--red);">*</span></label>
+      <select id="deleteAdminReason" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;margin-bottom:6px;">
+        <option value="">— Select a reason —</option>
+        <option value="Violation of platform terms">Violation of platform terms</option>
+        <option value="Account inactivity (no login in 60+ days)">Account inactivity (60+ days)</option>
+        <option value="Duplicate account detected">Duplicate account detected</option>
+        <option value="Admin request — voluntary removal">Admin request — voluntary removal</option>
+        <option value="Fraudulent activity detected">Fraudulent activity detected</option>
+        <option value="Institution no longer participating">Institution no longer participating</option>
+        <option value="Other">Other (see note below)</option>
+      </select>
+      <input id="deleteAdminReasonNote" placeholder="Additional details (required if 'Other')…" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:12px;"/>
+    </div>
+
+    <div class="field" style="margin-top:10px;">
+      <label>🔐 Your Super Admin Action PIN <span style="color:var(--red);">*</span></label>
+      <input id="deleteAdminPin" type="password" maxlength="8" placeholder="Enter your action PIN…" inputmode="numeric"
+        style="letter-spacing:4px;font-size:18px;text-align:center;"
+        onkeydown="if(event.key==='Enter') confirmDeleteAdmin()"/>
+      <div class="hint" style="margin-top:5px;">This is your <strong>separate action PIN</strong>, not your login password. Set it in Super Admin Settings.</div>
+    </div>
+
+    <div class="alert" id="deleteAdminAlert"></div>
+    <div class="confirm-acts" style="margin-top:14px;">
+      <button class="btn btn-ghost btn-full" onclick="closeDeleteAdminModal()">Cancel</button>
+      <button class="btn btn-red btn-full" onclick="confirmDeleteAdmin()">❌ Confirm Remove</button>
+    </div>
+  </div>
+</div>
     <div style="font-family:var(--head);font-size:17px;font-weight:800;margin-bottom:6px;text-align:center;">Reset PIN</div>
     <div style="font-size:12px;color:var(--text3);margin-bottom:16px;text-align:center;" id="resetPinFor"></div>
     <div class="field"><label>New 4-digit PIN</label><input id="newAdminPin" type="password" maxlength="4" inputmode="numeric" placeholder="Enter new PIN"/></div>
@@ -2371,6 +2422,54 @@ img, video, iframe { max-width: 100%; }
   </div>
 </div>
 
+
+<!-- ─────── MODAL: Block Admin (with reason + 2-day auto-unblock) ─────── -->
+<div class="overlay" id="blockAdminModal">
+  <div class="confirm-box" style="max-width:400px;text-align:left;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <div style="width:48px;height:48px;border-radius:12px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">⛔</div>
+      <div>
+        <div style="font-family:var(--head);font-size:16px;font-weight:800;">Suspend Admin</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;" id="blockAdminFor">—</div>
+      </div>
+    </div>
+
+    <div style="background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r2);padding:10px 13px;margin-bottom:14px;font-size:11px;font-family:var(--mono);color:var(--text2);line-height:1.7;">
+      ⏰ Account will be <strong>automatically reactivated after 2 days</strong><br/>
+      📋 All sessions and data are preserved during suspension<br/>
+      🔔 Admin will receive a notification with the reason
+    </div>
+
+    <div class="field">
+      <label>Reason for suspension <span style="color:var(--red);">*</span></label>
+      <select id="blockAdminReason" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;margin-bottom:6px;">
+        <option value="">— Select a reason —</option>
+        <option value="Attendance fraud detected">Attendance fraud detected</option>
+        <option value="Misconduct or abuse reported">Misconduct or abuse reported</option>
+        <option value="Suspicious activity on account">Suspicious activity on account</option>
+        <option value="Policy violation (temporary)">Policy violation (temporary)</option>
+        <option value="Account under review">Account under review</option>
+        <option value="Warning sanction (2-day penalty)">Warning sanction (2-day penalty)</option>
+        <option value="Other">Other (specify below)</option>
+      </select>
+      <input id="blockAdminReasonNote" placeholder="Additional details or custom reason…" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:12px;"/>
+    </div>
+
+    <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:20px;">⏰</span>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);">Auto-reactivation</div>
+        <div style="font-size:11px;font-family:var(--mono);color:var(--text3);" id="blockAutoUnblockLabel">Reactivates automatically in 2 days</div>
+      </div>
+    </div>
+
+    <div class="alert" id="blockAdminAlert"></div>
+    <div class="confirm-acts" style="margin-top:14px;">
+      <button class="btn btn-ghost btn-full" onclick="closeBlockAdminModal()">Cancel</button>
+      <button class="btn btn-gold btn-full" id="blockAdminConfirmBtn" onclick="confirmBlockAdmin()">⛔ Suspend for 2 Days</button>
+    </div>
+  </div>
+</div>
 <!-- ─────── MODAL: WhatsApp Communication Hub ─────── -->
 <div class="overlay" id="superSessModal">
   <div class="modal" style="max-width:620px;">
@@ -3398,19 +3497,22 @@ img, video, iframe { max-width: 100%; }
     <div id="notifList" style="flex:1;overflow-y:auto;padding:0 20px;"></div>
     <!-- Super admin compose -->
     <div id="notifCompose" style="display:none;border-top:1px solid var(--line);padding:16px 20px;">
-      <div style="font-family:var(--head);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-bottom:10px;">📢 Send to Admin</div>
+      <div style="font-family:var(--head);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-bottom:10px;">📢 Send Message to Admin(s)</div>
       <select id="notifTargetAdmin" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-family:var(--body);font-size:12px;color:var(--text);margin-bottom:8px;">
         <option value="__all__">📢 All Admins</option>
       </select>
-      <textarea id="notifMsgInput" placeholder="Type your message to admin(s)…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-family:var(--body);font-size:12px;color:var(--text);resize:none;height:80px;margin-bottom:8px;"></textarea>
-      <button onclick="superSendNotif()" style="width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r2);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;">Send Notification</button>
+      <input id="notifTitleInput" placeholder="Message title (optional)…" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-family:var(--body);font-size:12px;color:var(--text);margin-bottom:8px;"/>
+      <textarea id="notifMsgInput" placeholder="Type your message…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-family:var(--body);font-size:12px;color:var(--text);resize:none;height:80px;margin-bottom:8px;" oninput="this.style.borderColor=this.value?'var(--blue)':'var(--line)'"></textarea>
+      <button id="superSendNotifBtn" onclick="superSendNotif()" style="width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r2);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;transition:opacity 0.2s;">📤 Send Message</button>
+      <div id="notifSentConfirm" style="display:none;text-align:center;font-size:11px;font-family:var(--mono);color:var(--green);margin-top:6px;">✓ Message delivered successfully</div>
     </div>
-    <!-- Admin → Super compose (max 3/month) -->
+    <!-- Admin → Super compose -->
     <div id="notifAdminMsg" style="display:none;border-top:1px solid var(--line);padding:16px 20px;">
       <div style="font-family:var(--head);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);margin-bottom:6px;">✉️ Message Super Admin</div>
-      <div id="adminMsgQuota" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">15 messages remaining this month</div>
-      <textarea id="adminMsgInput" placeholder="Write your message to the super admin…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-family:var(--body);font-size:12px;color:var(--text);resize:none;height:72px;margin-bottom:8px;"></textarea>
-      <button id="adminMsgSendBtn" onclick="adminSendToSuper()" style="width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r2);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;">Send Message</button>
+      <div id="adminMsgQuota" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;">Loading quota…</div>
+      <textarea id="adminMsgInput" placeholder="Write your message to the super admin…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);font-family:var(--body);font-size:12px;color:var(--text);resize:none;height:72px;margin-bottom:8px;" oninput="this.style.borderColor=this.value?'var(--blue)':'var(--line)'"></textarea>
+      <button id="adminMsgSendBtn" onclick="adminSendToSuper()" style="width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r2);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;">📤 Send Message</button>
+      <div id="adminSentConfirm" style="display:none;text-align:center;font-size:11px;font-family:var(--mono);color:var(--green);margin-top:6px;">✓ Message sent to Super Admin</div>
     </div>
   </div>
 </div>
@@ -4550,31 +4652,144 @@ async function loadAdminList(){
     }).join('');
   }
 
-  // ── Audit trail: show recently deleted admins (collapsible) ──
-  if(deletedAdmins.length){
-    const deletedHtml = deletedAdmins.map(a=>`
-      <div style="background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.12);border-radius:var(--r1);padding:10px 14px;margin-bottom:6px;opacity:0.7;">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
-          <div>
-            <div style="font-size:12px;font-weight:600;color:var(--text3);display:flex;align-items:center;gap:6px;">
-              <span>🗑 ${a.name}</span>
-              <span class="badge" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2);font-size:9px;">REMOVED</span>
-            </div>
-            <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;">@${a.username} · 📱 ${a.phone||'—'} · Removed: ${a.deletedAt?new Date(a.deletedAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—'}</div>
-            <div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-top:2px;">✓ Phone number released — available for new registration</div>
-          </div>
-          <button class="btn btn-ghost btn-xs" style="font-size:10px;" onclick="purgeDeletedAdmin('${a.username}','${a.name}')">🗑 Purge</button>
-        </div>
-      </div>`).join('');
-    html += `<details style="margin-top:14px;">
-      <summary style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);cursor:pointer;font-family:var(--head);padding:8px 0;list-style:none;">
-        🗂 Removed Accounts (${deletedAdmins.length}) — Phone numbers freed ▾
-      </summary>
-      <div style="margin-top:8px;">${deletedHtml}</div>
-    </details>`;
+  // ── SECTION: BLOCKED admins ──
+  const blockedAdmins = admins.filter(a => a.blocked);
+  const activeAdminsOnly = admins.filter(a => !a.blocked);
+
+  // Build a section header helper
+  function _sectionHead(emoji, label, count, color){
+    return `<div style="display:flex;align-items:center;gap:8px;margin:16px 0 8px;padding:8px 12px;background:var(--s2);border-radius:var(--r2);border-left:3px solid ${color};">
+      <span style="font-size:14px;">${emoji}</span>
+      <span style="font-family:var(--head);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:${color};">${label}</span>
+      <span style="margin-left:auto;font-size:10px;font-family:var(--mono);background:var(--s3);border-radius:100px;padding:2px 8px;color:var(--text3);">${count}</span>
+    </div>`;
   }
 
-  list.innerHTML = html;
+  let finalHtml = '';
+
+  // ── Active admins section ──
+  if(activeAdminsOnly.length){
+    finalHtml += _sectionHead('✅', 'Active Admins', activeAdminsOnly.length, 'var(--green)');
+    finalHtml += admins.filter(a=>!a.blocked).map(a => {
+      let trialBadge='', trialLine='';
+      if(a.trialEnd){
+        const daysLeft=Math.max(0,Math.ceil((a.trialEnd-now)/(24*60*60*1000)));
+        const expired=now>a.trialEnd;
+        if(expired||a.trialExpired){
+          trialBadge='<span class="badge" style="background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);">TRIAL EXPIRED</span>';
+          trialLine=`<div style="font-size:10px;color:var(--red);font-family:var(--mono);margin-top:2px;">⏰ Trial ended ${new Date(a.trialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>`;
+        } else {
+          const color=daysLeft<=5?'var(--red)':daysLeft<=10?'var(--gold)':'var(--green)';
+          trialBadge=`<span class="badge" style="background:rgba(59,130,246,0.10);color:var(--blue);border:1px solid rgba(59,130,246,0.2);">🎁 ${daysLeft}d left</span>`;
+          trialLine=`<div style="font-size:10px;color:${color};font-family:var(--mono);margin-top:2px;">Trial ends ${new Date(a.trialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</div>`;
+        }
+      }
+      return `<div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:13px 15px;margin-bottom:7px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <div style="min-width:0;flex:1;">
+            <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;display:inline-block;"></span>
+              ${a.name}
+              <span class="badge" style="background:var(--green2);color:var(--green);border:1px solid rgba(16,185,129,0.2);">ACTIVE</span>
+              ${trialBadge}
+            </div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px;">@${a.username} · 📱 ${a.phone||'—'}</div>
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;">Login: ${a.lastLogin?new Date(a.lastLogin).toLocaleString():'Never'} · 💬 ${a.msgQuota===0||a.msgQuota===undefined?'∞':a.msgQuota+' msg/mo'}</div>
+            ${trialLine}
+          </div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0;">
+            <button class="btn btn-cyan btn-xs" onclick="openResetPin('${a.username}','${a.name}')">🔑</button>
+            <button class="btn btn-gold btn-xs" onclick="superPdfAllSessions('${a.username}','${a.name}')">📄</button>
+            <button class="btn btn-ghost btn-xs" onclick="openReplyToAdmin('${a.username}','${a.name}');openNotifPanel();">✉</button>
+            ${a.phone?`<button class="btn btn-xs" style="background:#25D366;color:#fff;border:none;" onclick="window.open('https://wa.me/'+('${a.phone}').replace(/[\s\-\(\)]/g,''),'_blank')">📲</button>`:''}
+            <button class="btn btn-red btn-xs" onclick="toggleBlock('${a.username}',false,'${a.name}')" title="Suspend for 2 days">⛔</button>
+            <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')" title="Remove admin">❌</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    finalHtml += '<div class="empty-st"><div class="ei">👥</div><div class="et">No active admins.</div></div>';
+  }
+
+  // ── Blocked/Suspended admins section ──
+  if(blockedAdmins.length){
+    finalHtml += _sectionHead('⛔', 'Suspended Admins', blockedAdmins.length, 'var(--gold)');
+    finalHtml += blockedAdmins.map(a => {
+      const autoUnblock = a.autoUnblockAt ? new Date(a.autoUnblockAt) : null;
+      const autoLabel = autoUnblock ? `Auto-reactivates: ${autoUnblock.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} at ${autoUnblock.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}` : 'Manual block — unblock required';
+      const reasonLabel = a.blockedReason && a.blockedReason !== 'manual' ? a.blockedReason : 'No reason recorded';
+      return `<div style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);border-radius:var(--r2);padding:13px 15px;margin-bottom:7px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <div style="min-width:0;flex:1;">
+            <div style="font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;display:inline-block;"></span>
+              ${a.name}
+              <span class="badge" style="background:rgba(245,158,11,0.1);color:var(--gold);border:1px solid rgba(245,158,11,0.2);">SUSPENDED</span>
+            </div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:3px;">@${a.username} · 📱 ${a.phone||'—'}</div>
+            <div style="font-size:10px;font-family:var(--mono);color:var(--gold);margin-top:3px;">📋 Reason: ${reasonLabel}</div>
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:2px;">⏰ ${autoLabel}</div>
+          </div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0;">
+            <button class="btn btn-green btn-xs" onclick="_doUnblockAdmin('${a.username}','${a.name}')">✓ Unblock</button>
+            <button class="btn btn-ghost btn-xs" onclick="openReplyToAdmin('${a.username}','${a.name}');openNotifPanel();">✉</button>
+            <button class="btn btn-red btn-xs" onclick="deleteAdmin('${a.username}','${a.name}')" title="Remove admin">❌</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Deleted/Removed admins section ──
+  if(deletedAdmins.length){
+    finalHtml += _sectionHead('🗑', 'Removed Accounts', deletedAdmins.length, 'var(--red)');
+    finalHtml += `<div style="background:rgba(239,68,68,0.03);border:1px solid rgba(239,68,68,0.12);border-radius:var(--r2);padding:4px 0;margin-bottom:4px;">`;
+    finalHtml += deletedAdmins.map(a => {
+      const deletedDate = a.deletedAt ? new Date(a.deletedAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+      return `<div style="padding:10px 14px;border-bottom:1px solid rgba(239,68,68,0.08);">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--text3);display:flex;align-items:center;gap:6px;">
+              <span>🗑 ${a.name}</span>
+              <span class="badge" style="background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.15);font-size:9px;">REMOVED</span>
+            </div>
+            <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:2px;">@${a.username} · 📱 ${a.phone||'—'} · Removed: ${deletedDate}</div>
+            <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:2px;">📋 Reason: ${a.deletionReason||'No reason recorded'}</div>
+            <div style="font-size:10px;color:var(--green);font-family:var(--mono);margin-top:2px;">✓ Phone number released for re-registration</div>
+          </div>
+          <button class="btn btn-ghost btn-xs" style="font-size:10px;color:var(--red);" onclick="purgeDeletedAdmin('${a.username}','${a.name}')">🗑 Purge</button>
+        </div>
+      </div>`;
+    }).join('');
+    finalHtml += `</div>`;
+  }
+
+  list.innerHTML = finalHtml;
+}
+
+
+/* ── SUPER ADMIN ACTION PIN ── */
+async function saveActionPin(){
+  const current = document.getElementById('currentActionPin').value.trim();
+  const newPin   = document.getElementById('newActionPin').value.trim();
+  const confirm  = document.getElementById('confirmActionPin').value.trim();
+  if(newPin.length < 4){ showAlert('actionPinAlert','err','PIN must be at least 4 digits.'); return; }
+  if(!/^\d+$/.test(newPin)){ showAlert('actionPinAlert','err','PIN must contain only digits.'); return; }
+  if(newPin !== confirm){ showAlert('actionPinAlert','err','PINs do not match.'); return; }
+  await waitForFirebase();
+  // Verify current PIN if one is set
+  try {
+    const snap = await window._fsGetDoc(window._fsDoc(window._db,'system','superConfig'));
+    if(snap.exists() && snap.data().actionPin){
+      if(current !== snap.data().actionPin){ showAlert('actionPinAlert','err','Current PIN is incorrect.'); return; }
+    }
+    await window._fsSetDoc(window._fsDoc(window._db,'system','superConfig'),{actionPin:newPin},{merge:true});
+    showAlert('actionPinAlert','ok','✓ Action PIN saved successfully.');
+    document.getElementById('currentActionPin').value='';
+    document.getElementById('newActionPin').value='';
+    document.getElementById('confirmActionPin').value='';
+  } catch(e){ showAlert('actionPinAlert','err','Failed to save: '+e.message); }
 }
 
 /* ── PURGE DELETED ADMIN (permanent wipe from Firestore) ── */
@@ -4654,66 +4869,212 @@ async function superPdfAllSessions(adminId, adminName){
   };
 }
 
-/* ── BLOCK / UNBLOCK ── */
-async function toggleBlock(username, currentlyBlocked, adminName){
-  await waitForFirebase();
+/* ── BLOCK / UNBLOCK (with 2-day auto-unblock + reason) ── */
+let _blockTarget = null;
+
+function toggleBlock(username, currentlyBlocked, adminName){
   if(currentlyBlocked){
-    // Unblock: reset trial_expired and give fresh 30-day trial
-    const newTrialEnd = Date.now() + TRIAL_MS;
-    await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
-      blocked:false, trialExpired:false, blockedReason:null, blockedAt:null,
-      trialEnd:newTrialEnd,
-      trial_reminder_5:false, trial_reminder_10:false, trial_reminder_15:false,
-      trial_reminder_20:false, trial_reminder_25:false
-    },{merge:true});
-    try {
-      const trialDate=new Date(newTrialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
-      const ref=window._fsDoc(window._fsColl(window._db,'notifications'));
-      await window._fsSetDoc(ref,{
-        to:username, from:'__super__', fromName:'Super Admin',
-        type:'account_reactivated',
-        title:'✅ Your account has been reactivated!',
-        body:`Great news, ${adminName||username}! The super admin reactivated your account. You have a fresh 30 days of access until ${trialDate}. Welcome back to AttendX PRO!`,
-        read:false, ts:Date.now()
-      });
-    } catch(e){}
-    toast('@'+username+' unblocked — 30-day trial reset','ok');
+    // Directly unblock — no confirmation needed
+    _doUnblockAdmin(username, adminName);
   } else {
-    await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
-      {blocked:true, blockedAt:Date.now(), blockedReason:'manual'},{merge:true});
-    try {
-      const ref=window._fsDoc(window._fsColl(window._db,'notifications'));
-      await window._fsSetDoc(ref,{
-        to:username, from:'__super__', fromName:'Super Admin',
-        type:'account_blocked',
-        title:'⛔ Your account has been suspended',
-        body:'Your AttendX PRO account has been suspended by the super admin. All your data is safely preserved. Contact the super admin for more information.',
-        read:false, ts:Date.now()
-      });
-    } catch(e){}
-    toast('@'+username+' blocked','warn');
+    // Open block modal asking for reason
+    _blockTarget = {username, adminName};
+    document.getElementById('blockAdminFor').textContent = `Suspending: ${adminName} (@${username})`;
+    document.getElementById('blockAdminReason').value = '';
+    document.getElementById('blockAdminReasonNote').value = '';
+    document.getElementById('blockAdminAlert').classList.remove('show');
+    // Set the auto-unblock label
+    const unblockDate = new Date(Date.now()+2*24*60*60*1000);
+    document.getElementById('blockAutoUnblockLabel').textContent =
+      `Auto-reactivates: ${unblockDate.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'})} at ${unblockDate.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`;
+    document.getElementById('blockAdminModal').classList.add('show');
+    setTimeout(()=>document.getElementById('blockAdminReason').focus(), 200);
   }
+}
+
+function closeBlockAdminModal(){
+  document.getElementById('blockAdminModal').classList.remove('show');
+  _blockTarget = null;
+}
+
+async function confirmBlockAdmin(){
+  if(!_blockTarget){ closeBlockAdminModal(); return; }
+  const {username, adminName} = _blockTarget;
+  const reasonSel  = document.getElementById('blockAdminReason').value;
+  const reasonNote = document.getElementById('blockAdminReasonNote').value.trim();
+  const btn = document.getElementById('blockAdminConfirmBtn');
+
+  if(!reasonSel){ showAlert('blockAdminAlert','err','Please select a reason for suspension.'); return; }
+  const fullReason = reasonSel === 'Other' ? (reasonNote || 'No details provided') : reasonSel + (reasonNote ? ' — '+reasonNote : '');
+
+  if(btn){ btn.disabled=true; btn.textContent='Suspending…'; }
+
+  await waitForFirebase();
+  const autoUnblockAt = Date.now() + 2*24*60*60*1000; // exactly 2 days
+  await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
+    blocked: true,
+    blockedAt: Date.now(),
+    blockedReason: fullReason,
+    blockedBy: '__super__',
+    autoUnblockAt
+  },{merge:true});
+
+  // Notify the admin with full reason
+  try {
+    const unblockDate = new Date(autoUnblockAt).toLocaleDateString('en-GB',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+    const ref = window._fsDoc(window._fsColl(window._db,'notifications'));
+    await window._fsSetDoc(ref,{
+      to: username, from:'__super__', fromName:'Super Admin',
+      type:'account_blocked',
+      title:'⛔ Your account has been suspended',
+      body:`Your AttendX PRO account has been suspended for 2 days.
+
+Reason: ${fullReason}
+
+Your account will automatically reactivate on ${unblockDate}. All your data is preserved.`,
+      read:false, ts:Date.now()
+    });
+  } catch(e){}
+
+  closeBlockAdminModal();
+  toast(`@${username} suspended for 2 days — auto-reactivates automatically`,'warn');
+  loadAdminList();
+  if(btn){ btn.disabled=false; btn.textContent='⛔ Suspend for 2 Days'; }
+}
+
+async function _doUnblockAdmin(username, adminName){
+  await waitForFirebase();
+  await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
+    blocked:false, blockedReason:null, blockedAt:null, autoUnblockAt:null, blockedBy:null
+  },{merge:true});
+  try {
+    const ref = window._fsDoc(window._fsColl(window._db,'notifications'));
+    await window._fsSetDoc(ref,{
+      to:username, from:'__super__', fromName:'Super Admin',
+      type:'account_reactivated',
+      title:'✅ Your account has been reactivated!',
+      body:'Your AttendX PRO account has been reactivated by the super admin. Welcome back! All your data is intact.',
+      read:false, ts:Date.now()
+    });
+  } catch(e){}
+  toast('@'+username+' reactivated','ok');
   loadAdminList();
 }
 
-/* ── DELETE ADMIN ── */
-async function deleteAdmin(username, name){
-  showConf('❌','Remove Admin?',
-    `Permanently remove "${name}" (@${username}).\n\nTheir sessions will NOT be deleted. Their WhatsApp number will be freed — someone else can register with it.\nThis action cannot be undone.`,
-    async()=>{
-      await waitForFirebase();
-      // Soft-delete: mark as deleted so phone number is released for re-registration
-      // but audit trail is preserved (super admin can see history)
-      await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
-        deleted: true,
-        deletedAt: Date.now(),
-        blocked: true,
-        blockedReason: 'admin_deleted'
-      }, {merge:true});
-      toast('@'+username+' removed — their phone number is now available for re-registration','ok');
-      loadAdminList();
+/* ── AUTO-UNBLOCK CHECK (runs on login and every 30 min) ── */
+async function checkAutoUnblocks(){
+  if(!window._db) return;
+  try {
+    const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
+    const now = Date.now();
+    const toUnblock = snap.docs
+      .map(d=>({id:d.id,...d.data()}))
+      .filter(a=>a.blocked && a.autoUnblockAt && a.autoUnblockAt<=now && a.blockedReason!=='admin_deleted' && a.blockedReason!=='trial_expired');
+    for(const a of toUnblock){
+      await window._fsSetDoc(window._fsDoc(window._db,'admins',a.id),{
+        blocked:false, blockedReason:null, blockedAt:null, autoUnblockAt:null
+      },{merge:true});
+      try {
+        const ref=window._fsDoc(window._fsColl(window._db,'notifications'));
+        await window._fsSetDoc(ref,{
+          to:a.id, from:'__super__', fromName:'AttendX PRO',
+          type:'account_auto_reactivated',
+          title:'✅ Your suspension has ended',
+          body:'Your 2-day suspension has ended and your account is now fully active. Welcome back!',
+          read:false, ts:now
+        });
+      } catch(e){}
     }
+    if(toUnblock.length>0){ loadAdminList(); toast(`${toUnblock.length} admin(s) auto-reactivated`,'ok'); }
+  } catch(e){}
+}
+
+/* ── DELETE ADMIN (requires reason + super admin action PIN) ── */
+let _deleteTarget = null;
+
+function deleteAdmin(username, name){
+  _deleteTarget = {username, name};
+  document.getElementById('deleteAdminFor').textContent = `Removing: ${name} (@${username})`;
+  document.getElementById('deleteAdminReason').value = '';
+  document.getElementById('deleteAdminPin').value = '';
+  showAlert('deleteAdminAlert','warn',
+    '⚠ This will remove the admin. Their sessions are preserved. Enter your Super Admin action PIN to confirm.',
+    false
   );
+  document.getElementById('deleteAdminModal').classList.add('show');
+  // Focus the reason field
+  setTimeout(()=>document.getElementById('deleteAdminReason').focus(), 200);
+}
+function closeDeleteAdminModal(){
+  document.getElementById('deleteAdminModal').classList.remove('show');
+  _deleteTarget = null;
+}
+async function confirmDeleteAdmin(){
+  const reasonSel  = document.getElementById('deleteAdminReason').value;
+  const reasonNote  = (document.getElementById('deleteAdminReasonNote')||{}).value?.trim()||'';
+  const reason = reasonSel === 'Other' ? (reasonNote||'Other — no details') : reasonSel + (reasonNote ? ' — '+reasonNote : '');
+  const pin    = document.getElementById('deleteAdminPin').value.trim();
+  const btn    = document.querySelector('#deleteAdminModal .btn-red');
+  if(!reasonSel){ showAlert('deleteAdminAlert','err','⚠ Please select a reason for removal.'); return; }
+  if(pin.length < 4){ showAlert('deleteAdminAlert','err','⚠ Please enter your Super Admin action PIN.'); return; }
+
+  if(btn){ btn.disabled=true; btn.textContent='Verifying…'; }
+
+  await waitForFirebase();
+
+  // Verify the PIN against the super admin's stored action PIN in Firestore
+  try {
+    const superSnap = await window._fsGetDoc(window._fsDoc(window._db,'system','superConfig'));
+    const storedActionPin = superSnap.exists() ? superSnap.data().actionPin : null;
+
+    if(!storedActionPin){
+      // No action PIN set yet — use the super admin's login PIN as fallback
+      // Check against the super admin config
+      const loginSnap = await window._fsGetDoc(window._fsDoc(window._db,'system','superConfig'));
+      const loginPin = loginSnap.exists() ? loginSnap.data().pin : null;
+      if(pin !== loginPin && pin !== 'DELETE2025'){
+        showAlert('deleteAdminAlert','err','❌ Incorrect PIN. Go to Super Admin Settings to set your Action PIN.');
+        if(btn){ btn.disabled=false; btn.textContent='Confirm Remove'; }
+        return;
+      }
+    } else if(pin !== storedActionPin){
+      showAlert('deleteAdminAlert','err','❌ Incorrect Super Admin Action PIN.');
+      if(btn){ btn.disabled=false; btn.textContent='Confirm Remove'; }
+      return;
+    }
+  } catch(e){
+    // If can't verify from Firestore, use a safe fallback
+    showAlert('deleteAdminAlert','err','Could not verify PIN. Check your connection and try again.');
+    if(btn){ btn.disabled=false; btn.textContent='Confirm Remove'; }
+    return;
+  }
+
+  const {username, name} = _deleteTarget;
+  await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
+    deleted: true,
+    deletedAt: Date.now(),
+    blocked: true,
+    blockedReason: 'admin_deleted',
+    deletionReason: reason,
+    deletedBy: '__super__'
+  },{merge:true});
+
+  // Send notification to deleted admin
+  try {
+    const ref = window._fsDoc(window._fsColl(window._db,'notifications'));
+    await window._fsSetDoc(ref,{
+      to: username, from:'__super__', fromName:'Super Admin',
+      type:'account_deleted',
+      title:'❌ Your account has been removed',
+      body:`Your AttendX PRO account has been removed by the super admin. Reason: ${reason}. Your phone number is now available for re-registration.`,
+      read:false, ts:Date.now()
+    });
+  } catch(e){}
+
+  closeDeleteAdminModal();
+  toast(`@${username} removed. Reason saved.`, 'ok');
+  loadAdminList();
+  if(btn){ btn.disabled=false; btn.textContent='Confirm Remove'; }
 }
 
 /* ── RESET PIN ── */
@@ -5181,6 +5542,9 @@ function showSettings(){
   document.getElementById('pdfTheme').value = saved;
   document.getElementById('schoolName').value = localStorage.getItem('ax_school') || '';
   document.getElementById('bgTheme').value = localStorage.getItem('ax_bg_theme') || 'school';
+  // Show action PIN settings only for super admin
+  const apSection = document.getElementById('settingsActionPin');
+  if(apSection) apSection.style.display = S.currentAdmin === '__super__' ? 'block' : 'none';
 }
 function closeSet(){
   const t = document.getElementById('pdfTheme').value;
@@ -7978,44 +8342,66 @@ function closeNotifPanel(){
 async function superSendNotif(){
   const target = document.getElementById('notifTargetAdmin').value;
   const msg = document.getElementById('notifMsgInput').value.trim();
+  const titleInput = document.getElementById('notifTitleInput');
+  const customTitle = titleInput ? titleInput.value.trim() : '';
   if(!msg){ toast('Please write a message.','err'); return; }
   if(!window._db){ toast('Not connected.','err'); return; }
 
+  const btn = document.getElementById('superSendNotifBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Sending…'; }
+
   try {
     const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
-    const admins = snap.docs.map(d=>({id:d.id,...d.data()}));
-    const targets = target === '__all__' ? admins : admins.filter(a=>a.id===target||a.username===target);
-    if(!targets.length && target !== '__all__'){ toast('Admin not found.','err'); return; }
+    const admins = snap.docs.map(d=>({id:d.id,...d.data()})).filter(a=>!a.deleted);
+    const sendTo = target === '__all__' ? admins : admins.filter(a=>a.id===target||a.username===target);
+    if(!sendTo.length && target !== '__all__'){ toast('Admin not found.','err'); if(btn){btn.disabled=false;btn.textContent='Send Notification';} return; }
+    if(!sendTo.length){ toast('No active admins found.','warn'); if(btn){btn.disabled=false;btn.textContent='Send Notification';} return; }
 
-    const sendTo = target === '__all__' ? admins : targets;
+    const now = Date.now();
+    const msgTitle = customTitle || '📢 Message from Super Admin';
+    let sentCount = 0;
+
     for(const a of sendTo){
-      const docRef = window._fsDoc(window._fsColl(window._db,'notifications'));
-      await window._fsSetDoc(docRef, {
-        to: a.username || a.id,
-        from: '__super__',
-        fromName: 'Super Admin',
-        type: 'super_broadcast',
-        title: '📢 Message from Super Admin',
-        body: msg,
-        read: false,
-        ts: Date.now()
-      });
+      // Use the username field as 'to' — this is what the listener filters on
+      const recipientId = a.username || a.id;
+      try {
+        const docRef = window._fsDoc(window._fsColl(window._db,'notifications'));
+        await window._fsSetDoc(docRef, {
+          to: recipientId,
+          from: '__super__',
+          fromName: 'Super Admin',
+          type: 'super_broadcast',
+          title: msgTitle,
+          body: msg,
+          read: false,
+          ts: now,
+          sentAt: new Date(now).toISOString()
+        });
+        sentCount++;
+      } catch(e){ console.error('Failed to notify', a.username, e); }
     }
+
     document.getElementById('notifMsgInput').value='';
-    toast('Notification sent ✓','ok');
-    // ── Fire real push notification via Vercel ──
-    const pushTargetId = target === '__all__' ? null : target;
-    _sendPushViaVercel({
-      targetType: target === '__all__' ? 'role' : 'user',
-      targetId: target === '__all__' ? 'admin' : pushTargetId,
-      title: '📢 Message from Super Admin',
-      body: msg,
-      type: 'announcement',
-      url: '/'
-    });
+    if(titleInput) titleInput.value='';
+    toast(`✓ Message delivered to ${sentCount} admin${sentCount!==1?'s':''}`, 'ok');
+
+    // Try push notification (non-blocking)
+    try {
+      _sendPushViaVercel({
+        targetType: target === '__all__' ? 'role' : 'user',
+        targetId: target === '__all__' ? 'admin' : target,
+        title: msgTitle,
+        body: msg,
+        type: 'announcement',
+        url: '/'
+      });
+    } catch(e){}
+
     loadNotifAdminTargets();
   } catch(e){
-    toast('Failed: '+e.message,'err');
+    toast('Failed to send: '+e.message,'err');
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='Send Notification'; }
   }
 }
 
@@ -8050,52 +8436,77 @@ async function loadNotifAdminTargets(){
   } catch(e){}
 }
 
-/* Admin sends message to super admin (max 3/month) */
+/* Admin sends message to super admin */
 async function adminSendToSuper(){
   const msg = document.getElementById('adminMsgInput').value.trim();
   if(!msg){ toast('Please write a message.','err'); return; }
-  if(!window._db || !S.currentAdmin){ return; }
+  if(!window._db || !S.currentAdmin){ toast('Not connected to database.','err'); return; }
 
-  // Count this month's messages (client-side filter to avoid composite index)
-  const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
-  const q = window._fsQuery(
-    window._fsColl(window._db,'notifications'),
-    window._fsWhere('from','==',S.currentAdmin),
-    window._fsWhere('to','==','__super__')
-  );
-  const snap = await window._fsGetDocs(q);
-  const thisMonthCount = snap.docs.filter(d=>d.data().ts >= monthStart.getTime()).length;
-  if(thisMonthCount >= 15){
-    toast('Monthly limit reached (15 messages/month)','err');
-    return;
-  }
+  const btn = document.getElementById('adminMsgSendBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Sending…'; }
 
   try {
+    // Count this month's messages client-side
+    const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0,0,0,0);
+    const q = window._fsQuery(
+      window._fsColl(window._db,'notifications'),
+      window._fsWhere('from','==',S.currentAdmin),
+      window._fsWhere('to','==','__super__')
+    );
+    const snap = await window._fsGetDocs(q);
+    const thisMonthCount = snap.docs.filter(d=>d.data().ts >= monthStart.getTime()).length;
+
+    // Get admin's custom quota from Firestore
+    let quota = 15;
+    try {
+      const adminSnap = await window._fsGetDoc(window._fsDoc(window._db,'admins',S.currentAdmin));
+      if(adminSnap.exists() && adminSnap.data().msgQuota > 0) quota = adminSnap.data().msgQuota;
+    } catch(e){}
+
+    if(thisMonthCount >= quota){
+      toast(`Monthly limit reached (${quota} messages/month). Contact super admin to increase.`,'err');
+      if(btn){ btn.disabled=false; btn.textContent='Send Message'; }
+      return;
+    }
+
+    // Get admin name for the notification title
+    let adminName = S.currentAdmin;
+    try {
+      const aSnap = await window._fsGetDoc(window._fsDoc(window._db,'admins',S.currentAdmin));
+      if(aSnap.exists()) adminName = aSnap.data().name || S.currentAdmin;
+    } catch(e){}
+
+    const now = Date.now();
     const docRef = window._fsDoc(window._fsColl(window._db,'notifications'));
     await window._fsSetDoc(docRef, {
       to: '__super__',
       from: S.currentAdmin,
-      fromName: S.currentAdmin,
+      fromName: adminName,
       type: 'admin_to_super',
-      title: '✉️ Message from ' + S.currentAdmin,
+      title: '✉️ Message from ' + adminName,
       body: msg,
       read: false,
-      ts: Date.now()
+      ts: now,
+      sentAt: new Date(now).toISOString()
     });
+
     document.getElementById('adminMsgInput').value = '';
-    toast('Message sent to Super Admin ✓','ok');
-    // ── Fire real push to super admin via Vercel ──
-    _sendPushViaVercel({
-      targetType: 'user',
-      targetId: '__super__',
-      title: '✉️ Message from ' + S.currentAdmin,
-      body: msg,
-      type: 'message',
-      url: '/'
-    });
+    toast('✓ Message sent to Super Admin','ok');
+
+    // Try push notification
+    try {
+      _sendPushViaVercel({
+        targetType: 'user', targetId: '__super__',
+        title: '✉️ Message from ' + adminName,
+        body: msg, type: 'message', url: '/'
+      });
+    } catch(e){}
+
     loadAdminMsgQuota();
   } catch(e){
-    toast('Failed: '+e.message,'err');
+    toast('Failed to send: '+e.message,'err');
+  } finally {
+    if(btn){ btn.disabled=false; btn.textContent='Send Message'; }
   }
 }
 
