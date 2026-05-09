@@ -2240,16 +2240,6 @@ img, video, iframe { max-width: 100%; }
     </div>
 
     <!-- ── VISITOR NOTIFICATION OPT-IN ── -->
-    <!-- ── BROADCAST BANNER (shown when super admin broadcasts) ── -->
-    <div id="visitorBroadcastBanner" style="display:none;background:linear-gradient(135deg,rgba(226,185,106,0.15),rgba(59,130,246,0.08));border:1px solid rgba(226,185,106,0.35);border-radius:var(--r3);padding:14px 18px;margin:0 0 14px;flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap;">
-      <span style="font-size:22px;flex-shrink:0;">📢</span>
-      <div style="flex:1;min-width:180px;">
-        <div style="font-family:var(--head);font-size:11px;font-weight:700;color:var(--gold);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.05em;">Announcement from Admin</div>
-        <div id="visitorBroadcastBannerText" style="font-size:13px;color:var(--text);line-height:1.5;"></div>
-      </div>
-      <button onclick="this.closest('#visitorBroadcastBanner').style.display='none'" style="font-size:16px;background:none;border:none;cursor:pointer;color:var(--text3);flex-shrink:0;">✕</button>
-    </div>
-
     <div id="visitorNotifBanner" style="display:none;background:linear-gradient(135deg,var(--blue3),var(--s2));border:1px solid var(--line2);border-radius:var(--r3);padding:16px 18px;margin:0 0 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
       <span style="font-size:22px;flex-shrink:0;">🔔</span>
       <div style="flex:1;min-width:200px;">
@@ -2293,7 +2283,7 @@ img, video, iframe { max-width: 100%; }
               <div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap;">
                 <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
                   <span>🖼</span>
-                  <input id="landingChatImg" type="file" accept="image/*,video/*" style="display:none;" onchange="previewChatImg(this,'landingImgPreview')"/>
+                  <input id="landingChatImg" type="file" accept="image/*" style="display:none;" onchange="previewChatImg(this,'landingImgPreview')"/>
                   <span style="color:var(--blue);text-decoration:underline;">Add photo</span>
                 </label>
                 <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
@@ -2521,7 +2511,7 @@ img, video, iframe { max-width: 100%; }
                 <div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap;">
                   <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
                     <span>🖼</span>
-                    <input id="publicChatImg" type="file" accept="image/*,video/*" style="display:none;" onchange="previewChatImg(this,'publicImgPreview')"/>
+                    <input id="publicChatImg" type="file" accept="image/*" style="display:none;" onchange="previewChatImg(this,'publicImgPreview')"/>
                     <span style="color:var(--blue);text-decoration:underline;">Add photo</span>
                   </label>
                   <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
@@ -2556,7 +2546,7 @@ img, video, iframe { max-width: 100%; }
                 <div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap;">
                   <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
                     <span>🖼</span>
-                    <input id="adminChatImg" type="file" accept="image/*,video/*" style="display:none;" onchange="previewChatImg(this,'adminImgPreview')"/>
+                    <input id="adminChatImg" type="file" accept="image/*" style="display:none;" onchange="previewChatImg(this,'adminImgPreview')"/>
                     <span style="color:var(--blue);text-decoration:underline;">Add photo</span>
                   </label>
                   <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
@@ -3028,88 +3018,7 @@ img, video, iframe { max-width: 100%; }
             <div class="empty-st"><div class="ei">📡</div><div class="et">No active sessions</div></div>
           </div>
         </div>
-
-        <!-- ── ADMIN CHAT PANEL ── -->
-        <div class="panel-block a-fadeup d4" style="margin-bottom:15px;">
-          <div class="pb-head">
-            <div class="pb-title"><div class="pb-icon" style="background:var(--blue3)">💬</div>Community Chat</div>
-            <div style="display:flex;gap:6px;">
-              <button class="btn btn-primary btn-xs" id="adminPanelChtab-public" onclick="adminPanelSwitchChat('public')" style="flex:1;">Public</button>
-              <button class="btn btn-ghost btn-xs" id="adminPanelChtab-admin" onclick="adminPanelSwitchChat('admin')" style="flex:1;">Admin Board</button>
-            </div>
-          </div>
-          <div class="pb-body" style="padding:0;">
-            <!-- Public chat (admin can reply as admin or as visitor name) -->
-            <div id="adminPanelChat-public" style="display:block;">
-              <div id="adminPanelPublicMessages" style="max-height:220px;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;">
-                <div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;font-family:var(--mono);">Loading…</div>
-              </div>
-              <div style="padding:8px 10px;border-top:1px solid var(--line);">
-                <div id="adminPanelPublicReplyPreview" style="display:none;align-items:center;gap:8px;background:var(--s3);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:5px 8px;margin-bottom:5px;">
-                  <div style="flex:1;min-width:0;"><div class="rp-name" style="font-size:10px;font-weight:700;color:var(--blue);"></div><div class="rp-text" style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div></div>
-                  <button onclick="clearAdminPanelReply('public')" style="font-size:14px;background:none;border:none;cursor:pointer;color:var(--text3);">✕</button>
-                </div>
-                <div style="display:flex;gap:6px;align-items:flex-end;">
-                  <textarea id="adminPanelPublicInput" rows="2" placeholder="Reply as admin… (Enter to send)" style="flex:1;padding:7px 9px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:12px;resize:none;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdminPanelMsg('public')}"></textarea>
-                  <button class="btn btn-primary btn-xs" onclick="sendAdminPanelMsg('public')" style="padding:8px 10px;">➤</button>
-                </div>
-                <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap;">
-                  <label style="font-size:10px;color:var(--text3);">
-                    <input type="file" id="adminPanelPublicImg" accept="image/*,video/*" style="display:none;" onchange="previewAdminPanelImg('public')">
-                    <button class="btn btn-ghost btn-xs" style="font-size:10px;" onclick="document.getElementById('adminPanelPublicImg').click()">📎 Media</button>
-                  </label>
-                  <label style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:4px;">
-                    <input type="checkbox" id="adminPanelPublicViewOnce" style="width:12px;height:12px;"> 👁 View once
-                  </label>
-                </div>
-                <div id="adminPanelPublicImgPreview" style="display:none;margin-top:4px;"></div>
-              </div>
-            </div>
-            <!-- Admin-only board -->
-            <div id="adminPanelChat-admin" style="display:none;">
-              <div id="adminPanelAdminMessages" style="max-height:220px;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;">
-                <div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;font-family:var(--mono);">Loading…</div>
-              </div>
-              <div style="padding:8px 10px;border-top:1px solid var(--line);">
-                <div id="adminPanelAdminReplyPreview" style="display:none;align-items:center;gap:8px;background:var(--s3);border-left:3px solid var(--gold);border-radius:0 6px 6px 0;padding:5px 8px;margin-bottom:5px;">
-                  <div style="flex:1;min-width:0;"><div class="rp-name" style="font-size:10px;font-weight:700;color:var(--gold);"></div><div class="rp-text" style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div></div>
-                  <button onclick="clearAdminPanelReply('admin')" style="font-size:14px;background:none;border:none;cursor:pointer;color:var(--text3);">✕</button>
-                </div>
-                <div style="display:flex;gap:6px;align-items:flex-end;">
-                  <textarea id="adminPanelAdminInput" rows="2" placeholder="Post to admin board… (Enter)" style="flex:1;padding:7px 9px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:12px;resize:none;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdminPanelMsg('admin')}"></textarea>
-                  <button class="btn btn-gold btn-xs" onclick="sendAdminPanelMsg('admin')" style="padding:8px 10px;">➤</button>
-                </div>
-                <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap;">
-                  <label style="font-size:10px;color:var(--text3);">
-                    <input type="file" id="adminPanelAdminImg" accept="image/*,video/*" style="display:none;" onchange="previewAdminPanelImg('admin')">
-                    <button class="btn btn-ghost btn-xs" style="font-size:10px;" onclick="document.getElementById('adminPanelAdminImg').click()">📎 Media</button>
-                  </label>
-                  <label style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:4px;">
-                    <input type="checkbox" id="adminPanelAdminViewOnce" style="width:12px;height:12px;"> 👁 View once
-                  </label>
-                </div>
-                <div id="adminPanelAdminImgPreview" style="display:none;margin-top:4px;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── ADMIN INBOX (messages from visitors) ── -->
-        <div class="panel-block a-fadeup d5" style="margin-bottom:15px;">
-          <div class="pb-head">
-            <div class="pb-title" style="position:relative;">
-              <div class="pb-icon" style="background:rgba(226,185,106,0.15);">📬</div>My Inbox
-              <span id="adminPanelInboxBadge" style="display:none;position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:var(--red);border-radius:50%;"></span>
-            </div>
-          </div>
-          <div class="pb-body" style="padding:0;">
-            <div id="adminPanelInboxList" style="max-height:260px;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;">
-              <div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;font-family:var(--mono);">Loading inbox…</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel-block a-fadeup d6">
+        <div class="panel-block a-fadeup d4">
           <div class="pb-head">
             <div class="pb-title"><div class="pb-icon" style="background:var(--blue3)">ℹ</div>Quick Guide</div>
           </div>
@@ -4118,8 +4027,6 @@ function showPage(name) {
   if (name === 'dash' || name === 'qr') {
     navTabs.style.display = 'flex';
     navTabs.classList.add('admin-active');
-    // Hide install button on admin pages
-    document.querySelectorAll('.pwa-install-btn').forEach(b => b.style.display='none');
     if(S.currentAdmin === '__super__'){
       navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showSettings()">⚙</button><button class="nav-btn nav-btn-ghost" id="notifBtnNav" onclick="openNotifPanel()" style="position:relative;">🔔<span id="notifBadgeNav" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-family:var(--mono);border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;display:none;"></span></button><button class="nav-btn" style="background:var(--gold);color:#fff;border:none;padding:6px 14px;border-radius:var(--r1);font-weight:700;cursor:pointer;" onclick="backToSuperPanel()">🛡 Super Panel</button>`;
     } else {
@@ -4129,8 +4036,6 @@ function showPage(name) {
     ntQR.classList.toggle('active',  name==='qr');
   } else if (name === 'super') {
     navTabs.style.display = 'none'; navTabs.classList.remove('admin-active');
-    // Hide install button on super admin panel
-    document.querySelectorAll('.pwa-install-btn').forEach(b => b.style.display='none');
     navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" id="notifBtnNav" onclick="openNotifPanel()" style="position:relative;">🔔<span id="notifBadgeNav" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-family:var(--mono);border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;display:none;"></span></button><button class="nav-btn nav-btn-ghost" onclick="superOut()">Sign Out</button>`;
   } else if (name === 'student') {
     navTabs.style.display = 'none'; navTabs.classList.remove('admin-active');
@@ -4140,8 +4045,6 @@ function showPage(name) {
     navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showPage('landing')">← Home</button>`;
   } else {
     navTabs.style.display = 'none'; navTabs.classList.remove('admin-active');
-    // Show install button on landing/public pages (if not already installed)
-    if(!_pwaInstalled) document.querySelectorAll('.pwa-install-btn').forEach(b => b.style.display='flex');
     navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showLogin()">Admin Login</button><button class="nav-btn nav-btn-solid" onclick="showLogin()">Get Started →</button>`;
   }
   document.getElementById('siteFooter').style.display = (name === 'student'||name==='qrscanner') ? 'none' : '';
@@ -4639,7 +4542,7 @@ function navTo(pg){
     return;
   }
   showPage(pg);
-  if(pg==='dash'){ refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); loadAdminPanelChats(); }
+  if(pg==='dash'){ refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); }
 }
 function adminOut() { S.loggedIn=false; S.currentAdmin=null; if(S.liveInt)clearInterval(S.liveInt); stopDynQR(); stopNotifListener(); showPage('landing'); }
 
@@ -4750,7 +4653,7 @@ async function tryLogin() {
   S.loggedIn = true;
   S.currentAdmin = username;
   closeLoginModal();
-  showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); loadAdminPanelChats();
+  showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
   startNotifListener();
   // Smart push permission prompt on first login interaction
   showPushPermPromptIfNeeded();
@@ -4890,7 +4793,7 @@ async function recoverPin(){
       S.loggedIn = true;
       S.currentAdmin = username;
       closeLoginModal();
-      showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); loadAdminPanelChats();
+      showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
       startNotifListener();
     }, 1500);
   } catch(e){
@@ -4917,7 +4820,7 @@ function superOut(){ S.loggedIn=false; S.currentAdmin=null; stopNotifListener();
 function superGoToDash(){
   S.loggedIn = true;
   S.currentAdmin = '__super__';
-  showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); loadAdminPanelChats();
+  showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo();
   startNotifListener();
   showPushPermPromptIfNeeded();
 }
@@ -9537,48 +9440,17 @@ async function broadcastToVisitors(){
   if(!msg){ showAlert('visitorBroadcastAlert','err','Please enter a message.'); return; }
   await waitForFirebase();
   try {
-    // 1. Save to visitor_broadcasts collection (for banner on next visit)
+    // Save broadcast as a notification all visitors will see
     await window._fsAddDoc(window._fsColl(window._db,'visitor_broadcasts'),{
       message: msg,
       sentAt: Date.now(),
       sentBy: '__super__',
       type: 'broadcast'
     });
-    // 2. Post into chat_public as a broadcast message — visitors see it live in the chat board
-    const ref = await window._fsAddDoc(window._fsColl(window._db,'chat_public'),{
-      name: '📢 Super Admin',
-      text: msg,
-      role: 'super',
-      senderId: '__super__',
-      at: Date.now(),
-      isBroadcast: true
-    });
-    await window._fsSetDoc(window._fsDoc(window._db,'chat_public',ref.id),{id:ref.id},{merge:true});
-    showAlert('visitorBroadcastAlert','ok','✓ Broadcast sent — all visitors can see it now in the community board.');
+    // Also show as in-app notification on landing
+    showAlert('visitorBroadcastAlert','ok','✓ Broadcast saved — visitors will see it on next visit.');
     document.getElementById('visitorBroadcastMsg').value='';
   } catch(e){ showAlert('visitorBroadcastAlert','err','Failed: '+e.message); }
-}
-
-// ── Load & display active broadcasts as a banner on the landing page ──
-async function _loadBroadcastBanner(){
-  await waitForFirebase();
-  try {
-    const snap = await window._fsGetDocs(window._fsQuery(
-      window._fsColl(window._db,'visitor_broadcasts'),
-      window._fsOrderBy('sentAt','desc'),
-      window._fsLimit(1)
-    ));
-    if(snap.empty) return;
-    const latest = snap.docs[0].data();
-    // Show if within last 24h
-    if(Date.now() - latest.sentAt > 86400000) return;
-    const banner = document.getElementById('visitorBroadcastBanner');
-    if(banner){
-      banner.style.display='flex';
-      const txt = document.getElementById('visitorBroadcastBannerText');
-      if(txt) txt.textContent = latest.message;
-    }
-  } catch(e){}
 }
 
 /* ══════════════════════════════════════════════════════
@@ -9632,13 +9504,11 @@ function _chatMsgHtml(msg, isMine, boardId){
         </div>
       </div>`;
     }
-  } else if(msg.videoUrl){
-    bodyHtml = `<video src="${msg.videoUrl}" controls style="max-width:220px;border-radius:10px;display:block;margin-bottom:4px;" preload="metadata"></video>`;
   } else if(msg.imgUrl){
     bodyHtml = `<img src="${msg.imgUrl}" style="max-width:220px;border-radius:10px;display:block;cursor:pointer;margin-bottom:4px;" onclick="window.open('${msg.imgUrl}','_blank')" alt="Photo"/>`;
   }
   if(msg.text){
-    bodyHtml += `<div style="font-size:13px;color:var(--text);line-height:1.5;margin-top:${msg.imgUrl||msg.videoUrl?'6px':'0'};">${_esc(msg.text)}</div>`;
+    bodyHtml += `<div style="font-size:13px;color:var(--text);line-height:1.5;margin-top:${msg.imgUrl?'6px':'0'};">${_esc(msg.text)}</div>`;
   }
 
   // ── Reply button ──
@@ -9710,11 +9580,10 @@ function _replyPreviewHtml(boardId){
 async function _uploadChatImage(file){
   // Convert to base64 data URL (no external storage needed)
   return new Promise((resolve, reject)=>{
-    if(!file || (!file.type.startsWith('image/') && !file.type.startsWith('video/'))){ reject('Not an image or video'); return; }
-    if(file.type.startsWith('video/') && file.size > 10*1024*1024){ reject('Video too large (max 10MB)'); return; }
-    if(file.type.startsWith('image/') && file.size > 2*1024*1024){ reject('Image too large (max 2MB)'); return; }
+    if(!file || !file.type.startsWith('image/')){ reject('Not an image'); return; }
+    if(file.size > 2*1024*1024){ reject('Image too large (max 2MB)'); return; }
     const reader = new FileReader();
-    reader.onload = e => resolve({ dataUrl: e.target.result, isVideo: file.type.startsWith('video/') });
+    reader.onload = e => resolve(e.target.result);
     reader.onerror = ()=> reject('Read failed');
     reader.readAsDataURL(file);
   });
@@ -9788,10 +9657,10 @@ async function sendPublicChatMsg(){
   }
   if(imgFile){
     try {
-      const uploaded = await _uploadChatImage(imgFile);
-      if(uploaded.isVideo){ msgData.videoUrl = uploaded.dataUrl; }
-      else { msgData.imgUrl = uploaded.dataUrl; msgData.viewOnce = viewOnce; msgData.viewedBy = []; }
-    } catch(e){ toast('File error: '+e,'err'); return; }
+      msgData.imgUrl    = await _uploadChatImage(imgFile);
+      msgData.viewOnce  = viewOnce;
+      msgData.viewedBy  = [];
+    } catch(e){ toast('Image error: '+e,'err'); return; }
   }
   const ref = await window._fsAddDoc(window._fsColl(window._db,'chat_public'), msgData);
   // Store id back for view-once lookup
@@ -9843,10 +9712,10 @@ async function sendAdminChatMsg(){
   }
   if(imgFile){
     try {
-      const uploaded = await _uploadChatImage(imgFile);
-      if(uploaded.isVideo){ msgData.videoUrl = uploaded.dataUrl; }
-      else { msgData.imgUrl = uploaded.dataUrl; msgData.viewOnce = viewOnce; msgData.viewedBy = []; }
-    } catch(e){ toast('File error: '+e,'err'); return; }
+      msgData.imgUrl   = await _uploadChatImage(imgFile);
+      msgData.viewOnce = viewOnce;
+      msgData.viewedBy = [];
+    } catch(e){ toast('Image error: '+e,'err'); return; }
   }
   const ref = await window._fsAddDoc(window._fsColl(window._db,'chat_admin'), msgData);
   await window._fsSetDoc(window._fsDoc(window._db,'chat_admin',ref.id),{id:ref.id},{merge:true});
@@ -9897,10 +9766,10 @@ async function sendLandingChatMsg(){
   }
   if(imgFile){
     try {
-      const uploaded = await _uploadChatImage(imgFile);
-      if(uploaded.isVideo){ msgData.videoUrl = uploaded.dataUrl; }
-      else { msgData.imgUrl = uploaded.dataUrl; msgData.viewOnce = viewOnce; msgData.viewedBy = []; }
-    } catch(e){ toast('File error: '+e,'err'); return; }
+      msgData.imgUrl   = await _uploadChatImage(imgFile);
+      msgData.viewOnce = viewOnce;
+      msgData.viewedBy = [];
+    } catch(e){ toast('Image error: '+e,'err'); return; }
   }
   const ref = await window._fsAddDoc(window._fsColl(window._db,'chat_public'), msgData);
   await window._fsSetDoc(window._fsDoc(window._db,'chat_public',ref.id),{id:ref.id},{merge:true});
@@ -9917,7 +9786,6 @@ document.addEventListener('firebaseReady', ()=>{
   trackVisitor();
   _checkVisitorNotifBanner();
   loadLandingChat();
-  _loadBroadcastBanner();
 });
 
 
@@ -10466,266 +10334,6 @@ async function sendQRViaWA(){
   }, 800);
 }
 
-/* ══════════════════════════════════════════════════════
-   ADMIN DASHBOARD — CHAT PANEL & INBOX
-   Admins can: reply to public visitor chat, post to admin board,
-   send/receive view-once images/videos, and see their own inbox.
-══════════════════════════════════════════════════════ */
-let _adminPanelPubUnsub  = null;
-let _adminPanelAdmUnsub  = null;
-let _adminPanelInboxUnsub = null;
-let _adminPanelReplyState = {};
-
-function adminPanelSwitchChat(board){
-  document.getElementById('adminPanelChat-public').style.display = board==='public' ? 'block' : 'none';
-  document.getElementById('adminPanelChat-admin').style.display  = board==='admin'  ? 'block' : 'none';
-  document.getElementById('adminPanelChtab-public').className = board==='public' ? 'btn btn-primary btn-xs' : 'btn btn-ghost btn-xs';
-  document.getElementById('adminPanelChtab-admin').className  = board==='admin'  ? 'btn btn-gold btn-xs'    : 'btn btn-ghost btn-xs';
-}
-
-function loadAdminPanelChats(){
-  _loadAdminPanelPublicChat();
-  _loadAdminPanelAdminChat();
-  _loadAdminPanelInbox();
-}
-
-function _loadAdminPanelPublicChat(){
-  if(_adminPanelPubUnsub){ _adminPanelPubUnsub(); _adminPanelPubUnsub=null; }
-  waitForFirebase().then(()=>{
-    const q = window._fsQuery(
-      window._fsColl(window._db,'chat_public'),
-      window._fsOrderBy('at','asc'),
-      window._fsLimit(60)
-    );
-    _adminPanelPubUnsub = window._fsOnSnap(q, snap=>{
-      const msgs = snap.docs.map(d=>({id:d.id,...d.data()}));
-      const container = document.getElementById('adminPanelPublicMessages');
-      if(!container) return;
-      if(!msgs.length){ container.innerHTML='<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;font-family:var(--mono);">No messages yet.</div>'; return; }
-      container.innerHTML = msgs.map(m=>_adminPanelMsgHtml(m,'public')).join('');
-      container.scrollTop = container.scrollHeight;
-    });
-  });
-}
-
-function _loadAdminPanelAdminChat(){
-  if(_adminPanelAdmUnsub){ _adminPanelAdmUnsub(); _adminPanelAdmUnsub=null; }
-  waitForFirebase().then(()=>{
-    const q = window._fsQuery(
-      window._fsColl(window._db,'chat_admin'),
-      window._fsOrderBy('at','asc'),
-      window._fsLimit(60)
-    );
-    _adminPanelAdmUnsub = window._fsOnSnap(q, snap=>{
-      const msgs = snap.docs.map(d=>({id:d.id,...d.data()}));
-      const container = document.getElementById('adminPanelAdminMessages');
-      if(!container) return;
-      if(!msgs.length){ container.innerHTML='<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;font-family:var(--mono);">No admin messages yet.</div>'; return; }
-      container.innerHTML = msgs.map(m=>_adminPanelMsgHtml(m,'admin')).join('');
-      container.scrollTop = container.scrollHeight;
-    });
-  });
-}
-
-function _adminPanelMsgHtml(msg, board){
-  const isMine = msg.senderId === S.currentAdmin;
-  const senderColor = msg.role==='super'?'var(--gold)':msg.role==='admin'?'var(--blue)':'var(--text3)';
-  const roleBadge = msg.role==='super'
-    ?'<span style="font-size:9px;background:rgba(226,185,106,0.15);color:var(--gold);border:1px solid rgba(226,185,106,0.25);border-radius:4px;padding:1px 5px;margin-left:4px;">SUPER</span>'
-    :msg.role==='admin'
-    ?'<span style="font-size:9px;background:var(--blue3);color:var(--blue);border:1px solid rgba(59,130,246,0.2);border-radius:4px;padding:1px 5px;margin-left:4px;">ADMIN</span>'
-    :'<span style="font-size:9px;background:var(--s3);color:var(--text3);border:1px solid var(--line);border-radius:4px;padding:1px 5px;margin-left:4px;">VISITOR</span>';
-  const time = msg.at ? new Date(msg.at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
-
-  let replyBlock = '';
-  if(msg.replyTo){
-    replyBlock = `<div style="border-left:3px solid var(--blue);padding:4px 7px;background:var(--s3);border-radius:0 5px 5px 0;margin-bottom:6px;cursor:pointer;" onclick="document.getElementById('apMsg-${msg.replyTo}')?.scrollIntoView({behavior:'smooth',block:'center'})">
-      <div style="font-size:9px;font-weight:700;color:var(--blue);">${_esc(msg.replyToName||'')}</div>
-      <div style="font-size:10px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">${msg.replyToImg?'🖼 Photo':_esc(msg.replyToText||'')}</div>
-    </div>`;
-  }
-
-  let bodyHtml = '';
-  if(msg.imgUrl && msg.viewOnce){
-    const myId = S.currentAdmin;
-    const viewed = (msg.viewedBy||[]).includes(myId);
-    const coll = board==='admin'?'chat_admin':'chat_public';
-    if(viewed){
-      bodyHtml = `<div style="font-size:11px;color:var(--text3);font-style:italic;">🔒 View once — already opened</div>`;
-    } else {
-      bodyHtml = `<div style="position:relative;cursor:pointer;display:inline-block;" onclick="openViewOnceImg('${msg.id}','${board}','${myId}')">
-        <img src="${msg.imgUrl}" style="max-width:140px;border-radius:8px;filter:blur(14px);display:block;" alt="View once"/>
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;">
-          <span style="font-size:22px;">👁</span>
-          <span style="font-size:9px;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.8);">Tap to view once</span>
-        </div>
-      </div>`;
-    }
-  } else if(msg.videoUrl){
-    bodyHtml = `<video src="${msg.videoUrl}" controls style="max-width:180px;border-radius:8px;display:block;" preload="metadata"></video>`;
-  } else if(msg.imgUrl){
-    bodyHtml = `<img src="${msg.imgUrl}" style="max-width:160px;border-radius:8px;display:block;cursor:pointer;" onclick="window.open('${msg.imgUrl}','_blank')" alt="Photo"/>`;
-  }
-  if(msg.text) bodyHtml += `<div style="font-size:12px;color:var(--text);line-height:1.4;margin-top:${msg.imgUrl||msg.videoUrl?'5px':'0'};">${_esc(msg.text)}</div>`;
-
-  // Note: No private reply - only public reply button (no reply-to-one threading)
-  const replyBtn = msg.isBroadcast ? '' :
-    `<button onclick="setAdminPanelReply('${board}','${msg.id}','${_esc(msg.name||'').replace(/'/g,"\\'")}','${_esc(msg.text||'').replace(/'/g,"\\'").substring(0,60)}',${!!msg.imgUrl})" style="font-size:9px;color:var(--text3);background:none;border:none;cursor:pointer;padding:1px 5px;border-radius:4px;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='none'">↩ Reply</button>`;
-
-  return `<div id="apMsg-${msg.id||msg.at}" style="background:${isMine?'var(--blue3)':'var(--s2)'};border:1px solid ${isMine?'rgba(59,130,246,0.2)':'var(--line)'};border-radius:var(--r2);padding:8px 10px;${isMine?'margin-left:20px;':'margin-right:20px;'}">
-    <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px;flex-wrap:wrap;">
-      <span style="font-size:10px;font-weight:700;color:${senderColor};">${_esc(msg.name||'Anonymous')}</span>
-      ${roleBadge}
-      <span style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-left:auto;">${time}</span>
-    </div>
-    ${replyBlock}${bodyHtml}
-    <div style="margin-top:4px;text-align:right;">${replyBtn}</div>
-  </div>`;
-}
-
-function setAdminPanelReply(board, msgId, name, text, isImg){
-  _adminPanelReplyState = { board, msgId, name, text: isImg?'':text, isImg };
-  const previewId = board==='admin' ? 'adminPanelAdminReplyPreview' : 'adminPanelPublicReplyPreview';
-  const el = document.getElementById(previewId);
-  if(el){
-    el.style.display='flex';
-    el.querySelector('.rp-name').textContent = name;
-    el.querySelector('.rp-text').textContent = isImg ? '🖼 Photo' : text;
-  }
-}
-
-function clearAdminPanelReply(board){
-  _adminPanelReplyState = {};
-  const previewId = board==='admin' ? 'adminPanelAdminReplyPreview' : 'adminPanelPublicReplyPreview';
-  const el = document.getElementById(previewId);
-  if(el) el.style.display='none';
-}
-
-function previewAdminPanelImg(board){
-  const inputId = board==='admin' ? 'adminPanelAdminImg' : 'adminPanelPublicImg';
-  const previewId = board==='admin' ? 'adminPanelAdminImgPreview' : 'adminPanelPublicImgPreview';
-  const file = document.getElementById(inputId)?.files?.[0];
-  const preview = document.getElementById(previewId);
-  if(!preview) return;
-  if(!file){ preview.style.display='none'; preview.innerHTML=''; return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    preview.style.display='block';
-    const isVideo = file.type.startsWith('video/');
-    preview.innerHTML = `<div style="display:flex;align-items:center;gap:8px;background:var(--s3);border-radius:var(--r1);padding:5px 8px;">
-      ${isVideo ? `<video src="${e.target.result}" style="width:44px;height:44px;object-fit:cover;border-radius:5px;flex-shrink:0;" muted></video>` : `<img src="${e.target.result}" style="width:44px;height:44px;object-fit:cover;border-radius:5px;flex-shrink:0;"/>`}
-      <div style="flex:1;min-width:0;"><div style="font-size:10px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(file.name)}</div><div style="font-size:9px;color:var(--text3);">${(file.size/1024).toFixed(0)} KB${isVideo?' · video':''}</div></div>
-      <button onclick="this.closest('div[style]').parentElement.style.display='none';document.getElementById('${inputId}').value='';" style="font-size:12px;background:none;border:none;cursor:pointer;color:var(--text3);">✕</button>
-    </div>`;
-  };
-  reader.readAsDataURL(file);
-}
-
-async function sendAdminPanelMsg(board){
-  if(!S.currentAdmin){ toast('You must be logged in','err'); return; }
-  const inputId   = board==='admin' ? 'adminPanelAdminInput'   : 'adminPanelPublicInput';
-  const imgId     = board==='admin' ? 'adminPanelAdminImg'     : 'adminPanelPublicImg';
-  const voId      = board==='admin' ? 'adminPanelAdminViewOnce': 'adminPanelPublicViewOnce';
-  const previewId = board==='admin' ? 'adminPanelAdminImgPreview' : 'adminPanelPublicImgPreview';
-
-  const text    = document.getElementById(inputId)?.value.trim();
-  const file    = document.getElementById(imgId)?.files?.[0];
-  const viewOnce= document.getElementById(voId)?.checked || false;
-
-  if(!text && !file){ toast('Write a message or attach a file','warn'); return; }
-
-  await waitForFirebase();
-  const coll = board==='admin' ? 'chat_admin' : 'chat_public';
-  const name = S.currentAdmin==='__super__' ? 'Super Admin' : S.currentAdmin;
-  const role = S.currentAdmin==='__super__' ? 'super' : 'admin';
-  const msgData = { name, text:text||'', role, senderId:S.currentAdmin, at:Date.now() };
-
-  if(_adminPanelReplyState.msgId && _adminPanelReplyState.board===board){
-    msgData.replyTo     = _adminPanelReplyState.msgId;
-    msgData.replyToName = _adminPanelReplyState.name;
-    msgData.replyToText = _adminPanelReplyState.text;
-    msgData.replyToImg  = _adminPanelReplyState.isImg;
-  }
-
-  if(file){
-    try {
-      const isVideo = file.type.startsWith('video/');
-      if(isVideo && file.size > 10*1024*1024){ toast('Video too large (max 10MB)','err'); return; }
-      if(!isVideo && file.size > 2*1024*1024){ toast('Image too large (max 2MB)','err'); return; }
-      const dataUrl = await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=()=>rej('Read failed'); r.readAsDataURL(file); });
-      if(isVideo){
-        msgData.videoUrl = dataUrl;
-      } else {
-        msgData.imgUrl   = dataUrl;
-        msgData.viewOnce = viewOnce;
-        msgData.viewedBy = [];
-      }
-    } catch(e){ toast('File error: '+e,'err'); return; }
-  }
-
-  const ref = await window._fsAddDoc(window._fsColl(window._db,coll), msgData);
-  await window._fsSetDoc(window._fsDoc(window._db,coll,ref.id),{id:ref.id},{merge:true});
-
-  if(document.getElementById(inputId)) document.getElementById(inputId).value='';
-  if(document.getElementById(imgId))   document.getElementById(imgId).value='';
-  const pv = document.getElementById(previewId);
-  if(pv){ pv.style.display='none'; pv.innerHTML=''; }
-  clearAdminPanelReply(board);
-}
-
-// ── Admin Panel Inbox (messages sent to THIS admin from visitors) ──
-function _loadAdminPanelInbox(){
-  if(_adminPanelInboxUnsub){ _adminPanelInboxUnsub(); _adminPanelInboxUnsub=null; }
-  if(!S.currentAdmin) return;
-  waitForFirebase().then(()=>{
-    const q = window._fsQuery(
-      window._fsColl(window._db,'visitor_inbox'),
-      window._fsOrderBy('sentAt','desc')
-    );
-    _adminPanelInboxUnsub = window._fsOnSnap(q, snap=>{
-      // Filter to messages directed at this admin
-      const myUsername = S.currentAdmin;
-      const all = snap.docs.map(d=>({id:d.id,...d.data()}))
-        .filter(m => m.toAdmin === myUsername);
-      const unread = all.filter(m=>!m.read).length;
-      const badge = document.getElementById('adminPanelInboxBadge');
-      if(badge) badge.style.display = unread > 0 ? 'block' : 'none';
-      _renderAdminPanelInbox(all);
-    });
-  });
-}
-
-function _renderAdminPanelInbox(msgs){
-  const container = document.getElementById('adminPanelInboxList');
-  if(!container) return;
-  if(!msgs.length){
-    container.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;font-family:var(--mono);">No messages yet.</div>';
-    return;
-  }
-  container.innerHTML = msgs.map(m=>{
-    const time = new Date(m.sentAt).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-    const statusBadge = m.replied
-      ? '<span style="font-size:9px;background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.2);border-radius:4px;padding:1px 5px;">REPLIED</span>'
-      : m.read
-      ? '<span style="font-size:9px;background:var(--s3);color:var(--text3);border:1px solid var(--line);border-radius:4px;padding:1px 5px;">READ</span>'
-      : '<span style="font-size:9px;background:var(--blue3);color:var(--blue);border:1px solid rgba(59,130,246,0.25);border-radius:4px;padding:1px 5px;font-weight:700;">NEW</span>';
-    return `<div style="background:${!m.read?'var(--s2)':'var(--s1)'};border:1px solid ${!m.read?'var(--line2)':'var(--line)'};border-radius:var(--r2);padding:10px 12px;">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
-        <span style="font-size:12px;font-weight:700;color:var(--text);">${_esc(m.fromName)}</span>
-        ${statusBadge}
-        <span style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-left:auto;">${time}</span>
-      </div>
-      <div style="font-size:11px;color:var(--text2);background:var(--s3);border-radius:var(--r1);padding:7px 9px;margin-bottom:8px;">${_esc(m.message)}</div>
-      ${m.replied && m.replyText ? `<div style="font-size:10px;color:var(--green);background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.15);border-radius:var(--r1);padding:6px 9px;margin-bottom:8px;"><span style="font-weight:700;">↩ Sent:</span> ${_esc(m.replyText)}</div>` : ''}
-      <div style="display:flex;gap:6px;flex-wrap:wrap;">
-        ${!m.replied ? `<button class="btn btn-primary btn-xs" onclick="openInboxReply('${m.id}','${_esc(m.fromName)}','${_esc(m.fromEmail)}','${_esc(m.message).replace(/'/g,'&#39;')}')">↩ Reply</button>` : ''}
-        ${!m.read ? `<button class="btn btn-ghost btn-xs" onclick="markInboxRead('${m.id}')">✓ Mark Read</button>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-/* ── Hook admin panel chat into admin login ── */
 /* ── BOOT ── */
 buildBg(_currentBgTheme);
 init();
