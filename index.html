@@ -2254,44 +2254,23 @@ img, video, iframe { max-width: 100%; }
 
     <!-- ── PUBLIC CHAT BOARD ── -->
     <div style="max-width:720px;margin:0 auto 40px;" id="landingChatSection">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">💬</div>
-          <div>
-            <div style="font-family:var(--head);font-size:15px;font-weight:800;color:var(--text);">Community Board</div>
-            <div style="font-size:11px;color:var(--text3);">Open to everyone — share thoughts, ask questions</div>
-          </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">💬</div>
+        <div>
+          <div style="font-family:var(--head);font-size:15px;font-weight:800;color:var(--text);">Community Board</div>
+          <div style="font-size:11px;color:var(--text3);">Open to everyone — share thoughts, ask questions</div>
         </div>
-        <button class="btn btn-ghost btn-xs" onclick="openVisitorMsgModal()" style="flex-shrink:0;color:var(--gold);border-color:rgba(226,185,106,0.3);">🛡 Contact Admin</button>
       </div>
       <div style="background:var(--s1);border:1px solid var(--line);border-radius:var(--r3);overflow:hidden;">
         <div id="landingChatMessages" style="max-height:280px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;">
           <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;font-family:var(--mono);">Loading messages…</div>
         </div>
         <div style="border-top:1px solid var(--line);padding:12px 14px;background:var(--s2);">
-          <div id="landingReplyPreview" style="display:none;align-items:center;gap:8px;background:var(--s3);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:6px 10px;margin-bottom:6px;">
-            <div style="flex:1;min-width:0;"><div class="rp-name" style="font-size:10px;font-weight:700;color:var(--blue);"></div><div class="rp-text" style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div></div>
-            <button onclick="clearChatReply('landing')" style="font-size:14px;background:none;border:none;cursor:pointer;color:var(--text3);">✕</button>
-          </div>
-          <div id="landingImgPreview" style="display:none;margin-bottom:6px;"></div>
           <div style="display:flex;gap:8px;margin-bottom:8px;">
             <input id="landingChatName" placeholder="Your name (or Anonymous)" style="flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s1);color:var(--text);font-family:var(--body);font-size:12px;"/>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-end;">
-            <div style="flex:1;">
-              <textarea id="landingChatInput" rows="2" placeholder="Write a message… (Ctrl+Enter to send)" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s1);color:var(--text);font-family:var(--body);font-size:13px;resize:none;box-sizing:border-box;" onkeydown="if(event.ctrlKey&&event.key==='Enter')sendLandingChatMsg()"></textarea>
-              <div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap;">
-                <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
-                  <span>🖼</span>
-                  <input id="landingChatImg" type="file" accept="image/*" style="display:none;" onchange="previewChatImg(this,'landingImgPreview')"/>
-                  <span style="color:var(--blue);text-decoration:underline;">Add photo</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
-                  <input id="landingChatViewOnce" type="checkbox" style="width:13px;height:13px;"/>
-                  👁 View once
-                </label>
-              </div>
-            </div>
+            <textarea id="landingChatInput" rows="2" placeholder="Write a message… (Ctrl+Enter to send)" style="flex:1;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s1);color:var(--text);font-family:var(--body);font-size:13px;resize:none;" onkeydown="if(event.ctrlKey&&event.key==='Enter')sendLandingChatMsg()"></textarea>
             <button class="btn btn-primary" style="padding:10px 14px;align-self:flex-end;" onclick="sendLandingChatMsg()">➤ Send</button>
           </div>
         </div>
@@ -2499,29 +2478,14 @@ img, video, iframe { max-width: 100%; }
           </div>
           <div class="pb-body" style="padding-bottom:8px;">
             <div id="publicChatMessages" style="max-height:320px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:8px;"></div>
-            <div id="publicReplyPreview" style="display:none;align-items:center;gap:8px;background:var(--s3);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:6px 10px;margin-bottom:6px;">
-              <div style="flex:1;min-width:0;"><div class="rp-name" style="font-size:10px;font-weight:700;color:var(--blue);"></div><div class="rp-text" style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div></div>
-              <button onclick="clearChatReply('public')" style="font-size:14px;background:none;border:none;cursor:pointer;color:var(--text3);">✕</button>
-            </div>
-            <div id="publicImgPreview" style="display:none;margin-bottom:6px;"></div>
             <div style="display:flex;gap:8px;align-items:flex-end;">
               <div style="flex:1;">
-                <input id="publicChatName" placeholder="Your name (or Anonymous)" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:12px;margin-bottom:6px;box-sizing:border-box;"/>
-                <textarea id="publicChatInput" rows="2" placeholder="Write a message… (Ctrl+Enter to send)" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:none;box-sizing:border-box;" onkeydown="if(event.ctrlKey&&event.key==='Enter')sendPublicChatMsg()"></textarea>
-                <div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap;">
-                  <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
-                    <span>🖼</span>
-                    <input id="publicChatImg" type="file" accept="image/*" style="display:none;" onchange="previewChatImg(this,'publicImgPreview')"/>
-                    <span style="color:var(--blue);text-decoration:underline;">Add photo</span>
-                  </label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
-                    <input id="publicChatViewOnce" type="checkbox" style="width:13px;height:13px;"/>
-                    👁 View once
-                  </label>
-                </div>
+                <input id="publicChatName" placeholder="Your name (or leave blank for Anonymous)" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:12px;margin-bottom:6px;"/>
+                <textarea id="publicChatInput" rows="2" placeholder="Write a message…" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:none;" onkeydown="if(event.ctrlKey&&event.key==='Enter')sendPublicChatMsg()"></textarea>
               </div>
               <button class="btn btn-primary" style="padding:10px 14px;align-self:flex-end;" onclick="sendPublicChatMsg()">➤</button>
             </div>
+          </div>
         </div>
       </div>
 
@@ -2534,27 +2498,8 @@ img, video, iframe { max-width: 100%; }
           </div>
           <div class="pb-body" style="padding-bottom:8px;">
             <div id="adminChatMessages" style="max-height:320px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:8px;"></div>
-            <div id="adminChatMessages" style="max-height:320px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:8px;"></div>
-            <div id="adminReplyPreview" style="display:none;align-items:center;gap:8px;background:var(--s3);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:6px 10px;margin-bottom:6px;">
-              <div style="flex:1;min-width:0;"><div class="rp-name" style="font-size:10px;font-weight:700;color:var(--gold);"></div><div class="rp-text" style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div></div>
-              <button onclick="clearChatReply('admin')" style="font-size:14px;background:none;border:none;cursor:pointer;color:var(--text3);">✕</button>
-            </div>
-            <div id="adminImgPreview" style="display:none;margin-bottom:6px;"></div>
             <div style="display:flex;gap:8px;align-items:flex-end;">
-              <div style="flex:1;">
-                <textarea id="adminChatInput" rows="2" placeholder="Message to all admins… (Ctrl+Enter to send)" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:none;box-sizing:border-box;" onkeydown="if(event.ctrlKey&&event.key==='Enter')sendAdminChatMsg()"></textarea>
-                <div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap;">
-                  <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
-                    <span>🖼</span>
-                    <input id="adminChatImg" type="file" accept="image/*" style="display:none;" onchange="previewChatImg(this,'adminImgPreview')"/>
-                    <span style="color:var(--blue);text-decoration:underline;">Add photo</span>
-                  </label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
-                    <input id="adminChatViewOnce" type="checkbox" style="width:13px;height:13px;"/>
-                    👁 View once
-                  </label>
-                </div>
-              </div>
+              <textarea id="adminChatInput" rows="2" placeholder="Message to all admins…" style="flex:1;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:none;" onkeydown="if(event.ctrlKey&&event.key==='Enter')sendAdminChatMsg()"></textarea>
               <button class="btn btn-gold" style="padding:10px 14px;align-self:flex-end;" onclick="sendAdminChatMsg()">➤</button>
             </div>
           </div>
@@ -3722,22 +3667,8 @@ img, video, iframe { max-width: 100%; }
       <!-- Step 1: pick admin -->
       <div id="vMsgStep1">
         <div style="font-family:var(--head);font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">1 — Choose an Admin</div>
-        <div id="vMsgAdminPicker" style="display:flex;flex-direction:column;gap:7px;max-height:220px;overflow-y:auto;margin-bottom:14px;">
-          <!-- Super Admin always shown first -->
-          <div class="vMsg-admin-opt" data-username="__super__" data-name="Super Admin"
-            onclick="vMsgSelectAdmin('__super__','Super Admin')"
-            style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid rgba(226,185,106,0.3);border-radius:var(--r2);cursor:pointer;transition:all 0.15s;background:rgba(226,185,106,0.05);"
-            onmouseover="this.style.borderColor='var(--gold)';this.style.background='var(--gold2)'"
-            onmouseout="if(!this.classList.contains('selected')){this.style.borderColor='rgba(226,185,106,0.3)';this.style.background='rgba(226,185,106,0.05)'}">
-            <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--gold),#f59e0b);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">🛡</div>
-            <div>
-              <div style="font-size:13px;font-weight:700;color:var(--text);">Super Admin</div>
-              <div style="font-size:10px;color:var(--gold);font-family:var(--mono);">Platform owner · Always available</div>
-            </div>
-            <div style="margin-left:auto;width:18px;height:18px;border-radius:50%;border:2px solid rgba(226,185,106,0.4);flex-shrink:0;" id="vMsgDot___super__"></div>
-          </div>
-          <div style="font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;padding:4px 2px;">Or contact a specific admin</div>
-          <div style="text-align:center;padding:12px;color:var(--text3);font-size:12px;font-family:var(--mono);" id="vMsgAdminList">Loading admins…</div>
+        <div id="vMsgAdminPicker" style="display:flex;flex-direction:column;gap:7px;max-height:200px;overflow-y:auto;margin-bottom:14px;">
+          <div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;font-family:var(--mono);">Loading admins…</div>
         </div>
         <button class="btn btn-primary btn-full" onclick="vMsgGoStep2()">Continue →</button>
       </div>
@@ -9254,61 +9185,36 @@ async function trackVisitor(){
   await waitForFirebase();
   try {
     const vid = _getVisitorId();
-    const today = new Date().toISOString().slice(0,10);
-    const monthKey = today.slice(0,7);
-
-    // ── Deduplicate: only count once per day per device ──
-    // Check localStorage first (fast), then cross-check Firestore (reliable even after cache clear)
-    const lastTrackedDay = localStorage.getItem('ax_tracked_day');
-    const lsCountedToday = lastTrackedDay === today;
-    // Also check Firestore days record for this visitor
-    const refCheck = window._fsDoc(window._db,'visitors',vid);
-    const snapCheck = await window._fsGetDoc(refCheck);
-    const existingDays = (snapCheck.exists() ? snapCheck.data().days : {}) || {};
-    const alreadyCountedToday = lsCountedToday || !!(existingDays[today]);
-
-    const ref = refCheck;
-    const snap = snapCheck;
+    const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+    const monthKey = today.slice(0,7); // YYYY-MM
+    const ref = window._fsDoc(window._db,'visitors',vid);
+    const snap = await window._fsGetDoc(ref);
     const data = snap.exists() ? snap.data() : {};
-
-    // Always update lastVisit, but only increment counts if new day
-    const updateData = {
-      vid,
+    const visits = (data.visits||0) + 1;
+    const months = data.months || {};
+    months[monthKey] = (months[monthKey]||0) + 1;
+    const days = data.days || {};
+    days[today] = (days[today]||0) + 1;
+    await window._fsSetDoc(ref,{
+      vid, visits, months, days,
       lastVisit: Date.now(),
       firstVisit: data.firstVisit || Date.now(),
       ua: navigator.userAgent.substring(0,120)
-    };
-
-    if(!alreadyCountedToday){
-      const visits = (data.visits||0) + 1;
-      const months = data.months || {};
-      months[monthKey] = (months[monthKey]||0) + 1;
-      const days = data.days || {};
-      days[today] = (days[today]||0) + 1;
-      updateData.visits = visits;
-      updateData.months = months;
-      updateData.days   = days;
-
-      // Aggregate counter — only increment once per day
-      const aggRef = window._fsDoc(window._db,'visitor_stats','aggregate');
-      const aggSnap = await window._fsGetDoc(aggRef);
-      const agg = aggSnap.exists() ? aggSnap.data() : {};
-      const aggMonths = agg.months || {};
-      aggMonths[monthKey] = (aggMonths[monthKey]||0) + 1;
-      const aggDays = agg.days || {};
-      aggDays[today] = (aggDays[today]||0) + 1;
-      await window._fsSetDoc(aggRef,{
-        total: (agg.total||0)+1,
-        months: aggMonths,
-        days: aggDays,
-        updatedAt: Date.now()
-      },{merge:true});
-
-      // Mark today as tracked in localStorage
-      localStorage.setItem('ax_tracked_day', today);
-    }
-
-    await window._fsSetDoc(ref, updateData, {merge:true});
+    },{merge:true});
+    // Aggregate counter
+    const aggRef = window._fsDoc(window._db,'visitor_stats','aggregate');
+    const aggSnap = await window._fsGetDoc(aggRef);
+    const agg = aggSnap.exists() ? aggSnap.data() : {};
+    const aggMonths = agg.months || {};
+    aggMonths[monthKey] = (aggMonths[monthKey]||0) + 1;
+    const aggDays = agg.days || {};
+    aggDays[today] = (aggDays[today]||0) + 1;
+    await window._fsSetDoc(aggRef,{
+      total: (agg.total||0)+1,
+      months: aggMonths,
+      days: aggDays,
+      updatedAt: Date.now()
+    },{merge:true});
   } catch(e){ console.warn('[AttendX] Visitor track error:',e.message); }
 }
 
@@ -9469,7 +9375,7 @@ function switchChatBoard(board){
   document.getElementById('chtab-admin').style.flex='1';
 }
 
-function _chatMsgHtml(msg, isMine, boardId){
+function _chatMsgHtml(msg, isMine){
   const senderColor = msg.role==='super'?'var(--gold)':msg.role==='admin'?'var(--blue)':'var(--text3)';
   const roleBadge = msg.role==='super'
     ?'<span style="font-size:9px;background:rgba(226,185,106,0.15);color:var(--gold);border:1px solid rgba(226,185,106,0.25);border-radius:4px;padding:1px 5px;margin-left:4px;">SUPER</span>'
@@ -9477,154 +9383,29 @@ function _chatMsgHtml(msg, isMine, boardId){
     ?'<span style="font-size:9px;background:var(--blue3);color:var(--blue);border:1px solid rgba(59,130,246,0.2);border-radius:4px;padding:1px 5px;margin-left:4px;">ADMIN</span>'
     :'<span style="font-size:9px;background:var(--s3);color:var(--text3);border:1px solid var(--line);border-radius:4px;padding:1px 5px;margin-left:4px;">VISITOR</span>';
   const time = msg.at ? new Date(msg.at).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : '';
-
-  // ── Reply quote block ──
-  let replyBlock = '';
-  if(msg.replyTo){
-    replyBlock = `<div style="border-left:3px solid var(--blue);padding:5px 8px;background:var(--s3);border-radius:0 6px 6px 0;margin-bottom:7px;cursor:pointer;" onclick="document.getElementById('cmsg-${msg.replyTo}')?.scrollIntoView({behavior:'smooth',block:'center'})">
-      <div style="font-size:10px;font-weight:700;color:var(--blue);">${_esc(msg.replyToName||'Unknown')}</div>
-      <div style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">${msg.replyToImg?'🖼 Photo':_esc(msg.replyToText||'')}</div>
-    </div>`;
-  }
-
-  // ── Message body ──
-  let bodyHtml = '';
-  if(msg.imgUrl && msg.viewOnce){
-    const vid = _getVisitorId();
-    const myId = S.currentAdmin||vid;
-    const viewed = (msg.viewedBy||[]).includes(myId);
-    if(viewed){
-      bodyHtml = `<div style="font-size:12px;color:var(--text3);font-style:italic;">🔒 View once — already opened</div>`;
-    } else {
-      bodyHtml = `<div style="position:relative;cursor:pointer;display:inline-block;" onclick="openViewOnceImg('${msg.id}','${boardId}','${myId}')">
-        <img src="${msg.imgUrl}" style="max-width:180px;border-radius:10px;filter:blur(18px);display:block;" alt="View once photo"/>
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
-          <span style="font-size:28px;">👁</span>
-          <span style="font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.8);">Tap to view once</span>
-        </div>
-      </div>`;
-    }
-  } else if(msg.imgUrl){
-    bodyHtml = `<img src="${msg.imgUrl}" style="max-width:220px;border-radius:10px;display:block;cursor:pointer;margin-bottom:4px;" onclick="window.open('${msg.imgUrl}','_blank')" alt="Photo"/>`;
-  }
-  if(msg.text){
-    bodyHtml += `<div style="font-size:13px;color:var(--text);line-height:1.5;margin-top:${msg.imgUrl?'6px':'0'};">${_esc(msg.text)}</div>`;
-  }
-
-  // ── Reply button ──
-  const replyBtn = `<button onclick="setChatReply('${boardId}','${msg.id}','${_esc(msg.name||'Anonymous').replace(/'/g,"\\'")}','${_esc(msg.text||'').replace(/'/g,"\\'").substring(0,60)}',${!!msg.imgUrl})" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px;transition:background 0.15s;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='none'">↩ Reply</button>`;
-
-  return `<div id="cmsg-${msg.id||msg.at}" style="background:${isMine?'var(--blue3)':'var(--s2)'};border:1px solid ${isMine?'rgba(59,130,246,0.2)':'var(--line)'};border-radius:var(--r2);padding:10px 12px;${isMine?'margin-left:32px;':'margin-right:32px;'}">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+  return `<div style="background:${isMine?'var(--blue3)':'var(--s2)'};border:1px solid ${isMine?'rgba(59,130,246,0.2)':'var(--line)'};border-radius:var(--r2);padding:10px 12px;${isMine?'margin-left:20px;':'margin-right:20px;'}">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;flex-wrap:wrap;">
       <span style="font-size:11px;font-weight:700;color:${senderColor};">${_esc(msg.name||'Anonymous')}</span>
       ${roleBadge}
       <span style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-left:auto;">${time}</span>
     </div>
-    ${replyBlock}
-    ${bodyHtml}
-    <div style="margin-top:5px;text-align:right;">${replyBtn}</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.5;">${_esc(msg.text||'')}</div>
   </div>`;
 }
 
 function _esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// ── Image preview helper ──
-function previewChatImg(input, previewId){
-  const preview = document.getElementById(previewId);
-  if(!preview) return;
-  const file = input?.files?.[0];
-  if(!file){ preview.style.display='none'; preview.innerHTML=''; return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    preview.style.display = 'block';
-    preview.innerHTML = `<div style="display:flex;align-items:center;gap:8px;background:var(--s3);border-radius:var(--r1);padding:6px 10px;">
-      <img src="${e.target.result}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0;"/>
-      <div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${_esc(file.name)}</div><div style="font-size:10px;color:var(--text3);">${(file.size/1024).toFixed(0)} KB</div></div>
-      <button onclick="this.closest('[id]').style.display=\'none\';document.getElementById('${input.id}').value='';" style="font-size:13px;background:none;border:none;cursor:pointer;color:var(--text3);">✕</button>
-    </div>`;
-  };
-  reader.readAsDataURL(file);
-}
-
-// ── Reply state ──
-let _chatReplyState = {}; // { boardId, msgId, name, text, isImg }
-
-function setChatReply(boardId, msgId, name, text, isImg){
-  _chatReplyState = { boardId, msgId, name, text: isImg?'':text, isImg };
-  const previewId = boardId==='landing' ? 'landingReplyPreview' : boardId==='admin' ? 'adminReplyPreview' : 'publicReplyPreview';
-  const el = document.getElementById(previewId);
-  if(el){
-    el.style.display = 'flex';
-    el.querySelector('.rp-name').textContent = name;
-    el.querySelector('.rp-text').textContent = isImg ? '🖼 Photo' : text;
-  }
-}
-
-function clearChatReply(boardId){
-  _chatReplyState = {};
-  const previewId = boardId==='landing' ? 'landingReplyPreview' : boardId==='admin' ? 'adminReplyPreview' : 'publicReplyPreview';
-  const el = document.getElementById(previewId);
-  if(el) el.style.display = 'none';
-}
-
-function _replyPreviewHtml(boardId){
-  return `<div id="${boardId==='landing'?'landingReplyPreview':boardId==='admin'?'adminReplyPreview':'publicReplyPreview'}" style="display:none;align-items:center;gap:8px;background:var(--s3);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:6px 10px;margin-bottom:6px;">
-    <div style="flex:1;min-width:0;">
-      <div class="rp-name" style="font-size:10px;font-weight:700;color:var(--blue);"></div>
-      <div class="rp-text" style="font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-    </div>
-    <button onclick="clearChatReply('${boardId}')" style="font-size:14px;background:none;border:none;cursor:pointer;color:var(--text3);">✕</button>
-  </div>`;
-}
-
-async function _uploadChatImage(file){
-  // Convert to base64 data URL (no external storage needed)
-  return new Promise((resolve, reject)=>{
-    if(!file || !file.type.startsWith('image/')){ reject('Not an image'); return; }
-    if(file.size > 2*1024*1024){ reject('Image too large (max 2MB)'); return; }
-    const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result);
-    reader.onerror = ()=> reject('Read failed');
-    reader.readAsDataURL(file);
-  });
-}
-
-async function openViewOnceImg(msgId, boardId, myId){
-  await waitForFirebase();
-  const coll = boardId==='admin'?'chat_admin':'chat_public';
-  const ref = window._fsDoc(window._db, coll, msgId);
-  const snap = await window._fsGetDoc(ref);
-  if(!snap.exists()) return;
-  const data = snap.data();
-  // Mark as viewed
-  const viewedBy = [...(data.viewedBy||[])];
-  if(!viewedBy.includes(myId)) viewedBy.push(myId);
-  await window._fsSetDoc(ref,{viewedBy},{merge:true});
-  // Show image in a modal overlay
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;';
-  overlay.innerHTML = `
-    <div style="font-size:11px;color:rgba(255,255,255,0.5);font-family:var(--mono);">👁 View Once — closes when you leave</div>
-    <img src="${data.imgUrl}" style="max-width:90vw;max-height:75vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.6);" />
-    <div style="display:flex;gap:12px;">
-      <a href="${data.imgUrl}" download="view_once.jpg" class="btn btn-primary" style="text-decoration:none;">⬇ Download</a>
-      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,0.2);" onclick="this.closest('div[style*=fixed]').remove()">✕ Close</button>
-    </div>`;
-  overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
-  document.body.appendChild(overlay);
-}
-
 // ── PUBLIC CHAT (Super Admin panel view) ──
 function loadPublicChat(){
-  if(_publicChatUnsub){ _publicChatUnsub(); _publicChatUnsub=null; }
+  if(_publicChatUnsub) return; // already subscribed
   waitForFirebase().then(()=>{
     const q = window._fsQuery(
       window._fsColl(window._db,'chat_public'),
       window._fsOrderBy('at','asc'),
-      window._fsLimit(100)
+      window._fsLimit(80)
     );
     _publicChatUnsub = window._fsOnSnap(q, snap=>{
-      const msgs = snap.docs.map(d=>({id:d.id,...d.data()}));
+      const msgs = snap.docs.map(d=>d.data());
       const container = document.getElementById('publicChatMessages');
       if(!container) return;
       if(!msgs.length){
@@ -9632,109 +9413,78 @@ function loadPublicChat(){
         return;
       }
       const myId = S.currentAdmin||_getVisitorId();
-      container.innerHTML = msgs.map(m=>_chatMsgHtml(m, m.senderId===myId,'public')).join('');
+      container.innerHTML = msgs.map(m=>_chatMsgHtml(m, m.senderId===myId)).join('');
       container.scrollTop = container.scrollHeight;
     });
   });
 }
 
 async function sendPublicChatMsg(){
-  const input   = document.getElementById('publicChatInput');
-  const nameEl  = document.getElementById('publicChatName');
-  const imgFile = document.getElementById('publicChatImg')?.files?.[0];
-  const text    = input?.value.trim();
-  const viewOnce= document.getElementById('publicChatViewOnce')?.checked || false;
-  if(!text && !imgFile){ toast('Write a message or pick an image','warn'); return; }
+  const input = document.getElementById('publicChatInput');
+  const nameEl = document.getElementById('publicChatName');
+  const text = input?.value.trim();
+  if(!text) return;
   await waitForFirebase();
   const name = nameEl?.value.trim() || (S.currentAdmin==='__super__'?'Super Admin':S.currentAdmin||'Anonymous');
   const role = S.currentAdmin==='__super__'?'super':S.currentAdmin?'admin':'visitor';
-  const msgData = { name, text:text||'', role, senderId: S.currentAdmin||_getVisitorId(), at: Date.now() };
-  if(_chatReplyState.msgId && _chatReplyState.boardId==='public'){
-    msgData.replyTo     = _chatReplyState.msgId;
-    msgData.replyToName = _chatReplyState.name;
-    msgData.replyToText = _chatReplyState.text;
-    msgData.replyToImg  = _chatReplyState.isImg;
-  }
-  if(imgFile){
-    try {
-      msgData.imgUrl    = await _uploadChatImage(imgFile);
-      msgData.viewOnce  = viewOnce;
-      msgData.viewedBy  = [];
-    } catch(e){ toast('Image error: '+e,'err'); return; }
-  }
-  const ref = await window._fsAddDoc(window._fsColl(window._db,'chat_public'), msgData);
-  // Store id back for view-once lookup
-  await window._fsSetDoc(window._fsDoc(window._db,'chat_public',ref.id),{id:ref.id},{merge:true});
+  await window._fsAddDoc(window._fsColl(window._db,'chat_public'),{
+    name, text, role,
+    senderId: S.currentAdmin||_getVisitorId(),
+    at: Date.now()
+  });
   if(input) input.value='';
-  if(document.getElementById('publicChatImg')) document.getElementById('publicChatImg').value='';
-  clearChatReply('public');
 }
 
 // ── ADMIN-ONLY CHAT ──
 function loadAdminChat(){
-  if(_adminChatUnsub){ _adminChatUnsub(); _adminChatUnsub=null; }
+  if(_adminChatUnsub) return;
   waitForFirebase().then(()=>{
     const q = window._fsQuery(
       window._fsColl(window._db,'chat_admin'),
       window._fsOrderBy('at','asc'),
-      window._fsLimit(100)
+      window._fsLimit(80)
     );
     _adminChatUnsub = window._fsOnSnap(q, snap=>{
-      const msgs = snap.docs.map(d=>({id:d.id,...d.data()}));
+      const msgs = snap.docs.map(d=>d.data());
       const container = document.getElementById('adminChatMessages');
       if(!container) return;
       if(!msgs.length){
         container.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;font-family:var(--mono);">No admin messages yet.</div>';
         return;
       }
-      container.innerHTML = msgs.map(m=>_chatMsgHtml(m, m.senderId===S.currentAdmin,'admin')).join('');
+      container.innerHTML = msgs.map(m=>_chatMsgHtml(m, m.senderId===S.currentAdmin)).join('');
       container.scrollTop = container.scrollHeight;
     });
   });
 }
 
 async function sendAdminChatMsg(){
-  const input   = document.getElementById('adminChatInput');
-  const imgFile = document.getElementById('adminChatImg')?.files?.[0];
-  const text    = input?.value.trim();
-  const viewOnce= document.getElementById('adminChatViewOnce')?.checked || false;
-  if(!text && !imgFile){ toast('Type a message or pick an image','warn'); return; }
+  const input = document.getElementById('adminChatInput');
+  const text = input?.value.trim();
+  if(!text){ toast('Type a message first','warn'); return; }
   if(!S.currentAdmin){ toast('You must be logged in to post here','err'); return; }
   await waitForFirebase();
   const name = S.currentAdmin==='__super__'?'Super Admin':S.currentAdmin;
   const role = S.currentAdmin==='__super__'?'super':'admin';
-  const msgData = { name, text:text||'', role, senderId: S.currentAdmin, at: Date.now() };
-  if(_chatReplyState.msgId && _chatReplyState.boardId==='admin'){
-    msgData.replyTo     = _chatReplyState.msgId;
-    msgData.replyToName = _chatReplyState.name;
-    msgData.replyToText = _chatReplyState.text;
-    msgData.replyToImg  = _chatReplyState.isImg;
-  }
-  if(imgFile){
-    try {
-      msgData.imgUrl   = await _uploadChatImage(imgFile);
-      msgData.viewOnce = viewOnce;
-      msgData.viewedBy = [];
-    } catch(e){ toast('Image error: '+e,'err'); return; }
-  }
-  const ref = await window._fsAddDoc(window._fsColl(window._db,'chat_admin'), msgData);
-  await window._fsSetDoc(window._fsDoc(window._db,'chat_admin',ref.id),{id:ref.id},{merge:true});
+  await window._fsAddDoc(window._fsColl(window._db,'chat_admin'),{
+    name, text, role,
+    senderId: S.currentAdmin,
+    at: Date.now()
+  });
   if(input) input.value='';
-  if(document.getElementById('adminChatImg')) document.getElementById('adminChatImg').value='';
-  clearChatReply('admin');
 }
 
 // ── LANDING PAGE PUBLIC CHAT ──
 function loadLandingChat(){
-  if(_landingChatUnsub){ _landingChatUnsub(); _landingChatUnsub=null; }
+  if(_landingChatUnsub) return;
   waitForFirebase().then(()=>{
     const q = window._fsQuery(
       window._fsColl(window._db,'chat_public'),
       window._fsOrderBy('at','asc'),
-      window._fsLimit(80)
+      window._fsLimit(50)
     );
     _landingChatUnsub = window._fsOnSnap(q, snap=>{
-      const msgs = snap.docs.map(d=>({id:d.id,...d.data()}));
+      const msgs = snap.docs.map(d=>d.data());
       const container = document.getElementById('landingChatMessages');
       if(!container) return;
       if(!msgs.length){
@@ -9742,40 +9492,26 @@ function loadLandingChat(){
         return;
       }
       const myId = _getVisitorId();
-      container.innerHTML = msgs.map(m=>_chatMsgHtml(m, m.senderId===myId,'landing')).join('');
+      container.innerHTML = msgs.map(m=>_chatMsgHtml(m, m.senderId===myId)).join('');
       container.scrollTop = container.scrollHeight;
     });
   });
 }
 
 async function sendLandingChatMsg(){
-  const input   = document.getElementById('landingChatInput');
-  const nameEl  = document.getElementById('landingChatName');
-  const imgFile = document.getElementById('landingChatImg')?.files?.[0];
-  const text    = input?.value.trim();
-  const viewOnce= document.getElementById('landingChatViewOnce')?.checked || false;
-  if(!text && !imgFile){ toast('Write something or pick an image','warn'); return; }
+  const input = document.getElementById('landingChatInput');
+  const nameEl = document.getElementById('landingChatName');
+  const text = input?.value.trim();
+  if(!text) return;
   await waitForFirebase();
   const name = nameEl?.value.trim() || 'Anonymous';
-  const msgData = { name, text:text||'', role:'visitor', senderId:_getVisitorId(), at:Date.now() };
-  if(_chatReplyState.msgId && _chatReplyState.boardId==='landing'){
-    msgData.replyTo     = _chatReplyState.msgId;
-    msgData.replyToName = _chatReplyState.name;
-    msgData.replyToText = _chatReplyState.text;
-    msgData.replyToImg  = _chatReplyState.isImg;
-  }
-  if(imgFile){
-    try {
-      msgData.imgUrl   = await _uploadChatImage(imgFile);
-      msgData.viewOnce = viewOnce;
-      msgData.viewedBy = [];
-    } catch(e){ toast('Image error: '+e,'err'); return; }
-  }
-  const ref = await window._fsAddDoc(window._fsColl(window._db,'chat_public'), msgData);
-  await window._fsSetDoc(window._fsDoc(window._db,'chat_public',ref.id),{id:ref.id},{merge:true});
+  await window._fsAddDoc(window._fsColl(window._db,'chat_public'),{
+    name, text,
+    role: 'visitor',
+    senderId: _getVisitorId(),
+    at: Date.now()
+  });
   if(input) input.value='';
-  if(document.getElementById('landingChatImg')) document.getElementById('landingChatImg').value='';
-  clearChatReply('landing');
 }
 
 /* ══════════════════════════════════════════════════════
@@ -9801,25 +9537,26 @@ async function openVisitorMsgModal(){
   _vMsgSelectedAdmin = null;
   document.getElementById('visitorMsgModal').classList.add('show');
   _showVMsgStep(1);
+  // Load admin list for picker
   await waitForFirebase();
   try {
     const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
     const admins = snap.docs.map(d=>d.data()).filter(a=>!a.deleted && !a.blocked);
-    const list = document.getElementById('vMsgAdminList');
-    if(!list) return;
-    // Super Admin always appears first
-    const superOpt = { username:'__super__', name:'Super Admin ⭐', isSuper:true };
-    const allOptions = [superOpt, ...admins];
-    list.innerHTML = allOptions.map(a=>`
-      <div class="vMsg-admin-opt" data-username="${a.username}" data-name="${_esc(a.name||a.username)}"
+    const picker = document.getElementById('vMsgAdminPicker');
+    if(!admins.length){
+      picker.innerHTML='<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px;font-family:var(--mono);">No admins available right now.</div>';
+      return;
+    }
+    picker.innerHTML = admins.map(a=>`
+      <div class="vMsg-admin-opt" data-username="${a.username}" data-name="${a.name||a.username}"
         onclick="vMsgSelectAdmin('${a.username}','${_esc(a.name||a.username)}')"
-        style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--line);border-radius:var(--r2);cursor:pointer;transition:all 0.15s;background:var(--s2);margin-bottom:7px;"
+        style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--line);border-radius:var(--r2);cursor:pointer;transition:all 0.15s;background:var(--s2);"
         onmouseover="this.style.borderColor='var(--blue)';this.style.background='var(--blue3)'"
         onmouseout="if(!this.classList.contains('selected')){this.style.borderColor='var(--line)';this.style.background='var(--s2)'}">
-        <div style="width:34px;height:34px;border-radius:10px;background:${a.isSuper?'linear-gradient(135deg,var(--gold),#f59e0b)':'linear-gradient(135deg,var(--blue),var(--cyan))'};display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">${a.isSuper?'🛡':'👤'}</div>
+        <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">👤</div>
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text);">${_esc(a.name||a.username)}</div>
-          <div style="font-size:10px;color:${a.isSuper?'var(--gold)':'var(--text3)'};font-family:var(--mono);">${a.isSuper?'Platform Administrator':'@'+a.username}</div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">@${a.username}</div>
         </div>
         <div style="margin-left:auto;width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;" id="vMsgDot_${a.username}"></div>
       </div>`).join('');
