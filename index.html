@@ -3045,9 +3045,10 @@ img, video, iframe { max-width: 100%; }
           <div class="panel-block a-fadeup d2">
             <div class="pb-head">
               <div class="pb-title"><div class="pb-icon" style="background:var(--blue3)">💬</div>Community Chat</div>
-              <div style="display:flex;gap:6px;">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 <button id="dchtab-public" class="btn btn-primary btn-xs" onclick="dChatSwitch('public')" style="flex:1;">🌐 Public</button>
                 <button id="dchtab-admin"  class="btn btn-ghost btn-xs"   onclick="dChatSwitch('admin')"  style="flex:1;">🔒 Admin Board</button>
+                <button id="dchtab-dm"     class="btn btn-ghost btn-xs"   onclick="dChatSwitch('dm')"     style="flex:1;position:relative;">💌 DM<span id="dmUnreadDot" style="display:none;position:absolute;top:3px;right:3px;width:7px;height:7px;background:var(--red);border-radius:50%;"></span></button>
               </div>
             </div>
             <div class="pb-body" style="padding:0;">
@@ -3108,7 +3109,28 @@ img, video, iframe { max-width: 100%; }
                 </div>
               </div>
             </div>
+            <!-- DM: Admin-to-Admin Private Messages -->
+            <div id="dc4-dm" style="display:none;">
+              <div style="padding:10px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <label style="font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap;">To:</label>
+                <select id="dmTargetAdmin" style="flex:1;min-width:120px;padding:6px 9px;background:var(--s2);border:1px solid var(--line);border-radius:var(--r1);color:var(--text);font-family:var(--mono);font-size:12px;" onchange="loadDMThread()">
+                  <option value="">— Select Admin —</option>
+                </select>
+                <button class="btn btn-ghost btn-xs" onclick="loadDMAdminList()" style="font-size:11px;">↺</button>
+              </div>
+              <div id="dmThreadMessages" style="max-height:260px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;">
+                <div style="text-align:center;padding:30px 0;color:var(--text3);font-size:12px;font-family:var(--mono);">Select an admin to start a private conversation</div>
+              </div>
+              <div style="padding:10px 12px;border-top:1px solid var(--line);">
+                <div style="display:flex;gap:6px;align-items:flex-end;">
+                  <textarea id="dmInput" rows="2" placeholder="Private message… (Enter to send)" style="flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:12px;resize:none;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendDM()}"></textarea>
+                  <button class="btn btn-primary btn-xs" onclick="sendDM()" style="padding:8px 10px;">➤</button>
+                </div>
+                <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:5px;">🔒 Private — only visible to you and the selected admin</div>
+              </div>
+            </div>
           </div>
+        </div>
         </div>
       </div>
 
@@ -10017,18 +10039,82 @@ async function openViewOnceImg(msgId, boardId, myId){
   const viewedBy = [...(data.viewedBy||[])];
   if(!viewedBy.includes(myId)) viewedBy.push(myId);
   await window._fsSetDoc(ref,{viewedBy},{merge:true});
+
+  // Only super admin can download view-once media
+  const isSuperAdmin = (S.currentAdmin === '__super__' || window._isSuperAdmin === true);
+
   // Show image in a modal overlay
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;';
+  overlay.id = '_voOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.94);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;';
+
+  // Build the img element without src in innerHTML to prevent right-click save data leakage
   overlay.innerHTML = `
-    <div style="font-size:11px;color:rgba(255,255,255,0.5);font-family:var(--mono);">👁 View Once — closes when you leave</div>
-    <img src="${data.imgUrl}" style="max-width:90vw;max-height:75vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.6);" />
-    <div style="display:flex;gap:12px;">
-      <a href="${data.imgUrl}" download="view_once.jpg" class="btn btn-primary" style="text-decoration:none;">⬇ Download</a>
-      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,0.2);" onclick="this.closest('div[style*=fixed]').remove()">✕ Close</button>
+    <div style="font-size:11px;color:rgba(255,255,255,0.5);font-family:var(--mono);">👁 View Once — ${isSuperAdmin ? 'Super Admin view' : 'cannot be downloaded or saved'}</div>
+    <div id="_voImgWrap" style="position:relative;user-select:none;">
+      <canvas id="_voCanvas" style="max-width:90vw;max-height:75vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.6);display:block;"></canvas>
+      ${!isSuperAdmin ? `<div style="position:absolute;inset:0;background:transparent;z-index:2;" oncontextmenu="return false;" ondragstart="return false;"></div>` : ''}
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;">
+      ${isSuperAdmin
+        ? `<a href="${data.imgUrl}" download="view_once.jpg" class="btn btn-primary" style="text-decoration:none;">⬇ Download (Super Admin)</a>`
+        : `<div style="font-size:11px;color:rgba(255,255,255,0.35);font-family:var(--mono);background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 14px;">🔒 Download disabled</div>`
+      }
+      <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,0.2);" onclick="_closeViewOnceOverlay(this)">✕ Close</button>
     </div>`;
+
+  // Draw image onto canvas (canvas content can't be saved via right-click on most browsers)
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const canvas = overlay.querySelector('#_voCanvas');
+    if (!canvas) return;
+    // Scale to fit within 90vw x 75vh
+    const maxW = Math.floor(window.innerWidth * 0.9);
+    const maxH = Math.floor(window.innerHeight * 0.75);
+    const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
+    canvas.width  = Math.round(img.naturalWidth  * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    // For non-super admins: add subtle watermark to deter screenshotting
+    if (!isSuperAdmin) {
+      ctx.font = `${Math.max(11, canvas.width * 0.025)}px monospace`;
+      ctx.fillStyle = 'rgba(255,255,255,0.10)';
+      ctx.textAlign = 'center';
+      for (let y = 40; y < canvas.height; y += 70) {
+        ctx.fillText('VIEW ONCE · AttendX PRO · ' + new Date().toLocaleDateString(), canvas.width/2, y);
+      }
+    }
+  };
+  img.src = data.imgUrl;
+
+  // Block right-click on the whole overlay for non-super-admins
+  if (!isSuperAdmin) {
+    overlay.addEventListener('contextmenu', e => e.preventDefault());
+    overlay.addEventListener('dragstart',   e => e.preventDefault());
+  }
+
+  if (isSuperAdmin) overlay.classList.add('super-admin');
   overlay.onclick = e => { if(e.target===overlay) overlay.remove(); };
   document.body.appendChild(overlay);
+
+  // Auto-close after 15 seconds for non-super users
+  if (!isSuperAdmin) {
+    let secs = 15;
+    const label = overlay.querySelector('div[style*="monospace"]');
+    const timer = setInterval(() => {
+      secs--;
+      if (label) label.textContent = `👁 View Once — closes in ${secs}s`;
+      if (secs <= 0) { clearInterval(timer); overlay.remove(); }
+    }, 1000);
+    overlay.addEventListener('remove', () => clearInterval(timer));
+  }
+}
+
+function _closeViewOnceOverlay(btn) {
+  const overlay = btn.closest('div[style*="position:fixed"]');
+  if (overlay) overlay.remove();
 }
 
 // ── PUBLIC CHAT (Super Admin panel view) ──
@@ -11270,11 +11356,448 @@ function _requestGeo(onSuccess, onError){
    EXPOSE _fsWhere (if not already exposed)
 ══════════════════════════════════════════════════════ */
 
+/* ══════════════════════════════════════════════════════
+   ADMIN DM SYSTEM — Private Admin-to-Admin Messages
+   + Visitor Reply System with QR Code Generation
+   KЭL ♛ PHANTOM — AttendX PRO
+══════════════════════════════════════════════════════ */
+
+/* ── DM Chat Thread (admin ↔ admin) ── */
+let _dmUnsub = null;
+
+function _dmThreadId(a, b) {
+  return [a, b].sort().join('__dm__');
+}
+
+async function loadDMAdminList() {
+  const sel = document.getElementById('dmTargetAdmin');
+  if (!sel || !window._db) return;
+  sel.innerHTML = '<option value="">— Select Admin —</option>';
+  try {
+    const snap = await window._fsGetDocs(window._fsColl(window._db, 'admins'));
+    snap.docs.forEach(d => {
+      if (d.id === S.currentAdmin) return; // skip self
+      const a = d.data();
+      if (a.blocked) return;
+      const opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = (a.name || a.username || d.id);
+      sel.appendChild(opt);
+    });
+  } catch (e) { console.warn('DM admin list error:', e); }
+}
+
+function loadDMThread() {
+  if (_dmUnsub) { _dmUnsub(); _dmUnsub = null; }
+  const sel = document.getElementById('dmTargetAdmin');
+  const target = sel?.value;
+  const msgBox = document.getElementById('dmThreadMessages');
+  if (!target || !window._db || !S.currentAdmin) {
+    if (msgBox) msgBox.innerHTML = '<div style="text-align:center;padding:30px 0;color:var(--text3);font-size:12px;font-family:var(--mono);">Select an admin to start a private conversation</div>';
+    return;
+  }
+  const tid = _dmThreadId(S.currentAdmin, target);
+  const q = window._fsQuery(
+    window._fsColl(window._db, 'admin_dms', tid, 'messages'),
+    window._fsOrderBy('ts', 'asc'),
+    window._fsLimit(60)
+  );
+  _dmUnsub = window._fsOnSnap(q, snap => {
+    if (!msgBox) return;
+    if (!snap.docs.length) {
+      msgBox.innerHTML = '<div style="text-align:center;padding:30px 0;color:var(--text3);font-size:12px;font-family:var(--mono);">No messages yet — say hello! 👋</div>';
+      return;
+    }
+    msgBox.innerHTML = snap.docs.map(d => {
+      const m = d.data();
+      const isMe = m.from === S.currentAdmin;
+      return `<div style="display:flex;flex-direction:column;align-items:${isMe ? 'flex-end' : 'flex-start'};gap:2px;">
+        <div style="max-width:85%;background:${isMe ? 'linear-gradient(135deg,var(--blue),var(--blue2))' : 'var(--s2)'};color:${isMe ? '#fff' : 'var(--text)'};border:1px solid ${isMe ? 'transparent' : 'var(--line)'};border-radius:${isMe ? '14px 14px 4px 14px' : '14px 14px 14px 4px'};padding:9px 13px;font-size:12px;line-height:1.5;word-break:break-word;">${_esc(m.body)}</div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);padding:0 4px;">${isMe ? 'You' : _esc(m.fromName || m.from)} · ${new Date(m.ts).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})}</div>
+      </div>`;
+    }).join('');
+    msgBox.scrollTop = msgBox.scrollHeight;
+    // Mark messages from target as read
+    _markDMsRead(tid, target);
+  });
+}
+
+async function sendDM() {
+  const sel = document.getElementById('dmTargetAdmin');
+  const input = document.getElementById('dmInput');
+  const target = sel?.value;
+  const body = input?.value.trim();
+  if (!target) { toast('Select an admin first', 'warn'); return; }
+  if (!body) return;
+  if (!window._db || !S.currentAdmin) { toast('Not connected', 'err'); return; }
+  const tid = _dmThreadId(S.currentAdmin, target);
+  // Get sender name
+  let fromName = S.currentAdmin;
+  try {
+    const snap = await window._fsGetDoc(window._fsDoc(window._db, 'admins', S.currentAdmin));
+    if (snap.exists()) fromName = snap.data().name || S.currentAdmin;
+  } catch(e){}
+  const msg = { from: S.currentAdmin, fromName, to: target, body, ts: Date.now(), read: false };
+  try {
+    await window._fsAddDoc(window._fsColl(window._db, 'admin_dms', tid, 'messages'), msg);
+    // Update thread metadata for unread badge
+    await window._fsSetDoc(window._fsDoc(window._db, 'admin_dms', tid), {
+      participants: [S.currentAdmin, target],
+      lastMsg: body, lastFrom: S.currentAdmin, lastTs: Date.now(),
+      [`unread_${target}`]: window.firebase?.firestore?.FieldValue?.increment(1) || 1
+    }, { merge: true });
+    input.value = '';
+  } catch (e) { toast('Failed to send: ' + e.message, 'err'); }
+}
+
+async function _markDMsRead(tid, fromAdmin) {
+  if (!window._db || !S.currentAdmin) return;
+  try {
+    await window._fsSetDoc(window._fsDoc(window._db, 'admin_dms', tid), {
+      [`unread_${S.currentAdmin}`]: 0
+    }, { merge: true });
+  } catch(e){}
+}
+
+function _listenDMUnread() {
+  if (!window._db || !S.currentAdmin) return;
+  // Listen for any DM threads involving this admin
+  const q = window._fsQuery(
+    window._fsColl(window._db, 'admin_dms'),
+    window._fsWhere('participants', 'array-contains', S.currentAdmin)
+  );
+  window._fsOnSnap(q, snap => {
+    let total = 0;
+    snap.docs.forEach(d => {
+      const data = d.data();
+      total += (data[`unread_${S.currentAdmin}`] || 0);
+    });
+    const dot = document.getElementById('dmUnreadDot');
+    if (dot) dot.style.display = total > 0 ? 'block' : 'none';
+  });
+}
+
+/* ── Extend dChatSwitch to handle DM tab ── */
+const _origDChatSwitch = typeof dChatSwitch === 'function' ? dChatSwitch : null;
+function dChatSwitch(tab) {
+  ['public','admin','dm'].forEach(t => {
+    const el = document.getElementById('dc4-' + t);
+    const btn = document.getElementById('dchtab-' + t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+    if (btn) {
+      btn.classList.toggle('btn-primary', t === tab);
+      btn.classList.toggle('btn-ghost', t !== tab);
+    }
+  });
+  if (tab === 'dm') {
+    loadDMAdminList();
+  } else if (_origDChatSwitch && tab !== 'dm') {
+    // Let original handle public/admin
+  }
+}
+
+/* ════════════════════════════════════════════════════
+   VISITOR REPLY MODAL — Admin → Visitor inbox reply
+   with optional QR code generation
+════════════════════════════════════════════════════ */
+
+let _visitorReplyTarget = null; // { name, email, msgId, adminTarget }
+
+function openVisitorReplyModal(visitorName, visitorEmail, originalMsg, msgId) {
+  _visitorReplyTarget = { name: visitorName, email: visitorEmail, originalMsg, msgId };
+  const modal = document.getElementById('visitorReplyModal');
+  if (!modal) return;
+  // Populate
+  document.getElementById('vrTargetName').textContent = visitorName || 'Visitor';
+  document.getElementById('vrOriginalMsg').textContent = originalMsg || '';
+  document.getElementById('vrReplyText').value = '';
+  document.getElementById('vrQRInput').value = '';
+  document.getElementById('vrQRPreview').style.display = 'none';
+  document.getElementById('vrQRPreview').innerHTML = '';
+  document.getElementById('vrAlert').innerHTML = '';
+  modal.classList.add('show');
+}
+
+function closeVisitorReplyModal() {
+  document.getElementById('visitorReplyModal')?.classList.remove('show');
+  _visitorReplyTarget = null;
+}
+
+function generateReplyQR() {
+  const input = document.getElementById('vrQRInput').value.trim();
+  if (!input) { toast('Enter a URL or text to generate QR', 'warn'); return; }
+  const preview = document.getElementById('vrQRPreview');
+  preview.style.display = 'flex';
+  preview.innerHTML = '';
+  // QR container
+  const qrBox = document.createElement('div');
+  qrBox.style.cssText = 'background:#fff;border-radius:10px;padding:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);display:inline-block;';
+  preview.appendChild(qrBox);
+  if (window.QRCode) {
+    new QRCode(qrBox, { text: input, width: 160, height: 160, colorDark: '#1E2A4A', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  } else {
+    qrBox.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(input)}" style="display:block;width:160px;height:160px;border-radius:6px;"/>`;
+  }
+  // Download button
+  const dlBtn = document.createElement('button');
+  dlBtn.className = 'btn btn-ghost btn-xs';
+  dlBtn.style.cssText = 'margin-top:6px;font-size:10px;';
+  dlBtn.textContent = '⬇ Download QR';
+  dlBtn.onclick = () => {
+    const canvas = qrBox.querySelector('canvas');
+    if (canvas) {
+      const a = document.createElement('a');
+      a.download = 'qr-for-' + (_visitorReplyTarget?.name||'visitor').replace(/\s+/g,'-') + '.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    } else {
+      const img = qrBox.querySelector('img');
+      if (img) window.open(img.src, '_blank');
+    }
+  };
+  preview.appendChild(dlBtn);
+  toast('QR code generated!', 'ok');
+}
+
+async function sendVisitorReply() {
+  if (!_visitorReplyTarget) return;
+  const replyText = document.getElementById('vrReplyText').value.trim();
+  const qrData = document.getElementById('vrQRInput').value.trim();
+  if (!replyText && !qrData) {
+    showAlert('vrAlert', 'err', 'Please write a message or generate a QR code to send.');
+    return;
+  }
+  if (!window._db) { showAlert('vrAlert', 'err', 'Not connected to database.'); return; }
+
+  let senderName = S.currentAdmin;
+  try {
+    const aSnap = await window._fsGetDoc(window._fsDoc(window._db, 'admins', S.currentAdmin));
+    if (aSnap.exists()) senderName = aSnap.data().name || S.currentAdmin;
+  } catch(e){}
+
+  const payload = {
+    type: 'admin_reply',
+    to: _visitorReplyTarget.email || _visitorReplyTarget.name,
+    toName: _visitorReplyTarget.name,
+    originalMsgId: _visitorReplyTarget.msgId || null,
+    from: S.currentAdmin || '__super__',
+    fromName: senderName,
+    body: replyText || '',
+    qrData: qrData || null,
+    hasQR: !!qrData,
+    read: false,
+    ts: Date.now()
+  };
+
+  try {
+    const ref = window._fsDoc(window._fsColl(window._db, 'visitor_replies'));
+    await window._fsSetDoc(ref, payload);
+    // Also mark original message as replied
+    if (_visitorReplyTarget.msgId && window._db) {
+      try {
+        await window._fsSetDoc(
+          window._fsDoc(window._db, 'visitor_messages', _visitorReplyTarget.msgId),
+          { replied: true, repliedAt: Date.now(), repliedBy: S.currentAdmin || '__super__' },
+          { merge: true }
+        );
+      } catch(e){}
+    }
+    showAlert('vrAlert', 'ok', '✓ Reply sent to ' + _visitorReplyTarget.name + (qrData ? ' with QR code' : ''));
+    setTimeout(() => closeVisitorReplyModal(), 2000);
+    toast('✓ Reply sent!', 'ok');
+  } catch (e) {
+    showAlert('vrAlert', 'err', 'Failed: ' + e.message);
+  }
+}
+
+/* ── Patch renderInboxMessages to add Reply button ── */
+/* We monkey-patch the existing renderInboxMessages logic by wrapping the
+   admin inbox panel rendering so each message card gets a Reply+QR button */
+function _buildInboxCard(msg, docId, isSuper) {
+  const senderDisplay = _esc(msg.name || msg.fromName || 'Visitor');
+  const bodyDisplay = _esc(msg.body || msg.message || '');
+  const timeDisplay = msg.ts ? new Date(msg.ts).toLocaleString('en-GB', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+  const isUnread = !msg.read;
+  const isReplied = msg.replied;
+  return `<div id="inboxcard-${docId}" style="background:${isUnread ? 'var(--blue3)' : 'var(--s2)'};border:1px solid ${isUnread ? 'var(--line2)' : 'var(--line)'};border-radius:var(--r2);padding:12px 14px;transition:all 0.2s;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;flex-shrink:0;">${(msg.name||'?')[0].toUpperCase()}</div>
+        <div>
+          <div style="font-family:var(--head);font-size:13px;font-weight:700;color:var(--text);">${senderDisplay}${isUnread ? '<span style="display:inline-block;width:7px;height:7px;background:var(--blue);border-radius:50%;margin-left:6px;vertical-align:middle;"></span>' : ''}</div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">${timeDisplay}${isReplied ? ' · <span style="color:var(--green);">✓ Replied</span>' : ''}</div>
+        </div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text);line-height:1.55;margin-bottom:10px;padding-left:40px;">${bodyDisplay}</div>
+    <div style="display:flex;gap:6px;padding-left:40px;flex-wrap:wrap;">
+      <button class="btn btn-primary btn-xs" onclick="openVisitorReplyModal(${JSON.stringify(msg.name||'Visitor')},${JSON.stringify(msg.email||msg.phone||'')},${JSON.stringify(msg.body||msg.message||'')},${JSON.stringify(docId)})" style="font-size:10px;gap:4px;">📤 Reply + QR</button>
+      ${!isReplied ? `<button class="btn btn-ghost btn-xs" onclick="_markInboxRead('${docId}','${isSuper?'super':'admin'}')" style="font-size:10px;">✓ Mark read</button>` : ''}
+    </div>
+  </div>`;
+}
+
+async function _markInboxRead(docId, scope) {
+  if (!window._db) return;
+  try {
+    await window._fsSetDoc(
+      window._fsDoc(window._db, 'visitor_messages', docId),
+      { read: true }, { merge: true }
+    );
+    toast('Marked as read', 'ok');
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+/* ── Listen to admin's visitor inbox with reply buttons ── */
+let _adminInboxUnsub2 = null;
+function loadAdminVisitorInbox() {
+  if (!window._db || !S.currentAdmin) return;
+  if (_adminInboxUnsub2) { _adminInboxUnsub2(); _adminInboxUnsub2 = null; }
+  const list = document.getElementById('adminPanelInboxList');
+  if (!list) return;
+  const q = window._fsQuery(
+    window._fsColl(window._db, 'visitor_messages'),
+    window._fsWhere('adminTarget', '==', S.currentAdmin),
+    window._fsOrderBy('ts', 'desc'),
+    window._fsLimit(20)
+  );
+  _adminInboxUnsub2 = window._fsOnSnap(q, snap => {
+    if (!list) return;
+    if (!snap.docs.length) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px;font-family:var(--mono);">No messages yet</div>';
+      return;
+    }
+    let unread = 0;
+    list.innerHTML = snap.docs.map(d => {
+      if (!d.data().read) unread++;
+      return _buildInboxCard(d.data(), d.id, false);
+    }).join('');
+    const badge = document.getElementById('adminPanelInboxBadge');
+    if (badge) badge.style.display = unread > 0 ? 'block' : 'none';
+  });
+}
+
+/* Auto-load DM list when admin dashboard opens */
+const _origShowDash = typeof showDash === 'function' ? showDash : null;
+
+/* ── On admin login, start DM unread listener ── */
+document.addEventListener('adminLoggedIn', () => {
+  setTimeout(() => {
+    _listenDMUnread();
+    loadAdminVisitorInbox();
+  }, 1500);
+});
+
+/* ── Visitor Reply Modal — close on backdrop ── */
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('visitorReplyModal');
+  if (modal) {
+    modal.addEventListener('click', e => {
+      if (e.target === modal) closeVisitorReplyModal();
+    });
+  }
+});
+
 /* ── BOOT ── */
 buildBg(_currentBgTheme);
 init();
 // Wait for layout before setting lang slider width
 requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ setLang(_lang); }); });
+
+/* ═══════════════════════════════════════════════
+   VIEW-ONCE GLOBAL PROTECTION
+   Blocks right-click, drag, keyboard shortcuts
+   on view-once overlay for non-super-admins
+═══════════════════════════════════════════════ */
+(function(){
+  // Intercept Ctrl+S / Ctrl+Shift+S / PrintScreen when view-once overlay is open
+  document.addEventListener('keydown', function(e){
+    const overlay = document.getElementById('_voOverlay');
+    if(!overlay) return;
+    const isSuperAdmin = (window.S?.currentAdmin === '__super__');
+    if(isSuperAdmin) return;
+    // Block Ctrl+S, Ctrl+Shift+S, Ctrl+U, F12, PrintScreen
+    if(e.key==='PrintScreen' || (e.ctrlKey && ['s','S','u','U','p','P'].includes(e.key))){
+      e.preventDefault(); e.stopImmediatePropagation();
+      return false;
+    }
+  }, true);
+
+  // Intercept copy attempt on view-once overlay
+  document.addEventListener('copy', function(e){
+    const overlay = document.getElementById('_voOverlay');
+    if(!overlay) return;
+    const isSuperAdmin = (window.S?.currentAdmin === '__super__');
+    if(!isSuperAdmin){ e.preventDefault(); }
+  });
+})();
 </script>
+
+<!-- ═══════════════════════════════════════════════════════
+     VISITOR REPLY MODAL — Admin sends reply + QR to visitor
+═══════════════════════════════════════════════════════ -->
+<div class="overlay" id="visitorReplyModal" style="display:none;align-items:center;justify-content:center;z-index:9500;">
+  <div class="modal" style="max-width:480px;width:95%;border-radius:var(--r4);overflow:hidden;animation:scaleIn 0.25s ease both;">
+    <div class="modal-top" style="background:linear-gradient(135deg,var(--blue3),rgba(14,165,233,0.08));border-bottom:1px solid var(--line);">
+      <div class="modal-title" style="display:flex;align-items:center;gap:10px;">
+        <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:16px;">📤</div>
+        <div>
+          <div style="font-family:var(--head);font-size:15px;font-weight:800;">Reply to Visitor</div>
+          <div id="vrTargetName" style="font-size:11px;color:var(--text3);font-family:var(--mono);"></div>
+        </div>
+      </div>
+      <button onclick="closeVisitorReplyModal()" style="background:var(--s3);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:15px;color:var(--text2);">✕</button>
+    </div>
+    <div class="modal-body" style="padding:20px;display:flex;flex-direction:column;gap:14px;max-height:80vh;overflow-y:auto;">
+
+      <!-- Original message preview -->
+      <div style="background:var(--s2);border-left:3px solid var(--blue);border-radius:0 var(--r1) var(--r1) 0;padding:10px 12px;">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:4px;">Original Message</div>
+        <div id="vrOriginalMsg" style="font-size:12px;color:var(--text2);line-height:1.55;word-break:break-word;"></div>
+      </div>
+
+      <!-- Reply text -->
+      <div class="field" style="margin:0;">
+        <label>Your Reply Message</label>
+        <textarea id="vrReplyText" rows="3" placeholder="Type your reply to the visitor…" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:vertical;"></textarea>
+      </div>
+
+      <!-- QR Code Generator -->
+      <div style="background:var(--s2);border:1px solid var(--line);border-radius:var(--r2);padding:14px;">
+        <div style="font-family:var(--head);font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:7px;">
+          <span style="font-size:16px;">▦</span> Generate a QR Code for this Visitor
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <input id="vrQRInput" placeholder="URL or text to encode (e.g. attendance link)" style="flex:1;min-width:180px;padding:9px 11px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s1);color:var(--text);font-family:var(--mono);font-size:12px;"/>
+          <button class="btn btn-primary btn-sm" onclick="generateReplyQR()" style="white-space:nowrap;flex-shrink:0;">Generate QR</button>
+        </div>
+        <div id="vrQRPreview" style="display:none;flex-direction:column;align-items:center;gap:8px;padding:10px 0;"></div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">💡 The QR link/data is sent with the reply — the visitor can see it in their message feed.</div>
+      </div>
+
+      <!-- Alert -->
+      <div class="alert" id="vrAlert"></div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" style="flex:1;" onclick="sendVisitorReply()">📤 Send Reply</button>
+        <button class="btn btn-ghost" onclick="closeVisitorReplyModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+#visitorReplyModal.show { display:flex !important; }
+
+/* View-once protection: block drag, selection, pointer on canvas */
+#_voOverlay { -webkit-user-select:none; user-select:none; }
+#_voOverlay canvas { -webkit-user-drag:none; user-drag:none; pointer-events:none; }
+#_voOverlay img   { -webkit-user-drag:none; user-drag:none; pointer-events:none; }
+/* Super admin overrides */
+#_voOverlay.super-admin canvas,
+#_voOverlay.super-admin img { pointer-events:auto; }
+</style>
+
 </body>
 </html>
