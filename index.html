@@ -2173,12 +2173,6 @@ img, video, iframe { max-width: 100%; }
   <button class="pwa-install-btn" id="pwaInstallBtn" onclick="installPWA()" title="Install as App">
     📲 Install App
   </button>
-  <!-- Visitor Bell (real-time unread replies indicator) -->
-  <button id="visitorInboxBell" onclick="openVisitorInboxDrawer()" title="Your replies & messages" style="display:none;position:relative;background:none;border:1.5px solid rgba(59,130,246,0.3);border-radius:20px;padding:5px 12px 5px 8px;cursor:pointer;display:none;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--blue);font-family:var(--head);transition:all 0.18s;margin-right:6px;" onmouseover="this.style.background='var(--blue3)'" onmouseout="this.style.background='none'">
-    <span style="font-size:15px;">🔔</span>
-    <span>My Inbox</span>
-    <span id="visitorReplyBadge" style="display:none;min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:700;font-family:var(--mono);align-items:center;justify-content:center;padding:0 4px;line-height:18px;"></span>
-  </button>
   <div class="nav-right" id="navRight">
     <button class="nav-btn nav-btn-ghost" onclick="showLogin()">Admin Login</button>
     <button class="nav-btn nav-btn-solid" onclick="showLogin()">Get Started →</button>
@@ -2207,9 +2201,11 @@ img, video, iframe { max-width: 100%; }
     </p>
     <div class="landing-cta a-fadeup d3">
       <button class="cta-btn cta-primary" onclick="showLogin()">Open Admin Panel →</button>
+      <button class="cta-btn cta-outline" onclick="showLogin()">View Demo</button>
       <button class="cta-btn cta-outline" onclick="openContact()" style="border-color:var(--blue);color:var(--blue);">✦ Contact Us</button>
       <button class="cta-btn cta-outline" onclick="openVisitorMsgModal()" style="border-color:var(--cyan);color:var(--cyan);">📬 Message an Admin</button>
       <button class="cta-btn cta-outline" onclick="installPWA()" style="border-color:var(--green);color:var(--green);" title="Install as app">📲 Install App</button>
+      <button class="cta-btn cta-outline" onclick="openVisitorInboxDrawer()" id="visitorInboxBell" style="border-color:var(--blue);color:var(--blue);position:relative;display:none;">🔔 My Replies<span id="visitorReplyBadge" style="display:none;position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:700;font-family:var(--mono);align-items:center;justify-content:center;padding:0 4px;line-height:18px;"></span></button>
     </div>
     <div class="features-grid a-fadeup d4">
       <div class="feat">
@@ -2345,7 +2341,6 @@ img, video, iframe { max-width: 100%; }
       <div class="login-sub">How are you accessing today?</div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
         <button class="btn btn-primary btn-lg btn-full" onclick="showLoginStep('admin')">👨‍🏫 Admin Login</button>
-        <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('preclass')" style="border-color:rgba(16,185,129,0.4);color:var(--green);">📍 Mark Presence Before Class</button>
         <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('register')">➕ Register as New Admin</button>
         <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('super')" style="border-color:var(--gold);color:var(--gold);">🛡 Super Admin</button>
       </div>
@@ -2427,37 +2422,6 @@ img, video, iframe { max-width: 100%; }
       <div class="alert" id="superAlert"></div>
       <button class="btn btn-full" style="background:var(--gold);color:#fff;margin-top:6px;padding:12px;border-radius:var(--r2);font-weight:700;border:none;cursor:pointer;" onclick="trySuperLogin()">Enter Super Admin</button>
       <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="showLoginStep('step1')">← Back</button>
-    </div>
-
-    <!-- Pre-class presence marking step -->
-    <div class="login-card a-scalein" id="loginStepPreclass" style="display:none;">
-      <div style="text-align:center;margin-bottom:16px;">
-        <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--green),#2ECC71);display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 10px;">📍</div>
-        <div class="login-title">Mark Presence Before Class</div>
-        <div class="login-sub">Admin adds students without phones directly to the attendance PDF.</div>
-      </div>
-      <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:11px 13px;margin-bottom:14px;font-size:12px;color:var(--text2);line-height:1.65;">
-        1. Select the active session<br/>2. Enter student details<br/>3. Tap Mark as Present — they appear in the report
-      </div>
-      <div class="field" style="margin-bottom:10px;"><label>Active Session</label>
-        <select id="preclassSessionSelect" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;"><option value="">Loading…</option></select>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-        <div class="field" style="margin:0;"><label style="font-size:11px;">First Name</label><input id="preclassFirst" placeholder="Jean" style="font-size:13px;"/></div>
-        <div class="field" style="margin:0;"><label style="font-size:11px;">Last Name</label><input id="preclassLast" placeholder="Mbarga" style="font-size:13px;"/></div>
-      </div>
-      <div class="field" style="margin-bottom:8px;"><label style="font-size:11px;">Matriculation No.</label><input id="preclassMat" placeholder="e.g. 21B0045" style="font-size:13px;font-family:var(--mono);"/></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-        <div class="field" style="margin:0;"><label style="font-size:11px;">Class</label><input id="preclassCls" placeholder="Match session class" style="font-size:13px;"/></div>
-        <div class="field" style="margin:0;"><label style="font-size:11px;">Department</label><input id="preclassDept" placeholder="e.g. CS" style="font-size:13px;"/></div>
-      </div>
-      <div class="alert" id="preclassAlert"></div>
-      <button style="width:100%;background:linear-gradient(135deg,var(--green),#2ECC71);color:#fff;border:none;padding:12px;border-radius:var(--r2);font-weight:700;font-family:var(--head);font-size:14px;cursor:pointer;margin-top:6px;" onclick="submitPreclassPresence()">✓ Mark as Present</button>
-      <div id="preclassSuccessList" style="display:none;margin-top:10px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:10px 12px;">
-        <div style="font-size:10px;font-weight:700;color:var(--green);font-family:var(--mono);margin-bottom:4px;">✓ Added this session:</div>
-        <div id="preclassSuccessNames" style="font-size:12px;color:var(--text2);line-height:1.8;"></div>
-      </div>
-      <button class="btn btn-ghost btn-full" style="margin-top:10px;" onclick="showLoginStep('step1')">← Back</button>
     </div>
   </div>
 </div>
@@ -2943,16 +2907,6 @@ img, video, iframe { max-width: 100%; }
               <div class="field"><label>Lecturer</label><input id="inLec" placeholder="Dr. Name"/></div>
               <div class="field"><label>Start Time</label><input id="inTime" type="time"/></div>
               <div class="field"><label>Duration (min)</label><input id="inDur" type="number" value="30" min="1" max="360"/></div>
-              <div class="field">
-                <label>🔗 QR Link Expiry <span style="font-size:10px;color:var(--text3);font-weight:400;">(after session ends)</span></label>
-                <select id="inQRExpiry" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;">
-                  <option value="0">Never expires (permanent link)</option>
-                  <option value="300000">5 minutes</option>
-                  <option value="3600000">1 hour</option>
-                  <option value="86400000" selected>24 hours</option>
-                  <option value="604800000">7 days</option>
-                </select>
-              </div>
             </div>
             <div class="field"><label>Room / Location (optional)</label><input id="inRoom" placeholder="e.g. Amphi B"/></div>
 
@@ -4157,6 +4111,7 @@ img, video, iframe { max-width: 100%; }
         <li><a href="#" onclick="goHome();return false;">Home</a></li>
         <li><a href="#" onclick="showLogin();return false;">Admin Panel</a></li>
         <li><a href="#" onclick="navTo('qr');return false;">QR Generator</a></li>
+        <li><a href="#" onclick="showLogin();return false;">View Demo</a></li>
       </ul>
     </div>
 
@@ -4365,10 +4320,8 @@ function showPage(name) {
   if (name === 'dash' || name === 'qr') {
     navTabs.style.display = 'flex';
     navTabs.classList.add('admin-active');
-    // Hide install button and visitor bell on admin pages
+    // Hide install button on admin pages
     document.querySelectorAll('.pwa-install-btn').forEach(b => b.style.display='none');
-    const vBellA = document.getElementById('visitorInboxBell');
-    if(vBellA) vBellA.style.display='none';
     if(S.currentAdmin === '__super__'){
       navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showSettings()">⚙</button><button class="nav-btn nav-btn-ghost" id="notifBtnNav" onclick="openNotifPanel()" style="position:relative;">🔔<span id="notifBadgeNav" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;font-family:var(--mono);border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;display:none;"></span></button><button class="nav-btn" style="background:var(--gold);color:#fff;border:none;padding:6px 14px;border-radius:var(--r1);font-weight:700;cursor:pointer;" onclick="backToSuperPanel()">🛡 Super Panel</button>`;
     } else {
@@ -4391,9 +4344,6 @@ function showPage(name) {
     navTabs.style.display = 'none'; navTabs.classList.remove('admin-active');
     // Show install button on landing/public pages (if not already installed)
     if(!_pwaInstalled) document.querySelectorAll('.pwa-install-btn').forEach(b => b.style.display='flex');
-    // Show visitor bell on landing
-    const vBell = document.getElementById('visitorInboxBell');
-    if(vBell) vBell.style.display='inline-flex';
     navRight.innerHTML = `<button class="nav-btn nav-btn-ghost" onclick="showLogin()">Admin Login</button><button class="nav-btn nav-btn-solid" onclick="showLogin()">Get Started →</button>`;
   }
   document.getElementById('siteFooter').style.display = (name==='student'||name==='qrscanner'||name==='dash'||name==='qr'||name==='super') ? 'none' : '';
@@ -4896,13 +4846,12 @@ function navTo(pg){
 function adminOut() { S.loggedIn=false; S.currentAdmin=null; if(S.liveInt)clearInterval(S.liveInt); stopDynQR(); stopNotifListener(); showPage('landing'); }
 
 function showLoginStep(step){
-  ['loginStep1','loginStepAdmin','loginStepRegister','loginStepSuper','loginStepRecover','loginStepPreclass'].forEach(id=>{
+  ['loginStep1','loginStepAdmin','loginStepRegister','loginStepSuper','loginStepRecover'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.style.display='none';
   });
-  const map = {step1:'loginStep1',admin:'loginStepAdmin',register:'loginStepRegister',super:'loginStepSuper',recover:'loginStepRecover',preclass:'loginStepPreclass'};
-  if(map[step]){ const el=document.getElementById(map[step]); if(el) el.style.display='block'; }
-  if(step==='preclass') { setTimeout(_loadPreclassSessions, 100); }
+  const map = {step1:'loginStep1',admin:'loginStepAdmin',register:'loginStepRegister',super:'loginStepSuper',recover:'loginStepRecover'};
+  if(map[step]) document.getElementById(map[step]).style.display='block';
   S.pinInput=''; S_regPin=''; S_recPin='';
   updateDots(); updateRegDots(); updateRecDots();
 }
@@ -6102,9 +6051,7 @@ function createSession() {
 
   const start = Date.now(), expiry = start + dur*60*1000, id = start;
   const isDynamic = S._sessionMode === 'dynamic';
-  const qrExpiryOffset = parseInt(v('inQRExpiry')||'86400000');
-  const qrExpiresAt = qrExpiryOffset === 0 ? null : start + qrExpiryOffset;
-  const sess = {id,sub,cls,dept,lec,time,dur,room,start,expiry,adminId:S.currentAdmin||'default',sessionMode:isDynamic?'dynamic':'static',qrExpiresAt};
+  const sess = {id,sub,cls,dept,lec,time,dur,room,start,expiry,adminId:S.currentAdmin||'default',sessionMode:isDynamic?'dynamic':'static'};
   const radius = parseInt(v('inRadius'))||100;
   if (S.teacherLat != null) {
     sess.geoLat    = S.teacherLat;
@@ -6911,12 +6858,6 @@ function checkStudentGeo(s) {
 function submitAttend(){
   const s=S.currentSession; if(!s)return;
   if(Date.now()>s.expiry){showExpired();return;}
-  // Check QR link expiry (independent of session duration)
-  if(s.qrExpiresAt && s.qrExpiresAt > 0 && Date.now() > s.qrExpiresAt){
-    showAlert('stuAlert','err','⏱ This QR code has expired. Ask your teacher to share the latest QR code.');
-    document.getElementById('stuSubmitBtn')?.setAttribute('disabled','true');
-    return;
-  }
   if(s.geoLat!=null && S.geoBlocked){
     const dist = S.studentDist!=null ? ` You are ${S.studentDist}m away (limit: ${s.geoRadius}m).` : '';
     showAlert('stuAlert','err','❌ Location check failed — you must be physically present in class.'+dist);
@@ -6948,7 +6889,6 @@ function submitAttend(){
     }
     if(qrToken !== s.dynQRToken){
       showAlert('stuAlert','err','❌ QR code expired or invalid. Please scan the latest QR code displayed in class.');
-    document.getElementById('stuSubmitBtn')?.setAttribute('disabled','true');
       return;
     }
     if(Date.now() > s.dynQRExpiry){
@@ -8252,7 +8192,7 @@ const TRANSLATIONS = {
     chip:'Smart Attendance Platform',
     hero1:'Attendance.', hero2:'Zero Friction.',
     sub:'Create timed sessions, verify students by class, generate scannable QR codes, and export professional PDF reports — all in one platform.',
-    btn_admin:'Open Admin Panel →', btn_contact:'✦ Contact Us',
+    btn_admin:'Open Admin Panel →', btn_demo:'View Demo', btn_contact:'✦ Contact Us',
     // Login
     welcome:'Welcome to AttendX', how_access:'How are you accessing today?',
     admin_login_btn:'👨‍🏫 Admin Login', register_btn:'➕ Register as New Admin', super_btn:'🛡 Super Admin',
@@ -8513,7 +8453,7 @@ const TRANSLATIONS = {
     chip:'Plateforme de Présence Intelligente',
     hero1:'Présence.', hero2:'Zéro Friction.',
     sub:'Créez des sessions minutées, vérifiez les étudiants par classe, générez des QR codes et exportez des rapports PDF professionnels — tout en un.',
-    btn_admin:'Ouvrir le Panneau Admin →', btn_contact:'✦ Nous Contacter',
+    btn_admin:'Ouvrir le Panneau Admin →', btn_demo:'Voir la Démo', btn_contact:'✦ Nous Contacter',
     // Login
     welcome:'Bienvenue sur AttendX', how_access:'Comment accédez-vous aujourd\'hui ?',
     admin_login_btn:'👨‍🏫 Connexion Admin', register_btn:'➕ Créer un Compte Admin', super_btn:'🛡 Super Admin',
@@ -8816,6 +8756,7 @@ function applyTranslations(){
   setText('.landing-sub', 'sub');
   const ctaBtns = qsa('.landing-cta .cta-btn');
   if(ctaBtns[0]) ctaBtns[0].textContent = t('btn_admin');
+  if(ctaBtns[1]) ctaBtns[1].textContent = t('btn_demo');
   if(ctaBtns[2]) ctaBtns[2].textContent = t('btn_contact');
   // Feature cards
   const featTitles = qsa('.feat-title');
@@ -10028,7 +9969,7 @@ function _chatMsgHtml(msg, isMine, boardId){
 
   return `<div id="cmsg-${msg.id||msg.at}" style="background:${isMine?'var(--blue3)':'var(--s2)'};border:1px solid ${isMine?'rgba(59,130,246,0.2)':'var(--line)'};border-radius:var(--r2);padding:10px 12px;${isMine?'margin-left:32px;':'margin-right:32px;'}">
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
-      <span style="font-size:11px;font-weight:700;color:${senderColor};cursor:${msg.role==='visitor'?'pointer':'default'};" onclick="${msg.role==='visitor'?`openVisitorDMFromChat('${_esc((msg.name||'Anonymous').replace(/'/g,"\'"))}','${msg.senderId||''}')`:''}" title="${msg.role==='visitor'?'Click to DM':''}">${_esc(msg.name||'Anonymous')}${msg.role==='visitor'?'<span style="font-size:8px;color:var(--text3);margin-left:3px;" title="Click to send DM">✉</span>':''}</span>
+      <span style="font-size:11px;font-weight:700;color:${senderColor};">${_esc(msg.name||'Anonymous')}</span>
       ${roleBadge}
       <span style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-left:auto;">${time}</span>
     </div>
@@ -10393,7 +10334,6 @@ async function sendLandingChatMsg(){
 // These are needed for chat realtime queries; patch them in after firebase loads
 document.addEventListener('firebaseReady', ()=>{
   trackVisitor();
-  setTimeout(_vidStartBellListener, 1500); // start real-time bell listener
   _checkVisitorNotifBanner();
   loadLandingChat();
   _loadBroadcastBanner();
@@ -11213,8 +11153,7 @@ function _renderAdminPanelInbox(msgs){
       ${m.replied && m.replyText ? `<div style="font-size:10px;color:var(--green);background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.15);border-radius:var(--r1);padding:6px 9px;margin-bottom:8px;"><span style="font-weight:700;">↩ Sent:</span> ${_esc(m.replyText)}</div>` : ''}
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         ${!m.replied ? `<button class="btn btn-primary btn-xs" onclick="openInboxReply('${m.id}','${_esc(m.fromName)}','${_esc(m.fromEmail)}','${_esc(m.message).replace(/'/g,'&#39;')}')">↩ Reply</button>` : ''}
-        ${!m.read ? `<button class="btn btn-ghost btn-xs" onclick="markInboxRead('${m.id}')">✓ Mark Read</button>` : '<span style="font-size:10px;color:var(--text3);font-family:var(--mono);">👁 Seen</span>'}
-        ${m.replied && m.replyReadAt ? '<span style="font-size:10px;color:var(--green);font-family:var(--mono);">✓✓ Read by visitor</span>' : m.replied ? '<span style="font-size:10px;color:var(--text3);font-family:var(--mono);">✓ Delivered</span>' : ''}
+        ${!m.read ? `<button class="btn btn-ghost btn-xs" onclick="markInboxRead('${m.id}')">✓ Mark Read</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -11789,38 +11728,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-
-/* ── Open DM compose pre-filled from clicking a chat name ── */
-function openVisitorDMFromChat(name, senderId) {
-  if(!name || name === 'Anonymous') { toast('Cannot DM anonymous visitors','warn'); return; }
-  openVisitorDMCompose();
-  const inp = document.getElementById('vidDMRecipient');
-  if(inp){ inp.value = name; inp.dispatchEvent(new Event('input')); }
-  // Also show the drawer
-  openVisitorInboxDrawer();
-  viSwitch('dms');
-  // Switch back to compose after short delay
-  setTimeout(()=>{ openVisitorDMCompose(); if(inp) inp.value=name; }, 200);
-}
-
-/* ── QR expiry checker (called on student attendance page) ── */
-function _checkQRExpiry(sess) {
-  if(!sess.qrExpiresAt) return true; // no expiry = always valid
-  if(Date.now() > sess.qrExpiresAt) return false; // expired
-  return true;
-}
-
-
-/* ── Close visitor inbox drawer on outside click ── */
-document.addEventListener('click', function _drawerOutsideClick(e) {
-  const drawer = document.getElementById('visitorInboxDrawer');
-  const bell   = document.getElementById('visitorInboxBell');
-  if(!drawer || !drawer.classList.contains('open')) return;
-  if(!drawer.contains(e.target) && !bell?.contains(e.target)) {
-    drawer.classList.remove('open');
-  }
-});
-
 /* ── BOOT ── */
 buildBg(_currentBgTheme);
 init();
@@ -11931,8 +11838,21 @@ requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ setLang(_lang); }); });
 ═══════════════════════════════════════════════════ -->
 
 <!-- Visitor Inbox Drawer (slides in from bottom on mobile, right on desktop) -->
-<div id="drawerOverlay" onclick="closeVisitorInboxDrawer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:8999;backdrop-filter:blur(2px);transition:opacity 0.28s;"></div>
-<div id="visitorInboxDrawer" style="position:fixed;top:0;right:0;width:360px;max-width:100vw;height:100%;background:var(--s1);border-left:1px solid var(--line);box-shadow:-8px 0 40px rgba(0,0,0,0.18);z-index:9000;display:flex;flex-direction:column;transform:translateX(110%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);overflow:hidden;">
+<div id="visitorInboxDrawer" style="
+  position:fixed;bottom:0;right:0;
+  width:min(420px,100vw);
+  max-height:82vh;
+  background:var(--s1);
+  border:1px solid var(--line2);
+  border-bottom:none;
+  border-radius:var(--r3) var(--r3) 0 0;
+  box-shadow:0 -8px 40px rgba(0,0,0,0.35);
+  z-index:9200;
+  display:flex;flex-direction:column;
+  transform:translateY(110%);
+  transition:transform 0.32s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
+">
   <!-- Header -->
   <div style="padding:14px 16px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-shrink:0;background:linear-gradient(135deg,var(--blue3),var(--s1));">
     <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🔔</div>
@@ -11942,9 +11862,7 @@ requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ setLang(_lang); }); });
     </div>
     <div style="display:flex;gap:6px;align-items:center;">
       <button id="vidComposeDMBtn" class="btn btn-primary btn-xs" onclick="openVisitorDMCompose()" style="font-size:10px;">✉ New DM</button>
-      <button onclick="openVisitorDMCompose()" style="font-size:11px;background:var(--blue3);border:1px solid rgba(59,130,246,0.25);color:var(--blue);border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:700;font-family:var(--head);" title="Send a DM to another visitor">✉ DM</button>
-    <button onclick="openVIDVerify()" style="font-size:11px;background:var(--gold2);border:1px solid rgba(226,185,106,0.25);color:var(--gold);border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:700;font-family:var(--head);" title="Link your email to this inbox">🔗 Verify</button>
-    <button onclick="closeVisitorInboxDrawer()" style="background:var(--s3);border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;color:var(--text2);font-size:14px;">✕</button>
+      <button onclick="closeVisitorInboxDrawer()" style="background:var(--s3);border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;color:var(--text2);font-size:14px;">✕</button>
     </div>
   </div>
 
@@ -12016,21 +11934,13 @@ requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ setLang(_lang); }); });
 </div>
 
 <style>
-#visitorInboxDrawer.open { transform: translateX(0) !important; }
+#visitorInboxDrawer.open { transform: translateY(0) !important; }
 #vidComposeOverlay.show { display:flex !important; }
 #vidVerifyModal.show { display:flex !important; }
 .vi-tab-active { color:var(--blue) !important; border-bottom:2px solid var(--blue) !important; }
 .vi-tab { transition:color 0.15s,border-color 0.15s; }
 @keyframes inboxBellPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
-#visitorInboxBell.has-unread { animation: inboxBellPulse 1.5s ease-in-out infinite; border-color:var(--red) !important; }
-@keyframes inboxBellPulse {
-  0%,100%{transform:scale(1) rotate(0deg);}
-  20%{transform:scale(1.08) rotate(8deg);}
-  40%{transform:scale(1.05) rotate(-6deg);}
-  60%{transform:scale(1.02) rotate(4deg);}
-}
-#visitorReplyBadge { animation: badgePop 0.3s ease; }
-@keyframes badgePop { from{transform:scale(0);}to{transform:scale(1);} }
+#visitorInboxBell.has-unread { animation: inboxBellPulse 1.5s ease-in-out infinite; }
 </style>
 
 <script>
@@ -12067,16 +11977,13 @@ function openVisitorInboxDrawer() {
   const drawer = document.getElementById('visitorInboxDrawer');
   if (!drawer) return;
   drawer.classList.add('open');
-  const ov = document.getElementById('drawerOverlay');
-  if(ov) ov.style.display='block';
   viSwitch(_vidCurrentTab);
+  // Show bell button always when drawer is opened once
   const bell = document.getElementById('visitorInboxBell');
   if (bell) bell.style.display = 'inline-flex';
 }
 function closeVisitorInboxDrawer() {
   document.getElementById('visitorInboxDrawer')?.classList.remove('open');
-  const ov = document.getElementById('drawerOverlay');
-  if(ov) ov.style.display='none';
 }
 
 /* ── Tab switching ── */
@@ -12120,22 +12027,14 @@ function _loadVIDReplies() {
       if (!m.read) unread++;
       return _vidReplyCard(m, d.id, 'admin');
     }).join('');
-    // Mark all as read after 1s + set replyReadAt on original inbox msg
+    // Mark all as read after 1s
     setTimeout(() => {
       snap.docs.forEach(d => {
-        const msgData = d.data();
-        if (!msgData.read) {
+        if (!d.data().read) {
           window._fsSetDoc(
             window._fsDoc(window._db, 'visitor_replies', vid, 'messages', d.id),
             { read: true }, { merge: true }
           ).catch(()=>{});
-          // If this reply has an originalMsgId, mark replyReadAt on visitor_inbox
-          if(msgData.originalMsgId) {
-            window._fsSetDoc(
-              window._fsDoc(window._db, 'visitor_inbox', msgData.originalMsgId),
-              { replyReadAt: Date.now(), replyReadByVisitor: true }, { merge: true }
-            ).catch(()=>{});
-          }
         }
       });
     }, 1000);
