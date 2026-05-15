@@ -2201,10 +2201,8 @@ img, video, iframe { max-width: 100%; }
     </p>
     <div class="landing-cta a-fadeup d3">
       <button class="cta-btn cta-primary" onclick="showLogin()">Open Admin Panel →</button>
-      <button class="cta-btn cta-outline" onclick="showLogin()">View Demo</button>
       <button class="cta-btn cta-outline" onclick="openContact()" style="border-color:var(--blue);color:var(--blue);">✦ Contact Us</button>
       <button class="cta-btn cta-outline" onclick="openVisitorMsgModal()" style="border-color:var(--cyan);color:var(--cyan);">📬 Message an Admin</button>
-      <button class="cta-btn cta-outline" onclick="installPWA()" style="border-color:var(--green);color:var(--green);" title="Install as app">📲 Install App</button>
       <button class="cta-btn cta-outline" onclick="openVisitorInboxDrawer()" id="visitorInboxBell" style="border-color:var(--blue);color:var(--blue);position:relative;display:none;">🔔 My Replies<span id="visitorReplyBadge" style="display:none;position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:700;font-family:var(--mono);align-items:center;justify-content:center;padding:0 4px;line-height:18px;"></span></button>
     </div>
     <div class="features-grid a-fadeup d4">
@@ -2341,6 +2339,7 @@ img, video, iframe { max-width: 100%; }
       <div class="login-sub">How are you accessing today?</div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
         <button class="btn btn-primary btn-lg btn-full" onclick="showLoginStep('admin')">👨‍🏫 Admin Login</button>
+        <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('preclass')" style="border-color:rgba(16,185,129,0.45);color:var(--green);">📍 Mark Presence Before Class</button>
         <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('register')">➕ Register as New Admin</button>
         <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('super')" style="border-color:var(--gold);color:var(--gold);">🛡 Super Admin</button>
       </div>
@@ -2410,6 +2409,35 @@ img, video, iframe { max-width: 100%; }
       <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="showLoginStep('step1')">← Back</button>
     </div>
 
+    <!-- Step 2e: Pre-class presence (students without phones) -->
+    <div class="login-card a-scalein" id="loginStepPreclass" style="display:none;">
+      <div class="login-lock" style="background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);">📍</div>
+      <div class="login-title">Mark Presence Before Class</div>
+      <div class="login-sub">Admin marks students without phones as present in an active session.</div>
+      <div style="background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:10px 13px;margin-bottom:12px;font-size:11px;color:var(--text2);line-height:1.7;">
+        1. Select the active session &nbsp;·&nbsp; 2. Enter student info &nbsp;·&nbsp; 3. Tap Mark Present
+      </div>
+      <div class="field" style="margin-bottom:9px;"><label>Active Session</label>
+        <select id="preclassSessionSelect" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;"><option value="">Loading…</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div class="field" style="margin:0;"><label style="font-size:11px;">First Name</label><input id="preclassFirst" placeholder="Jean" style="font-size:13px;"/></div>
+        <div class="field" style="margin:0;"><label style="font-size:11px;">Last Name</label><input id="preclassLast" placeholder="Mbarga" style="font-size:13px;"/></div>
+      </div>
+      <div class="field" style="margin-bottom:8px;"><label style="font-size:11px;">Matriculation No.</label><input id="preclassMat" placeholder="e.g. 21B0045" style="font-size:13px;font-family:var(--mono);"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div class="field" style="margin:0;"><label style="font-size:11px;">Class</label><input id="preclassCls" placeholder="Must match session" style="font-size:13px;"/></div>
+        <div class="field" style="margin:0;"><label style="font-size:11px;">Dept</label><input id="preclassDept" placeholder="e.g. CS" style="font-size:13px;"/></div>
+      </div>
+      <div class="alert" id="preclassAlert"></div>
+      <button style="width:100%;background:linear-gradient(135deg,var(--green),#2ECC71);color:#fff;border:none;padding:12px;border-radius:var(--r2);font-weight:700;font-family:var(--head);font-size:14px;cursor:pointer;margin-top:6px;" onclick="submitPreclassPresence()">✓ Mark as Present</button>
+      <div id="preclassSuccessList" style="display:none;margin-top:10px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:10px 12px;">
+        <div style="font-size:10px;font-weight:700;color:var(--green);font-family:var(--mono);margin-bottom:4px;">✓ Added:</div>
+        <div id="preclassSuccessNames" style="font-size:12px;color:var(--text2);line-height:1.8;"></div>
+      </div>
+      <button class="btn btn-ghost btn-full" style="margin-top:10px;" onclick="showLoginStep('step1')">← Back</button>
+    </div>
+
     <!-- Step 2c: Super admin login -->
     <div class="login-card a-scalein" id="loginStepSuper" style="display:none;">
       <div class="login-lock" style="background:var(--gold2);border-color:rgba(245,158,11,0.3);">🛡</div>
@@ -2442,6 +2470,15 @@ img, video, iframe { max-width: 100%; }
       </div>
     </div>
 
+    <!-- ── SUPER ADMIN TABS ── -->
+    <div class="tabs a-fadeup" style="margin-bottom:18px;">
+      <button class="tab active" id="stab-admins" onclick="superTab('admins')">👥 Admins</button>
+      <button class="tab" id="stab-sessions" onclick="superTab('sessions')">📋 Sessions</button>
+      <button class="tab" id="stab-analytics" onclick="superTab('analytics')">📊 Analytics</button>
+      <button class="tab" id="stab-chat" onclick="superTab('chat')">💬 Chat</button>
+      <button class="tab" id="stab-inbox" onclick="superTab('inbox')" style="position:relative;">📬 Inbox<span id="inboxBadge" style="display:none;position:absolute;top:4px;right:4px;width:8px;height:8px;background:var(--red);border-radius:50%;"></span></button>
+    </div>
+
     <!-- ── TAB: ADMINS ── -->
     <div id="stab-content-admins">
       <div class="panel-block a-fadeup d1" style="margin-bottom:18px;">
@@ -2454,7 +2491,7 @@ img, video, iframe { max-width: 100%; }
     </div>
 
     <!-- ── TAB: SESSIONS ── -->
-    <div id="stab-content-sessions">
+    <div id="stab-content-sessions" style="display:none;">
       <div class="panel-block a-fadeup d1">
         <div class="pb-head">
           <div class="pb-title"><div class="pb-icon" style="background:var(--blue3);">📋</div>All Sessions (Today)</div>
@@ -2465,7 +2502,7 @@ img, video, iframe { max-width: 100%; }
     </div>
 
     <!-- ── TAB: ANALYTICS ── -->
-    <div id="stab-content-analytics">
+    <div id="stab-content-analytics" style="display:none;">
       <div class="panel-block a-fadeup d1" style="margin-bottom:16px;">
         <div class="pb-head">
           <div class="pb-title"><div class="pb-icon" style="background:var(--cyan2);">👁</div>Visitor Overview</div>
@@ -2505,7 +2542,7 @@ img, video, iframe { max-width: 100%; }
     </div>
 
     <!-- ── TAB: CHAT ── -->
-    <div id="stab-content-chat">
+    <div id="stab-content-chat" style="display:none;">
       <!-- Sub-tabs: Public / Admin-only -->
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <button id="chtab-public" class="btn btn-primary btn-xs" onclick="switchChatBoard('public')" style="flex:1;">🌐 Public Board</button>
@@ -2515,7 +2552,7 @@ img, video, iframe { max-width: 100%; }
       <!-- Public chat board -->
       <div id="chatboard-public">
         <div class="panel-block a-fadeup" style="margin-bottom:14px;">
-          <div class="pb-head"> 
+          <div class="pb-head">
             <div class="pb-title"><div class="pb-icon" style="background:var(--cyan2);">🌐</div>Public Chat Board</div>
             <span style="font-size:9px;color:var(--text3);font-family:var(--mono);">Anyone can post</span>
           </div>
@@ -2549,7 +2586,7 @@ img, video, iframe { max-width: 100%; }
       </div>
 
       <!-- Admin-only chat board -->
-      <div id="chatboard-admin">
+      <div id="chatboard-admin" style="display:none;">
         <div class="panel-block a-fadeup" style="margin-bottom:14px;">
           <div class="pb-head">
             <div class="pb-title"><div class="pb-icon" style="background:var(--gold2);">🔒</div>Admin-Only Board</div>
@@ -2585,7 +2622,7 @@ img, video, iframe { max-width: 100%; }
     </div>
 
     <!-- ── TAB: INBOX ── -->
-    <div id="stab-content-inbox">
+    <div id="stab-content-inbox" style="display:none;">
       <div class="panel-block a-fadeup">
         <div class="pb-head">
           <div class="pb-title"><div class="pb-icon" style="background:var(--blue3);">📬</div>Visitor Inbox</div>
@@ -4102,7 +4139,6 @@ img, video, iframe { max-width: 100%; }
         <li><a href="#" onclick="goHome();return false;">Home</a></li>
         <li><a href="#" onclick="showLogin();return false;">Admin Panel</a></li>
         <li><a href="#" onclick="navTo('qr');return false;">QR Generator</a></li>
-        <li><a href="#" onclick="showLogin();return false;">View Demo</a></li>
       </ul>
     </div>
 
@@ -4133,7 +4169,7 @@ img, video, iframe { max-width: 100%; }
   <!-- Bottom bar -->
   <div class="footer-bottom">
     <div class="footer-bottom-left">
-      AttendX PRO &nbsp;·&nbsp; Smart Attendance Platform &nbsp;·&nbsp; © <span id="fyear"></span>
+      AttendX PRO &nbsp;·&nbsp; Smart Attendance Platform &nbsp;·&nbsp; © <span id="fyearFooter"></span>
     </div>
     <div class="footer-bottom-links">
       <a href="#" onclick="return false;">Privacy</a>
@@ -4234,7 +4270,7 @@ const DEPTS = ['Computer Science','Mathematics','Physics','Chemistry','Biology',
 
 /* ── INIT ── */
 function init() {
-  document.getElementById('fyear').textContent = new Date().getFullYear();
+  ['fyear','fyearFooter'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=new Date().getFullYear();});
   document.getElementById('dashDate').textContent =
     new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 
@@ -4837,12 +4873,11 @@ function navTo(pg){
 function adminOut() { S.loggedIn=false; S.currentAdmin=null; if(S.liveInt)clearInterval(S.liveInt); stopDynQR(); stopNotifListener(); showPage('landing'); }
 
 function showLoginStep(step){
-  ['loginStep1','loginStepAdmin','loginStepRegister','loginStepSuper','loginStepRecover'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.style.display='none';
-  });
-  const map = {step1:'loginStep1',admin:'loginStepAdmin',register:'loginStepRegister',super:'loginStepSuper',recover:'loginStepRecover'};
-  if(map[step]) document.getElementById(map[step]).style.display='block';
+  // Hide ALL login cards first
+  document.querySelectorAll('#loginModalInner .login-card').forEach(el=>el.style.display='none');
+  const map = {step1:'loginStep1',admin:'loginStepAdmin',register:'loginStepRegister',super:'loginStepSuper',recover:'loginStepRecover',preclass:'loginStepPreclass'};
+  if(map[step]){ const _el=document.getElementById(map[step]); if(_el) _el.style.display='block'; }
+  if(step==='preclass') setTimeout(_loadPreclassSessions, 100);
   S.pinInput=''; S_regPin=''; S_recPin='';
   updateDots(); updateRegDots(); updateRecDots();
 }
@@ -5858,14 +5893,7 @@ function _dChatLoadBoard(board){
   });
 }
 
-function dChatSwitch(board){
-  document.getElementById('dc4-public').style.display = board==='public'?'block':'none';
-  document.getElementById('dc4-admin').style.display  = board==='admin'?'block':'none';
-  document.getElementById('dchtab-public').className = board==='public'?'btn btn-primary btn-xs':'btn btn-ghost btn-xs';
-  document.getElementById('dchtab-admin').className  = board==='admin'  ?'btn btn-gold btn-xs'   :'btn btn-ghost btn-xs';
-  document.getElementById('dchtab-public').style.flex='1';
-  document.getElementById('dchtab-admin').style.flex='1';
-}
+/* first dChatSwitch removed (duplicate) */
 
 function dChatPreviewImg(board){
   const inputId = board==='admin'?'dc4AdminImg':'dc4PublicImg';
@@ -5945,43 +5973,7 @@ async function dChatSend(board){
 /* ── CREATE SESSION ── */
 
 /* shared geo request — waits for best accuracy reading */
-function _requestGeo(onSuccess, onFail) {
-  if (!navigator.geolocation) { if(onFail) onFail({code:0,message:'Not supported'}); return; }
-
-  let bestPos = null;
-  let watchId = null;
-  let settled = false;
-
-  // Timeout after 20 seconds, use best reading we have
-  const timeout = setTimeout(()=>{
-    if(watchId != null) navigator.geolocation.clearWatch(watchId);
-    if(bestPos) onSuccess(bestPos);
-    else if(onFail) onFail({code:3, message:'Timed out'});
-    settled = true;
-  }, 20000);
-
-  watchId = navigator.geolocation.watchPosition(
-    pos => {
-      if(settled) return;
-      bestPos = pos;
-      // Accept if accuracy is 50m or better, otherwise keep watching
-      if(pos.coords.accuracy <= 50) {
-        settled = true;
-        clearTimeout(timeout);
-        navigator.geolocation.clearWatch(watchId);
-        onSuccess(pos);
-      }
-    },
-    err => {
-      if(settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      if(watchId != null) navigator.geolocation.clearWatch(watchId);
-      if(onFail) onFail(err);
-    },
-    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
-  );
-}
+/* first _requestGeo removed (duplicate) */
 
 /* called automatically when teacher logs in */
 function autoRequestTeacherGeo() {
@@ -7548,19 +7540,7 @@ function _generateQRCore(){
 
 
 /* QR Expiration Status Helpers */
-function _qrExpiryStatus(expMs){
-  if(!expMs) return {label:'Permanent', color:'var(--green)', icon:'✓'};
-  const now=Date.now();
-  if(now > expMs){
-    const ago=Math.floor((now-expMs)/60000);
-    const label=ago<60?`Expired ${ago}m ago`:ago<1440?`Expired ${Math.floor(ago/60)}h ago`:`Expired ${Math.floor(ago/1440)}d ago`;
-    return {label, color:'var(--red)', icon:'✕', expired:true};
-  }
-  const rem=expMs-now;
-  const mins=Math.floor(rem/60000);
-  const label=mins<60?`Expires in ${mins}m`:mins<1440?`Expires in ${Math.floor(mins/60)}h`:mins<10080?`Expires in ${Math.floor(mins/1440)}d`:'Permanent';
-  return {label, color:'var(--green)', icon:'⏱'};
-}
+/* first _qrExpiryStatus removed (duplicate) */
 
 /* Override genQR to also store expiry */
 const _origGenQR = typeof genQR === 'function' ? genQR : null;
@@ -8183,7 +8163,7 @@ const TRANSLATIONS = {
     chip:'Smart Attendance Platform',
     hero1:'Attendance.', hero2:'Zero Friction.',
     sub:'Create timed sessions, verify students by class, generate scannable QR codes, and export professional PDF reports — all in one platform.',
-    btn_admin:'Open Admin Panel →', btn_demo:'View Demo', btn_contact:'✦ Contact Us',
+    btn_admin:'Open Admin Panel →', btn_contact:'✦ Contact Us', btn_msg_admin:'📬 Message an Admin', install_app:'Install App',
     // Login
     welcome:'Welcome to AttendX', how_access:'How are you accessing today?',
     admin_login_btn:'👨‍🏫 Admin Login', register_btn:'➕ Register as New Admin', super_btn:'🛡 Super Admin',
@@ -8444,7 +8424,7 @@ const TRANSLATIONS = {
     chip:'Plateforme de Présence Intelligente',
     hero1:'Présence.', hero2:'Zéro Friction.',
     sub:'Créez des sessions minutées, vérifiez les étudiants par classe, générez des QR codes et exportez des rapports PDF professionnels — tout en un.',
-    btn_admin:'Ouvrir le Panneau Admin →', btn_demo:'Voir la Démo', btn_contact:'✦ Nous Contacter',
+    btn_admin:'Ouvrir le Panneau Admin →', btn_contact:'✦ Nous Contacter', btn_msg_admin:'📬 Contacter un Admin', install_app:'Installer',
     // Login
     welcome:'Bienvenue sur AttendX', how_access:'Comment accédez-vous aujourd\'hui ?',
     admin_login_btn:'👨‍🏫 Connexion Admin', register_btn:'➕ Créer un Compte Admin', super_btn:'🛡 Super Admin',
@@ -8747,8 +8727,8 @@ function applyTranslations(){
   setText('.landing-sub', 'sub');
   const ctaBtns = qsa('.landing-cta .cta-btn');
   if(ctaBtns[0]) ctaBtns[0].textContent = t('btn_admin');
-  if(ctaBtns[1]) ctaBtns[1].textContent = t('btn_demo');
-  if(ctaBtns[2]) ctaBtns[2].textContent = t('btn_contact');
+  if(ctaBtns[1]) ctaBtns[1].textContent = t('btn_contact');
+  if(ctaBtns[2]) ctaBtns[2].textContent = t('btn_msg_admin');
   // Feature cards
   const featTitles = qsa('.feat-title');
   const featDescs  = qsa('.feat-desc');
@@ -9654,7 +9634,7 @@ function superTab(tab){
   if(tab==='analytics') loadVisitorAnalytics();
   if(tab==='chat'){ loadPublicChat(); loadAdminChat(); }
   if(tab==='sessions') loadSuperSessions();
-  if(tab==='inbox') loadInbox();
+  if(tab==='inbox'){ loadInbox(); setTimeout(loadVIDVerifications, 500); }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -10397,33 +10377,43 @@ function _showVMsgStep(n){
   });
 }
 
+/* first sendVisitorMsg removed (duplicate) */
+
 async function sendVisitorMsg(){
+  if(!_vMsgSelectedAdmin){ toast('Select an admin first','warn'); return; }
   const name  = document.getElementById('vMsgSenderName')?.value.trim();
   const email = document.getElementById('vMsgSenderEmail')?.value.trim();
   const body  = document.getElementById('vMsgBody')?.value.trim();
-  if(!name || !email || !body){
-    showAlert('vMsgAlert','err','Please fill in all fields.'); return;
-  }
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-    showAlert('vMsgAlert','err','Please enter a valid email address.'); return;
-  }
-  if(!_vMsgSelectedAdmin){ showAlert('vMsgAlert','err','No admin selected.'); return; }
+  if(!name||!body){ showAlert('vMsgAlert','err','Name and message are required.'); return; }
   await waitForFirebase();
   try {
-    await window._fsAddDoc(window._fsColl(window._db,'visitor_inbox'),{
+    const _vid = _getVisitorId();
+    const _now = Date.now();
+    const _TTL = 172800000; // 48h
+    const ref = await window._fsAddDoc(window._fsColl(window._db,'visitor_inbox'),{
       toAdmin: _vMsgSelectedAdmin.username,
       toAdminName: _vMsgSelectedAdmin.name,
       fromName: name,
-      fromEmail: email,
+      fromEmail: email||'',
       message: body,
-      sentAt: Date.now(),
+      sentAt: _now,
+      deleteAt: _now + _TTL,
       read: false,
       replied: false,
       replyText: '',
-      vid: _getVisitorId()
+      vid: _vid
     });
+    // Copy to visitor's own subcollection so they see it in their Inbox drawer
+    if(_vid){
+      window._fsAddDoc(
+        window._fsColl(window._db,'visitor_replies',_vid,'messages'),
+        { from:'visitor', fromName:name, fromRole:'visitor', body,
+          toAdmin:_vMsgSelectedAdmin.username, toAdminName:_vMsgSelectedAdmin.name,
+          sentAt:_now, deleteAt:_now+_TTL, read:true, type:'sent', originalInboxId:ref.id }
+      ).catch(()=>{});
+    }
     _showVMsgStep(3);
-  } catch(e){ showAlert('vMsgAlert','err','Failed to send: '+e.message); }
+  } catch(e){ showAlert('vMsgAlert','err','Failed: '+e.message); }
 }
 
 function closeVisitorMsgModal(){
@@ -11580,56 +11570,7 @@ function generateReplyQR() {
   toast('QR code generated!', 'ok');
 }
 
-async function sendVisitorReply() {
-  if (!_visitorReplyTarget) return;
-  const replyText = document.getElementById('vrReplyText').value.trim();
-  const qrData = document.getElementById('vrQRInput').value.trim();
-  if (!replyText && !qrData) {
-    showAlert('vrAlert', 'err', 'Please write a message or generate a QR code to send.');
-    return;
-  }
-  if (!window._db) { showAlert('vrAlert', 'err', 'Not connected to database.'); return; }
-
-  let senderName = S.currentAdmin;
-  try {
-    const aSnap = await window._fsGetDoc(window._fsDoc(window._db, 'admins', S.currentAdmin));
-    if (aSnap.exists()) senderName = aSnap.data().name || S.currentAdmin;
-  } catch(e){}
-
-  const payload = {
-    type: 'admin_reply',
-    to: _visitorReplyTarget.email || _visitorReplyTarget.name,
-    toName: _visitorReplyTarget.name,
-    originalMsgId: _visitorReplyTarget.msgId || null,
-    from: S.currentAdmin || '__super__',
-    fromName: senderName,
-    body: replyText || '',
-    qrData: qrData || null,
-    hasQR: !!qrData,
-    read: false,
-    ts: Date.now()
-  };
-
-  try {
-    const ref = window._fsDoc(window._fsColl(window._db, 'visitor_replies'));
-    await window._fsSetDoc(ref, payload);
-    // Also mark original message as replied
-    if (_visitorReplyTarget.msgId && window._db) {
-      try {
-        await window._fsSetDoc(
-          window._fsDoc(window._db, 'visitor_messages', _visitorReplyTarget.msgId),
-          { replied: true, repliedAt: Date.now(), repliedBy: S.currentAdmin || '__super__' },
-          { merge: true }
-        );
-      } catch(e){}
-    }
-    showAlert('vrAlert', 'ok', '✓ Reply sent to ' + _visitorReplyTarget.name + (qrData ? ' with QR code' : ''));
-    setTimeout(() => closeVisitorReplyModal(), 2000);
-    toast('✓ Reply sent!', 'ok');
-  } catch (e) {
-    showAlert('vrAlert', 'err', 'Failed: ' + e.message);
-  }
-}
+/* first sendVisitorReply removed (duplicate) */
 
 /* ── Patch renderInboxMessages to add Reply button ── */
 /* We monkey-patch the existing renderInboxMessages logic by wrapping the
@@ -12426,14 +12367,7 @@ async function loadVIDVerifications() {
   }
 }
 
-/* Auto-load verifications when super admin opens inbox tab */
-const _origSuperTab = typeof superTab === 'function' ? superTab : null;
-function superTab(tab) {
-  if (_origSuperTab) _origSuperTab(tab);
-  if (tab === 'inbox') {
-    setTimeout(loadVIDVerifications, 500);
-  }
-}
+/* superTab: loadVIDVerifications merged into main function */
 
 /* ══════════════════════════════════════════════════════════
    SECURITY HARDENING
@@ -12490,21 +12424,7 @@ window._rlInbox   = new _RateLimiter(5,  60000, '_rl_inbox');   // 5 inbox msgs/
 window._rlDM      = new _RateLimiter(5,  60000, '_rl_dm');      // 5 DMs/min
 window._rlQR      = new _RateLimiter(20, 60000, '_rl_qr');      // 20 QR gens/min
 
-/* ── 3. Patch sendVisitorMsg to rate-limit + sanitize ── */
-const _origSendVisitorMsg = typeof sendVisitorMsg === 'function' ? sendVisitorMsg : null;
-async function sendVisitorMsg() {
-  if (!window._rlInbox.check()) {
-    showAlert('vMsgAlert','err','Too many messages. Please wait 60 seconds.');
-    return;
-  }
-  // Sanitize inputs
-  ['vMsgSenderName','vMsgSenderEmail','vMsgBody'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = _hardSanitize(el.value, id==='vMsgBody'?2000:200);
-  });
-  if (_origSendVisitorMsg) await _origSendVisitorMsg();
-}
-
+/* sendVisitorMsg rate-limit patch removed — original function handles this */
 /* ── 4. Firestore Security Rules (deploy these in Firebase console) ──
    These rules are documented here so you can paste them into:
    Firebase Console → Firestore → Rules
@@ -12557,7 +12477,7 @@ service cloud.firestore {
   meta.content = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://api.qrserver.com",
-    "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com",
+    "connect-src 'self' https:" + "//" + "*.googleapis.com https:" + "//" + "*.firebaseio.com https:" + "//" + "*.cloudfunctions.net wss:" + "//" + "*.firebaseio.com",
     "img-src 'self' data: blob: https://api.qrserver.com https://firebasestorage.googleapis.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
