@@ -2203,7 +2203,8 @@ img, video, iframe { max-width: 100%; }
       <button class="cta-btn cta-primary" onclick="showLogin()">Open Admin Panel →</button>
       <button class="cta-btn cta-outline" onclick="openContact()" style="border-color:var(--blue);color:var(--blue);">✦ Contact Us</button>
       <button class="cta-btn cta-outline" onclick="openVisitorMsgModal()" style="border-color:var(--cyan);color:var(--cyan);">📬 Message an Admin</button>
-      <button class="cta-btn cta-outline" onclick="openVisitorInboxDrawer()" id="visitorInboxBell" style="border-color:var(--blue);color:var(--blue);position:relative;display:none;">🔔 My Replies<span id="visitorReplyBadge" style="display:none;position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:700;font-family:var(--mono);align-items:center;justify-content:center;padding:0 4px;line-height:18px;"></span></button>
+      <button class="cta-btn cta-outline" onclick="document.getElementById('landingChatSection')?.scrollIntoView({behavior:'smooth'})" style="border-color:var(--purple,#8b5cf6);color:var(--purple,#8b5cf6);">💬 Community Chat</button>
+      <button class="cta-btn cta-outline" onclick="openVisitorInboxDrawer()" id="visitorInboxBell" style="border-color:var(--blue);color:var(--blue);position:relative;display:inline-flex;">🔔 My Replies<span id="visitorReplyBadge" style="display:none;position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;background:var(--red);color:#fff;border-radius:9px;font-size:10px;font-weight:700;font-family:var(--mono);align-items:center;justify-content:center;padding:0 4px;line-height:18px;"></span></button>
     </div>
     <div class="features-grid a-fadeup d4">
       <div class="feat">
@@ -2286,7 +2287,10 @@ img, video, iframe { max-width: 100%; }
               <div id="landingChatMsgCount" style="font-size:10px;color:var(--text3);font-family:var(--mono);">Loading…</div>
             </div>
           </div>
-          <button class="btn btn-ghost btn-xs" onclick="openVisitorMsgModal()" style="color:var(--gold);border-color:rgba(226,185,106,0.35);font-size:11px;padding:6px 14px;border-radius:999px;">🛡 Contact Admin</button>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button class="btn btn-ghost btn-xs" onclick="openVisitorInboxDrawer();viSwitch('dms')" style="color:var(--purple,#8b5cf6);border-color:rgba(139,92,246,0.35);font-size:11px;padding:6px 14px;border-radius:999px;" title="Send private DMs to other visitors">💬 Private DMs</button>
+            <button class="btn btn-ghost btn-xs" onclick="openVisitorMsgModal()" style="color:var(--gold);border-color:rgba(226,185,106,0.35);font-size:11px;padding:6px 14px;border-radius:999px;">🛡 Contact Admin</button>
+          </div>
         </div>
         <!-- Messages -->
         <div id="landingChatMessages" style="min-height:320px;max-height:460px;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:10px;">
@@ -2299,6 +2303,12 @@ img, video, iframe { max-width: 100%; }
             <button onclick="clearChatReply('landing')" style="font-size:14px;background:none;border:none;cursor:pointer;color:var(--text3);">✕</button>
           </div>
           <div id="landingImgPreview" style="display:none;margin-bottom:8px;"></div>
+          <!-- DM hint bar -->
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.18);border-radius:var(--r1);padding:7px 12px;margin-bottom:8px;">
+            <span style="font-size:13px;">💬</span>
+            <span style="font-size:11px;color:var(--text2);flex:1;">Click any visitor's <strong>name</strong> in the chat to send them a private DM.</span>
+            <button onclick="openVisitorInboxDrawer();viSwitch('dms')" style="font-size:10px;font-weight:700;color:var(--purple,#8b5cf6);background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);border-radius:6px;padding:3px 9px;cursor:pointer;white-space:nowrap;">Open DMs ↗</button>
+          </div>
           <div style="display:flex;gap:8px;margin-bottom:8px;">
             <input id="landingChatName" placeholder="Your name (or Anonymous)" style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r2);background:var(--s1);color:var(--text);font-family:var(--body);font-size:13px;"/>
           </div>
@@ -2338,10 +2348,10 @@ img, video, iframe { max-width: 100%; }
       <div class="login-title">Welcome to AttendX</div>
       <div class="login-sub">How are you accessing today?</div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
-        <button class="btn btn-primary btn-lg btn-full" onclick="showLoginStep('admin')">👨‍🏫 Admin Login</button>
-        <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('preclass')" style="border-color:rgba(16,185,129,0.45);color:var(--green);">📍 Mark Presence Before Class</button>
-        <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('register')">➕ Register as New Admin</button>
-        <button class="btn btn-ghost btn-lg btn-full" onclick="showLoginStep('super')" style="border-color:var(--gold);color:var(--gold);">🛡 Super Admin</button>
+        <button class="btn btn-primary btn-lg btn-full" data-i18n="admin_login_btn" onclick="showLoginStep('admin')">👨‍🏫 Admin Login</button>
+        <button class="btn btn-ghost btn-lg btn-full" data-i18n="preclass_btn" onclick="showLoginStep('preclass')" style="border-color:rgba(16,185,129,0.45);color:var(--green);">📍 Mark Presence Before Class</button>
+        <button class="btn btn-ghost btn-lg btn-full" data-i18n="register_btn" onclick="showLoginStep('register')">➕ Register as New Admin</button>
+        <button class="btn btn-ghost btn-lg btn-full" data-i18n="super_btn" onclick="showLoginStep('super')" style="border-color:var(--gold);color:var(--gold);">🛡 Super Admin</button>
       </div>
       <button class="btn btn-ghost btn-full" style="margin-top:14px;font-size:11px;" onclick="closeLoginModal()">✕ Close</button>
     </div>
@@ -4042,7 +4052,7 @@ img, video, iframe { max-width: 100%; }
       <!-- Step 1: pick admin -->
       <div id="vMsgStep1">
         <div style="font-family:var(--head);font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">1 — Choose an Admin</div>
-        <div id="vMsgAdminPicker" style="display:flex;flex-direction:column;gap:7px;max-height:220px;overflow-y:auto;margin-bottom:14px;">
+        <div id="vMsgAdminList" style="display:flex;flex-direction:column;gap:7px;max-height:220px;overflow-y:auto;margin-bottom:14px;">
           <!-- Super Admin always shown first -->
           <div class="vMsg-admin-opt" data-username="__super__" data-name="Super Admin"
             onclick="vMsgSelectAdmin('__super__','Super Admin')"
@@ -4057,7 +4067,7 @@ img, video, iframe { max-width: 100%; }
             <div style="margin-left:auto;width:18px;height:18px;border-radius:50%;border:2px solid rgba(226,185,106,0.4);flex-shrink:0;" id="vMsgDot___super__"></div>
           </div>
           <div style="font-size:9px;color:var(--text3);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;padding:4px 2px;">Or contact a specific admin</div>
-          <div style="text-align:center;padding:12px;color:var(--text3);font-size:12px;font-family:var(--mono);" id="vMsgAdminList">Loading admins…</div>
+          <div style="text-align:center;padding:12px;color:var(--text3);font-size:12px;font-family:var(--mono);">Loading admins…</div>
         </div>
         <button class="btn btn-primary btn-full" onclick="vMsgGoStep2()">Continue →</button>
       </div>
@@ -4260,6 +4270,7 @@ const S = {
   teacherLat:     null,
   teacherLng:     null,
   geoAccuracy:    null,
+  activeSessId:   null,
   geoBlocked:     false,
   studentDist:    null
 };
@@ -4844,6 +4855,12 @@ function showLogin(){
   S.pinInput=''; S_regPin=''; S_recPin='';
   showLoginStep('step1');
   document.getElementById('loginModal').classList.add('show');
+  // Reset preclass state so it's clean next open
+  const sl = document.getElementById('preclassSuccessList');
+  if(sl) sl.style.display='none';
+  const sn = document.getElementById('preclassSuccessNames');
+  if(sn) sn.innerHTML='';
+  if(typeof _preclassAdded !== 'undefined') _preclassAdded=[];
 }
 
 function closeLoginModal(){
@@ -4873,12 +4890,33 @@ function navTo(pg){
 function adminOut() { S.loggedIn=false; S.currentAdmin=null; if(S.liveInt)clearInterval(S.liveInt); stopDynQR(); stopNotifListener(); showPage('landing'); }
 
 function showLoginStep(step){
-  // Hide ALL login cards first
-  document.querySelectorAll('#loginModalInner .login-card').forEach(el=>el.style.display='none');
-  const map = {step1:'loginStep1',admin:'loginStepAdmin',register:'loginStepRegister',super:'loginStepSuper',recover:'loginStepRecover',preclass:'loginStepPreclass'};
-  if(map[step]){ const _el=document.getElementById(map[step]); if(_el) _el.style.display='block'; }
-  if(step==='preclass') setTimeout(_loadPreclassSessions, 100);
-  S.pinInput=''; S_regPin=''; S_recPin='';
+  // Hide every step card
+  ['loginStep1','loginStepAdmin','loginStepRegister','loginStepSuper','loginStepRecover','loginStepPreclass'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display = 'none';
+  });
+  // Show only the requested step
+  const map = {
+    step1:    'loginStep1',
+    admin:    'loginStepAdmin',
+    register: 'loginStepRegister',
+    super:    'loginStepSuper',
+    recover:  'loginStepRecover',
+    preclass: 'loginStepPreclass'
+  };
+  const targetId = map[step];
+  if(targetId){
+    const el = document.getElementById(targetId);
+    if(el){
+      el.style.display = 'block';
+      // Scroll to top of modal so content is fully visible
+      el.scrollTop = 0;
+    }
+  }
+  // Load sessions for preclass step
+  if(step === 'preclass') setTimeout(_loadPreclassSessions, 100);
+  // Reset all PIN inputs
+  S.pinInput = ''; S_regPin = ''; S_recPin = '';
   updateDots(); updateRegDots(); updateRecDots();
 }
 
@@ -6234,6 +6272,9 @@ function renderSessions() {
     if(!list)return;
     if(!ss.length){list.innerHTML='<div class="empty-st"><div class="ei">📋</div><div class="et">'+(q?'No matching sessions.':'No sessions today.')+'</div></div>';return;}
     Promise.all(ss.map(s=>getRec(s.id).then(r=>({s,r})))).then(items=>{
+      // Track the first active session ID for manual add
+      const _activeSess = items.find(({s})=>Date.now()<s.expiry);
+      S.activeSessId = _activeSess ? _activeSess.s.id : (items[0]?.s.id||null);
       list.innerHTML=items.map(({s,r})=>{
         const live=Date.now()<s.expiry;
         return `<div class="srow" onclick="openModal('${s.id}')">
@@ -8163,10 +8204,10 @@ const TRANSLATIONS = {
     chip:'Smart Attendance Platform',
     hero1:'Attendance.', hero2:'Zero Friction.',
     sub:'Create timed sessions, verify students by class, generate scannable QR codes, and export professional PDF reports — all in one platform.',
-    btn_admin:'Open Admin Panel →', btn_contact:'✦ Contact Us', btn_msg_admin:'📬 Message an Admin', install_app:'Install App',
+    btn_admin:'Open Admin Panel →', btn_contact:'✦ Contact Us',
     // Login
     welcome:'Welcome to AttendX', how_access:'How are you accessing today?',
-    admin_login_btn:'👨‍🏫 Admin Login', register_btn:'➕ Register as New Admin', super_btn:'🛡 Super Admin',
+    admin_login_btn:'👨‍🏫 Admin Login', preclass_btn:'📍 Mark Presence Before Class', register_btn:'➕ Register as New Admin', super_btn:'🛡 Super Admin',
     admin_access:'Admin Login', enter_user_pin:'Enter your username and PIN.',
     username_lbl:'Username', username_ph:'Your username',
     forgot_pin:'Forgot PIN?', back:'← Back',
@@ -8424,10 +8465,10 @@ const TRANSLATIONS = {
     chip:'Plateforme de Présence Intelligente',
     hero1:'Présence.', hero2:'Zéro Friction.',
     sub:'Créez des sessions minutées, vérifiez les étudiants par classe, générez des QR codes et exportez des rapports PDF professionnels — tout en un.',
-    btn_admin:'Ouvrir le Panneau Admin →', btn_contact:'✦ Nous Contacter', btn_msg_admin:'📬 Contacter un Admin', install_app:'Installer',
+    btn_admin:'Ouvrir le Panneau Admin →', btn_demo:'Voir la Démo', btn_contact:'✦ Nous Contacter',
     // Login
     welcome:'Bienvenue sur AttendX', how_access:'Comment accédez-vous aujourd\'hui ?',
-    admin_login_btn:'👨‍🏫 Connexion Admin', register_btn:'➕ Créer un Compte Admin', super_btn:'🛡 Super Admin',
+    admin_login_btn:'👨‍🏫 Connexion Admin', preclass_btn:'📍 Marquer Présence Avant le Cours', register_btn:'➕ Créer un Compte Admin', super_btn:'🛡 Super Admin',
     admin_access:'Connexion Admin', enter_user_pin:'Entrez votre nom d\'utilisateur et PIN.',
     username_lbl:'Nom d\'utilisateur', username_ph:'Votre nom d\'utilisateur',
     forgot_pin:'PIN oublié ?', back:'← Retour',
@@ -8727,8 +8768,7 @@ function applyTranslations(){
   setText('.landing-sub', 'sub');
   const ctaBtns = qsa('.landing-cta .cta-btn');
   if(ctaBtns[0]) ctaBtns[0].textContent = t('btn_admin');
-  if(ctaBtns[1]) ctaBtns[1].textContent = t('btn_contact');
-  if(ctaBtns[2]) ctaBtns[2].textContent = t('btn_msg_admin');
+  // btn_demo removed — no demo button exists anymore
   // Feature cards
   const featTitles = qsa('.feat-title');
   const featDescs  = qsa('.feat-desc');
@@ -8746,10 +8786,12 @@ function applyTranslations(){
   if(loginTitle) loginTitle.textContent = t('welcome');
   const loginSub = qs('#loginStep1 .login-sub');
   if(loginSub) loginSub.textContent = t('how_access');
-  const step1Btns = qsa('#loginStep1 .btn');
-  if(step1Btns[0]) step1Btns[0].textContent = t('admin_login_btn');
-  if(step1Btns[1]) step1Btns[1].textContent = t('register_btn');
-  if(step1Btns[2]) step1Btns[2].textContent = t('super_btn');
+  // Translate loginStep1 buttons by data-i18n attribute — never by index
+  qsa('#loginStep1 [data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (val && val !== key) el.textContent = val;
+  });
   // Admin login step
   const adminLoginTitle = qs('#loginStepAdmin .login-title');
   if(adminLoginTitle) adminLoginTitle.textContent = t('admin_access');
@@ -9846,7 +9888,6 @@ async function broadcastToVisitors(){
       at: Date.now(),
       isBroadcast: true
     });
-    await window._fsSetDoc(window._fsDoc(window._db,'chat_public',ref.id),{id:ref.id},{merge:true});
     showAlert('visitorBroadcastAlert','ok','✓ Broadcast sent — all visitors can see it now in the community board.');
     document.getElementById('visitorBroadcastMsg').value='';
   } catch(e){ showAlert('visitorBroadcastAlert','err','Failed: '+e.message); }
@@ -9940,7 +9981,7 @@ function _chatMsgHtml(msg, isMine, boardId){
 
   return `<div id="cmsg-${msg.id||msg.at}" style="background:${isMine?'var(--blue3)':'var(--s2)'};border:1px solid ${isMine?'rgba(59,130,246,0.2)':'var(--line)'};border-radius:var(--r2);padding:10px 12px;${isMine?'margin-left:32px;':'margin-right:32px;'}">
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
-      <span style="font-size:11px;font-weight:700;color:${senderColor};">${_esc(msg.name||'Anonymous')}</span>
+      <span style="font-size:11px;font-weight:700;color:${senderColor};cursor:${msg.role==='visitor'?'pointer':'default'};" onclick="${msg.role==='visitor'?'openVisitorDMFromChat(this)':''}" data-vname="${_esc(msg.name||'Anonymous')}" data-vsid="${msg.senderId||''}" title="${msg.role==='visitor'?'Click to send a private DM':''}">${_esc(msg.name||'Anonymous')}${msg.role==='visitor'?' <span style=\'font-size:9px;opacity:0.6;\'>✉</span>':''}</span>
       ${roleBadge}
       <span style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-left:auto;">${time}</span>
     </div>
@@ -10152,8 +10193,7 @@ async function sendPublicChatMsg(){
   }
   try {
     await waitForFirebase();
-    const ref = await window._fsAddDoc(window._fsColl(window._db,'chat_public'), msgData);
-    await window._fsSetDoc(window._fsDoc(window._db,'chat_public',ref.id),{id:ref.id},{merge:true});
+    await window._fsAddDoc(window._fsColl(window._db,'chat_public'), msgData);
   } catch(e){
     // Offline fallback: show locally
     toast('Offline — message shown locally only','warn');
@@ -10283,8 +10323,7 @@ async function sendLandingChatMsg(){
   }
   try {
     await waitForFirebase();
-    const ref = await window._fsAddDoc(window._fsColl(window._db,'chat_public'), msgData);
-    await window._fsSetDoc(window._fsDoc(window._db,'chat_public',ref.id),{id:ref.id},{merge:true});
+    await window._fsAddDoc(window._fsColl(window._db,'chat_public'), msgData);
   } catch(e){
     toast('Offline — message shown locally only','warn');
     const container = document.getElementById('landingChatMessages');
@@ -10563,7 +10602,8 @@ async function sendInboxReply(){
         window._fsColl(window._db,'visitor_replies',_replyVID,'messages'),
         { from: S.currentAdmin||'__super__', fromName: _sName, fromRole:'admin',
           body: text, qrData:null, hasQR:false, read:false,
-          sentAt: Date.now(), originalMsgId: _inboxCurrentMsg.id }
+          sentAt: Date.now(), deleteAt: Date.now()+172800000,
+          originalMsgId: _inboxCurrentMsg.id }
       ).catch(e=>console.warn('[VID] Bell write failed:',e.message));
     }
     toast('✓ Reply sent to '+_inboxCurrentMsg.fromName,'ok');
@@ -11283,6 +11323,72 @@ function _loadPreClassList(){
   });
 }
 
+/* ── Login modal pre-class helpers ── */
+async function _loadPreclassSessions(){
+  await waitForFirebase();
+  const sel = document.getElementById('preclassSessionSelect');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Loading…</option>';
+  try {
+    const today = new Date().toDateString();
+    const snap = await window._fsGetDocs(window._fsColl(window._db,'sessions'));
+    const opts = snap.docs
+      .map(d=>({id:d.id,...d.data()}))
+      .filter(s=>{
+        const d = new Date(s.createdAt||s.start||0).toDateString();
+        return d===today && !s.ended;
+      });
+    if(!opts.length){
+      sel.innerHTML='<option value="">No active sessions today</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">— Select session —</option>' +
+      opts.map(s=>`<option value="${s.id}">${s.subject||s.label||'Session'} — ${s.class||''} (${new Date(s.start||s.createdAt||0).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})})</option>`).join('');
+  } catch(e){ sel.innerHTML='<option value="">Error loading sessions</option>'; }
+}
+
+async function submitPreclassPresence(){
+  const sessId = document.getElementById('preclassSessionSelect')?.value;
+  const first  = document.getElementById('preclassFirst')?.value.trim();
+  const last   = document.getElementById('preclassLast')?.value.trim();
+  const mat    = document.getElementById('preclassMat')?.value.trim();
+  const cls    = document.getElementById('preclassCls')?.value.trim();
+  const dept   = document.getElementById('preclassDept')?.value.trim();
+  const alertEl= document.getElementById('preclassAlert');
+
+  if(!sessId){ showAlert('preclassAlert','err','Please select a session.'); return; }
+  if(!first && !last){ showAlert('preclassAlert','err','Please enter at least a first or last name.'); return; }
+
+  const name = [first,last].filter(Boolean).join(' ');
+  await waitForFirebase();
+  try {
+    const recId = 'PRE_'+Date.now()+'_'+Math.random().toString(36).slice(2,5).toUpperCase();
+    await window._fsSetDoc(
+      window._fsDoc(window._db,'sessions',sessId,'records',recId),
+      {
+        name, phone: mat||'MANUAL', class:cls||'', dept:dept||'',
+        manual:true, preClass:true,
+        timestamp:Date.now(), rank:Date.now()-1,
+        device:'Pre-class registration', ip:'N/A',
+        lat:S.teacherLat||null, lng:S.teacherLng||null,
+        verified:true
+      }
+    );
+    // Show success list
+    const successList = document.getElementById('preclassSuccessList');
+    const successNames = document.getElementById('preclassSuccessNames');
+    if(successList && successNames){
+      successList.style.display='block';
+      successNames.innerHTML += `✓ ${name}${mat?' ('+mat+')':''}<br/>`;
+    }
+    // Clear fields
+    ['preclassFirst','preclassLast','preclassMat','preclassCls','preclassDept']
+      .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    if(alertEl) alertEl.innerHTML='';
+    toast('✓ '+name+' marked present','ok');
+  } catch(e){ showAlert('preclassAlert','err','Failed: '+e.message); }
+}
+
 async function markPreClassPresence(){
   const name    = document.getElementById('preClassName')?.value.trim();
   const phone   = document.getElementById('preClassPhone')?.value.trim();
@@ -11658,6 +11764,121 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.target === modal) closeVisitorReplyModal();
     });
   }
+});
+
+
+/* ══════════════════════════════════════════════════════
+   VISITOR DM FROM CHAT — click a name to open DM compose
+══════════════════════════════════════════════════════ */
+function openVisitorDMFromChat(elOrName, senderId) {
+  // Accept either a DOM element (from onclick="openVisitorDMFromChat(this)") or a name string
+  let name, sid;
+  if(typeof elOrName === 'string'){
+    name = elOrName; sid = senderId||'';
+  } else {
+    name = elOrName?.dataset?.vname || '';
+    sid  = elOrName?.dataset?.vsid  || '';
+  }
+  if (!name || name === 'Anonymous') {
+    toast('Cannot DM an anonymous visitor — ask them to enter a name first', 'warn');
+    return;
+  }
+  // Open the inbox drawer on the DMs tab
+  openVisitorInboxDrawer();
+  viSwitch('dms');
+  // After drawer animates in, open compose pre-filled with recipient name
+  setTimeout(() => {
+    openVisitorDMCompose();
+    const inp = document.getElementById('vidDMRecipient');
+    if (inp) {
+      inp.value = name;
+      inp.focus();
+      // Highlight to draw attention
+      inp.style.borderColor = 'var(--blue)';
+      inp.style.boxShadow   = '0 0 0 3px rgba(59,130,246,0.18)';
+      setTimeout(() => { inp.style.borderColor = ''; inp.style.boxShadow = ''; }, 1800);
+    }
+  }, 240);
+}
+
+
+/* ══════════════════════════════════════════════════════
+   MESSAGE TTL — 2-DAY AUTO-DELETE
+   deleteAt written at creation. Client sweeper runs on
+   firebaseReady and every 60 min.
+══════════════════════════════════════════════════════ */
+function _ttlLabel(deleteAt) {
+  if (!deleteAt) return '';
+  const rem = deleteAt - Date.now();
+  if (rem <= 0) return '<span style="font-size:9px;color:var(--red);font-family:var(--mono);">⏱ Expired</span>';
+  const h = Math.floor(rem / 3600000);
+  const m = Math.floor((rem % 3600000) / 60000);
+  const label = h > 0 ? h + 'h ' + m + 'm' : m + 'm';
+  const col = h < 6 ? 'var(--red)' : h < 24 ? 'var(--gold)' : 'var(--text3)';
+  return `<span style="font-size:9px;color:${col};font-family:var(--mono);" title="Auto-deleted after 2 days">⏱ ${label} left</span>`;
+}
+
+async function _autoCleanExpiredMessages() {
+  if (!window._db) return;
+  const now     = Date.now();
+  const cutoff  = now - 172800000; // 48 h ago
+  const vid     = (typeof _getVisitorId === 'function') ? _getVisitorId() : null;
+
+  async function _delBatch(docs) {
+    for (const d of docs) await window._fsDeleteDoc(d.ref).catch(() => {});
+  }
+
+  // visitor_inbox — has deleteAt field
+  try {
+    const s = await window._fsGetDocs(window._fsQuery(
+      window._fsColl(window._db, 'visitor_inbox'),
+      window._fsWhere('deleteAt', '<=', now),
+      window._fsLimit(50)
+    ));
+    await _delBatch(s.docs);
+    if (s.size) console.log('[TTL] inbox deleted:', s.size);
+  } catch(e) {}
+
+  // visitor_replies for this visitor
+  if (vid) {
+    try {
+      const s = await window._fsGetDocs(window._fsQuery(
+        window._fsColl(window._db, 'visitor_replies', vid, 'messages'),
+        window._fsWhere('deleteAt', '<=', now),
+        window._fsLimit(50)
+      ));
+      await _delBatch(s.docs);
+      if (s.size) console.log('[TTL] replies deleted:', s.size);
+    } catch(e) {}
+  }
+
+  // chat_public older than 2 days (uses 'at' field)
+  try {
+    const s = await window._fsGetDocs(window._fsQuery(
+      window._fsColl(window._db, 'chat_public'),
+      window._fsWhere('at', '<=', cutoff),
+      window._fsLimit(50)
+    ));
+    await _delBatch(s.docs);
+    if (s.size) console.log('[TTL] chat_public deleted:', s.size);
+  } catch(e) {}
+
+  // chat_admin older than 2 days
+  try {
+    const s = await window._fsGetDocs(window._fsQuery(
+      window._fsColl(window._db, 'chat_admin'),
+      window._fsWhere('at', '<=', cutoff),
+      window._fsLimit(50)
+    ));
+    await _delBatch(s.docs);
+    if (s.size) console.log('[TTL] chat_admin deleted:', s.size);
+  } catch(e) {}
+}
+
+// Run sweeper 4 s after Firebase loads, then every hour
+document.addEventListener('firebaseReady', () => {
+  setTimeout(_autoCleanExpiredMessages, 4000);
+  setInterval(_autoCleanExpiredMessages, 3600000);
 });
 
 /* ── BOOT ── */
@@ -12174,7 +12395,8 @@ async function sendVisitorDM() {
         body: _sanitizeInput(body),
         qrData: null, hasQR: false,
         read: false,
-        sentAt: Date.now()
+        sentAt: Date.now(),
+        deleteAt: Date.now()+172800000
       }
     );
     showAlert('vidDMAlert','ok','✓ DM sent to ' + _esc(recipient));
@@ -12466,7 +12688,7 @@ service cloud.firestore {
     }
   }
 }
-── */
+*/
 
 /* ── 5. Content Security Policy (inject meta if not present) ── */
 (function _injectCSP() {
@@ -12477,7 +12699,7 @@ service cloud.firestore {
   meta.content = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://api.qrserver.com",
-    "connect-src 'self' https:" + "//" + "*.googleapis.com https:" + "//" + "*.firebaseio.com https:" + "//" + "*.cloudfunctions.net wss:" + "//" + "*.firebaseio.com",
+    "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com",
     "img-src 'self' data: blob: https://api.qrserver.com https://firebasestorage.googleapis.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
