@@ -1470,7 +1470,7 @@ body::after { content: none; }
 /* ════════════════════════════════
    QR TOOL PAGE
 ════════════════════════════════ */
-.qr-wrap { max-width:940px; margin:0 auto; padding:40px 24px 80px; }
+.qr-wrap { max-width:940px; margin:0 auto; padding:16px 24px 80px; }
 .qr-header { text-align:center; padding-bottom:44px; }
 .qr-chip {
   display:inline-flex; align-items:center; gap:8px;
@@ -2310,7 +2310,7 @@ img, video, iframe { max-width: 100%; }
             <button onclick="openVisitorInboxDrawer();viSwitch('dms')" style="font-size:10px;font-weight:700;color:var(--purple,#8b5cf6);background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.25);border-radius:6px;padding:3px 9px;cursor:pointer;white-space:nowrap;">Open DMs ↗</button>
           </div>
           <div style="display:flex;gap:8px;margin-bottom:8px;">
-            <input id="landingChatName" placeholder="Your name (or Anonymous)" style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r2);background:var(--s1);color:var(--text);font-family:var(--body);font-size:13px;"/>
+            <input id="landingChatName" placeholder="Your name (required)" style="flex:1;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r2);background:var(--s1);color:var(--text);font-family:var(--body);font-size:13px;" oninput="saveChatName(this.value)"/>
           </div>
           <div style="display:flex;gap:8px;align-items:flex-end;">
             <div style="flex:1;">
@@ -2575,7 +2575,8 @@ img, video, iframe { max-width: 100%; }
             <div id="publicImgPreview" style="display:none;margin-bottom:6px;"></div>
             <div style="display:flex;gap:8px;align-items:flex-end;">
               <div style="flex:1;">
-                <input id="publicChatName" placeholder="Your name (or Anonymous)" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:12px;margin-bottom:6px;box-sizing:border-box;"/>
+                <div id="chatNameAlert" style="margin-bottom:4px;"></div>
+                <input id="publicChatName" placeholder="Your name (required)" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:12px;margin-bottom:6px;box-sizing:border-box;" oninput="saveChatName(this.value)"/>
                 <textarea id="publicChatInput" rows="2" placeholder="Write a message… (Ctrl+Enter to send)" style="width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:none;box-sizing:border-box;" onkeydown="if(event.ctrlKey&&event.key==='Enter')sendPublicChatMsg()"></textarea>
                 <div style="display:flex;align-items:center;gap:10px;margin-top:5px;flex-wrap:wrap;">
                   <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);cursor:pointer;">
@@ -3358,10 +3359,9 @@ img, video, iframe { max-width: 100%; }
 <!-- ─────── QR TOOL PAGE ─────── -->
 <div class="page" id="pgQR">
   <div class="qr-wrap">
-    <div class="qr-header">
-      <div class="qr-chip a-fadeup"><span class="dot"></span>QR Code Generator</div>
-      <h1 class="qr-h1 a-fadeup d1">Generate &amp; Share<br/>QR Codes</h1>
-      <p class="qr-sub a-fadeup d2">Create scannable QR codes for session links, emails or websites. Download PNG/SVG — ready for print, Canva or projector.</p>
+    <div class="qr-header" style="text-align:left;padding-bottom:16px;display:flex;align-items:center;gap:12px;">
+      <div class="qr-chip" style="margin:0;"><span class="dot"></span>QR Code Generator</div>
+      <p style="font-size:12px;color:var(--text3);font-family:var(--mono);margin:0;">Session links · Emails · Images · Contacts — download PNG/SVG</p>
     </div>
 
     <div class="qr-main">
@@ -3597,9 +3597,9 @@ img, video, iframe { max-width: 100%; }
               <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
               Print
             </button>
-            <button class="btn-share" onclick="openWAShareModal()" style="background:rgba(37,211,102,0.12);color:#25D366;border-color:rgba(37,211,102,0.3);">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-              WhatsApp
+            <button class="btn-share" onclick="openQRDMShareModal()" style="background:rgba(59,111,232,0.12);color:var(--blue);border-color:rgba(59,111,232,0.3);">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Send via DM
             </button>
           </div>
           <!-- History -->
@@ -3979,48 +3979,32 @@ img, video, iframe { max-width: 100%; }
 </div>
 
 <!-- ══════════ QR WHATSAPP SHARE MODAL ══════════ -->
-<div class="overlay" id="waShareModal" onclick="if(event.target===this)closeWAShareModal()">
+<!-- QR DM Share Modal — replaces WhatsApp share -->
+<div class="overlay" id="qrDMShareModal" onclick="if(event.target===this)closeQRDMShareModal()">
   <div class="modal" style="max-width:400px;">
     <div class="modal-top">
-      <div class="modal-title" style="color:#25D366;">📲 Share QR via WhatsApp</div>
-      <button class="modal-close" onclick="closeWAShareModal()">✕</button>
+      <div class="modal-title" style="color:var(--blue);">💬 Send QR via Private DM</div>
+      <button class="modal-close" onclick="closeQRDMShareModal()">✕</button>
     </div>
     <div class="modal-body">
-      <!-- QR preview -->
       <div style="text-align:center;margin-bottom:16px;">
-        <div id="waQRPreview" style="display:inline-block;padding:10px;background:#fff;border-radius:12px;border:1px solid var(--line);box-shadow:0 2px 12px rgba(0,0,0,0.08);"></div>
+        <div id="qrDMPreview" style="display:inline-block;padding:10px;background:#fff;border-radius:12px;border:1px solid var(--line);box-shadow:0 2px 12px rgba(0,0,0,0.08);"></div>
       </div>
+      <div style="background:var(--blue3);border:1px solid var(--line2);border-radius:var(--r2);padding:10px 12px;font-size:11px;font-family:var(--mono);color:var(--blue2);margin-bottom:14px;line-height:1.6;">
+        💡 The recipient must be visible in the public chat. Enter their <strong>exact name</strong> as shown in chat.
+      </div>
+      <div id="qrDMShareAlert"></div>
       <div class="field" style="margin-bottom:10px;">
-        <label>Recipient WhatsApp Number <span style="color:var(--red);">*</span></label>
-        <div style="display:flex;gap:8px;">
-          <select id="waCountryCode" style="padding:10px 8px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--mono);font-size:12px;min-width:90px;">
-            <option value="237">🇨🇲 +237</option>
-            <option value="33">🇫🇷 +33</option>
-            <option value="1">🇺🇸 +1</option>
-            <option value="44">🇬🇧 +44</option>
-            <option value="234">🇳🇬 +234</option>
-            <option value="221">🇸🇳 +221</option>
-            <option value="225">🇨🇮 +225</option>
-            <option value="243">🇨🇩 +243</option>
-            <option value="27">🇿🇦 +27</option>
-            <option value="254">🇰🇪 +254</option>
-            <option value="212">🇲🇦 +212</option>
-            <option value="213">🇩🇿 +213</option>
-          </select>
-          <input id="waPhoneNumber" type="tel" placeholder="6XXXXXXXX" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--mono);font-size:13px;" inputmode="numeric"/>
-        </div>
+        <label>Recipient Name <span style="color:var(--red);">*</span></label>
+        <input id="qrDMRecipientName" placeholder="Exact name as shown in public chat…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;"/>
       </div>
       <div class="field" style="margin-bottom:14px;">
         <label>Message (optional)</label>
-        <textarea id="waShareMessage" rows="3" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:vertical;"></textarea>
-        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:4px;">The QR code image will be sent to this WhatsApp chat.</div>
+        <textarea id="qrDMMessage" rows="2" placeholder="Here is your QR code…" style="width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;resize:none;"></textarea>
       </div>
-      <button class="btn btn-full" onclick="sendQRViaWA()" style="background:#25D366;color:#fff;border:none;font-weight:700;font-size:14px;padding:13px;border-radius:var(--r2);box-shadow:0 4px 16px rgba(37,211,102,0.35);">
-        📲 Open WhatsApp Chat
+      <button class="btn btn-primary btn-full" onclick="sendQRViaDM()" style="font-weight:700;font-size:14px;padding:13px;">
+        💬 Send QR via DM
       </button>
-      <div style="font-size:10px;color:var(--text3);font-family:var(--mono);text-align:center;margin-top:10px;line-height:1.6;">
-        WhatsApp will open. Save the QR image first (↓ PNG), then attach it in the chat.
-      </div>
     </div>
   </div>
 </div>
@@ -6028,8 +6012,8 @@ function autoRequestTeacherGeo() {
     }
     showAlert('geoAlert','ok',`✓ Location captured (±${acc}m). Geo-fence ready.`);
   }, err => {
-    const msgs = {1:'Permission denied — allow location in browser settings.',2:'Position unavailable — try again.',3:'Timed out — retrying with lower accuracy…'};
-    console.warn('[GEO]',msgs[err.code]||err.message);
+    const msgs = {1:'',2:'Position unavailable — try again.',3:'Timed out — retrying with lower accuracy…'};
+    if(err.code !== 1) console.warn('[GEO]', msgs[err.code]||err.message);
   });
 }
 
@@ -6048,7 +6032,8 @@ function captureTeacherLocation() {
       showAlert('geoAlert','ok',`✓ Location captured (±${acc}m accuracy)`);
     },
     err => {
-      const msgs = {1:'Permission denied — allow location in browser settings.',2:'Position unavailable — try again.',3:'Timed out — move to open area and retry.'};
+      if(err.code === 1) return; // Permission denied — suppress silently
+      const msgs = {2:'Position unavailable — try again.',3:'Timed out — move to open area and retry.'};
       showAlert('geoAlert','err','❌ '+(msgs[err.code]||err.message));
     }
   );
@@ -6829,6 +6814,7 @@ function checkStudentGeo(s) {
       navigator.geolocation.clearWatch(watchId);
       S.geoBlocked = true;
       setBtnState(false);
+      if(err.code === 1){ return; } // Permission denied — suppress silently
       const msgs = {
         1: t('geo_denied'),
         2: t('geo_unavailable'),
@@ -10147,6 +10133,9 @@ function _closeViewOnceOverlay(btn) {
 // ── PUBLIC CHAT (Super Admin panel view) ──
 function loadPublicChat(){
   if(_publicChatUnsub){ _publicChatUnsub(); _publicChatUnsub=null; }
+  // Restore locked name for visitors
+  const savedName = localStorage.getItem('ax_chatName');
+  if(savedName && !S?.currentAdmin){ _lockChatName && _lockChatName(savedName); }
   waitForFirebase().then(()=>{
     const q = window._fsQuery(
       window._fsColl(window._db,'chat_public'),
@@ -10175,8 +10164,31 @@ async function sendPublicChatMsg(){
   const text    = input?.value.trim();
   const viewOnce= document.getElementById('publicChatViewOnce')?.checked || false;
   if(!text && !imgFile){ toast('Write a message or pick an image','warn'); return; }
-  const name = nameEl?.value.trim() || (S.currentAdmin==='__super__'?'Super Admin':S.currentAdmin||'Anonymous');
-  const role = S.currentAdmin==='__super__'?'super':S.currentAdmin?'admin':'visitor';
+
+  // ── Name enforcement for visitors ──
+  let name, role;
+  if(S.currentAdmin === '__super__'){ name = 'Super Admin'; role = 'super'; }
+  else if(S.currentAdmin){ name = S.currentAdmin; role = 'admin'; }
+  else {
+    // Visitor — name is required
+    const savedName = localStorage.getItem('ax_chatName');
+    const typedName = nameEl?.value.trim();
+    name = savedName || typedName;
+    if(!name){ showAlert('chatNameAlert','err','Please enter your name before sending a message.'); nameEl?.focus(); return; }
+    // If they typed a new name that matches saved, or first time — save and lock
+    if(!savedName && typedName){
+      localStorage.setItem('ax_chatName', typedName);
+      _lockChatName(typedName);
+      name = typedName;
+    } else if(savedName && typedName && typedName !== savedName){
+      // They tried to change their locked name — revert and warn
+      if(nameEl) nameEl.value = savedName;
+      toast('Your name is locked as "'+savedName+'" for this session.','warn');
+      name = savedName;
+    }
+    role = 'visitor';
+  }
+
   const msgData = { name, text:text||'', role, senderId: S.currentAdmin||_getVisitorId(), at: Date.now() };
   if(_chatReplyState.msgId && _chatReplyState.boardId==='public'){
     msgData.replyTo     = _chatReplyState.msgId;
@@ -10276,6 +10288,12 @@ async function sendAdminChatMsg(){
 // ── LANDING PAGE PUBLIC CHAT ──
 function loadLandingChat(){
   if(_landingChatUnsub){ _landingChatUnsub(); _landingChatUnsub=null; }
+  // Restore locked name for visitors
+  const savedName = localStorage.getItem('ax_chatName');
+  if(savedName){
+    const lnEl = document.getElementById('landingChatName');
+    if(lnEl){ lnEl.value=savedName; lnEl.readOnly=true; lnEl.style.background='var(--s3)'; lnEl.style.color='var(--text2)'; }
+  }
   waitForFirebase().then(()=>{
     const q = window._fsQuery(
       window._fsColl(window._db,'chat_public'),
@@ -10306,7 +10324,24 @@ async function sendLandingChatMsg(){
   const text    = input?.value.trim();
   const viewOnce= document.getElementById('landingChatViewOnce')?.checked || false;
   if(!text && !imgFile){ toast('Write something or pick an image','warn'); return; }
-  const name = nameEl?.value.trim() || 'Anonymous';
+
+  // ── Name enforcement ──
+  const savedName = localStorage.getItem('ax_chatName');
+  const typedName = nameEl?.value.trim();
+  let name = savedName || typedName;
+  if(!name){ toast('Please enter your name before sending.','warn'); nameEl?.focus(); return; }
+  if(!savedName && typedName){
+    localStorage.setItem('ax_chatName', typedName);
+    _lockChatName && _lockChatName(typedName);
+    // Also lock the landing name field
+    if(nameEl){ nameEl.value=typedName; nameEl.readOnly=true; nameEl.style.background='var(--s3)'; }
+    name = typedName;
+  } else if(savedName && typedName && typedName !== savedName){
+    if(nameEl) nameEl.value = savedName;
+    toast('Your name is locked as "'+savedName+'" for this session.','warn');
+    name = savedName;
+  }
+
   const msgData = { name, text:text||'', role:'visitor', senderId:_getVisitorId(), at:Date.now() };
   if(_chatReplyState.msgId && _chatReplyState.boardId==='landing'){
     msgData.replyTo     = _chatReplyState.msgId;
@@ -10869,11 +10904,12 @@ function _getQRMeta(type){
 /* ══════════════════════════════════════════════════════
    WHATSAPP SHARE
 ══════════════════════════════════════════════════════ */
-function openWAShareModal(){
-  const modal = document.getElementById('waShareModal');
+/* ── QR Share via Visitor DM ── */
+function openQRDMShareModal(){
+  const modal = document.getElementById('qrDMShareModal');
   if(!modal){ toast('Modal not found','err'); return; }
   // Clone current QR into preview
-  const preview = document.getElementById('waQRPreview');
+  const preview = document.getElementById('qrDMPreview');
   const srcCanvas = document.querySelector('#qr-output canvas');
   const srcImg    = document.querySelector('#qr-output img');
   if(preview){
@@ -10890,36 +10926,67 @@ function openWAShareModal(){
       img.src = srcImg.src;
       img.style.cssText = 'width:140px;height:140px;display:block;';
       preview.appendChild(img);
+    } else {
+      preview.innerHTML = '<div style="width:140px;height:140px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--text3);font-family:var(--mono);">Generate a QR first</div>';
     }
   }
-  // Pre-fill default message
   const label = document.getElementById('qrTypeBadge')?.textContent || 'QR Code';
-  document.getElementById('waShareMessage').value =
-    `Hello! Here is your ${label} generated by AttendX PRO.\n\nPlease scan the QR code image attached.\n\n— ${S.currentAdmin||'Admin'}`;
+  document.getElementById('qrDMMessage').value = `📷 Here is your ${label} — scan it or download via PNG button.`;
+  document.getElementById('qrDMRecipientName').value = '';
+  document.getElementById('qrDMShareAlert').innerHTML = '';
   modal.classList.add('show');
 }
-
-function closeWAShareModal(){
-  document.getElementById('waShareModal')?.classList.remove('show');
+function closeQRDMShareModal(){
+  document.getElementById('qrDMShareModal')?.classList.remove('show');
 }
+async function sendQRViaDM(){
+  const recipientName = document.getElementById('qrDMRecipientName')?.value.trim();
+  const message       = document.getElementById('qrDMMessage')?.value.trim();
+  if(!recipientName){ showAlert('qrDMShareAlert','err','Please enter the recipient\'s name.'); return; }
 
-async function sendQRViaWA(){
-  const cc    = document.getElementById('waCountryCode')?.value || '237';
-  const phone = document.getElementById('waPhoneNumber')?.value.trim().replace(/\D/g,'');
-  if(!phone){ toast('Please enter a WhatsApp number','warn'); return; }
-  const msg = document.getElementById('waShareMessage')?.value.trim();
-  const fullPhone = cc + phone;
-  // Build WA link with text
-  const waUrl = 'https://wa.me/'+fullPhone+'?text='+encodeURIComponent(msg||'');
-  // Download QR first (so they can attach it)
-  dlPNG();
-  // Small delay then open WA
-  setTimeout(()=>{
-    window.open(waUrl,'_blank');
-    toast('✓ QR downloaded + WhatsApp opened','ok');
-    closeWAShareModal();
-  }, 800);
+  // Get QR as data URL
+  const srcCanvas = document.querySelector('#qr-output canvas');
+  const srcImg    = document.querySelector('#qr-output img');
+  let qrDataUrl = '';
+  if(srcCanvas){ qrDataUrl = srcCanvas.toDataURL('image/png'); }
+  else if(srcImg){ qrDataUrl = srcImg.src; }
+  if(!qrDataUrl){ showAlert('qrDMShareAlert','err','No QR generated yet. Generate a QR code first.'); return; }
+
+  // Find the recipient VID by name from public chat
+  try {
+    await waitForFirebase();
+    const snap = await window._fsGetDocs(window._fsQuery(
+      window._fsColl(window._db, 'chat_public'),
+      window._fsWhere('name','==',recipientName),
+      window._fsLimit(1)
+    ));
+    if(snap.empty){ showAlert('qrDMShareAlert','err','Visitor "'+recipientName+'" not found in public chat. Make sure the name matches exactly.'); return; }
+    const targetVID = snap.docs[0].data().senderId;
+    if(!targetVID){ showAlert('qrDMShareAlert','err','Could not find visitor ID for this name.'); return; }
+    const myName = _getMyVisitorName();
+    await window._fsAddDoc(
+      window._fsColl(window._db, 'visitor_replies', targetVID, 'messages'),
+      {
+        from: _getVisitorId(),
+        fromName: S.currentAdmin || myName,
+        fromRole: S.currentAdmin ? 'admin' : 'visitor',
+        body: message || '📷 QR Code shared with you.',
+        imgUrl: qrDataUrl,
+        sentAt: Date.now(),
+        read: false,
+        deleteAt: Date.now() + 172800000
+      }
+    );
+    toast('✓ QR sent to '+recipientName+' via DM', 'ok');
+    closeQRDMShareModal();
+  } catch(e){
+    showAlert('qrDMShareAlert','err','Failed to send: '+e.message);
+  }
 }
+/* keep stubs so any remaining refs don't break */
+function openWAShareModal(){ openQRDMShareModal(); }
+function closeWAShareModal(){ closeQRDMShareModal(); }
+function sendQRViaWA(){ sendQRViaDM(); }
 
 /* ══════════════════════════════════════════════════════
    ADMIN DASHBOARD — CHAT PANEL & INBOX
@@ -11454,11 +11521,12 @@ function _requestGeo(onSuccess, onError){
   navigator.geolocation.getCurrentPosition(
     pos=>{ S.geoAccuracy = pos.coords.accuracy; onSuccess(pos); },
     err=>{
+      if(err.code===1){ return; } // Permission denied — suppress silently
       // On timeout or unavailable, retry with lower accuracy
       if(err.code===3||err.code===2){
         navigator.geolocation.getCurrentPosition(
           pos=>{ S.geoAccuracy = pos.coords.accuracy; onSuccess(pos); },
-          err2=>{ if(onError) onError(err2); },
+          err2=>{ if(err2.code!==1 && onError) onError(err2); },
           {enableHighAccuracy:false, timeout:15000, maximumAge:60000}
         );
       } else {
@@ -12421,6 +12489,35 @@ function _getMyVisitorName() {
   // Try to get name from localStorage
   return localStorage.getItem('ax_chatName') || 'Visitor';
 }
+
+/* ── Save and lock chat name ── */
+function saveChatName(val){
+  const saved = localStorage.getItem('ax_chatName');
+  if(saved) return; // already locked — don't update
+  // Just pre-save as they type; actual lock happens on first send
+}
+function _lockChatName(name){
+  const el = document.getElementById('publicChatName');
+  if(!el) return;
+  el.value = name;
+  el.readOnly = true;
+  el.style.background = 'var(--s3)';
+  el.style.color = 'var(--text2)';
+  el.title = 'Your name is locked for this session (' + name + ')';
+  el.placeholder = name;
+}
+/* ── Restore locked name on page load ── */
+(function _initChatName(){
+  function _apply(){
+    const saved = localStorage.getItem('ax_chatName');
+    const el = document.getElementById('publicChatName');
+    if(saved && el && !S?.currentAdmin){ _lockChatName(saved); }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _apply);
+  else _apply();
+  // Also re-apply whenever the chat section becomes visible
+  document.addEventListener('chatSectionShown', _apply);
+})();
 
 /* ══════════════════════════════════
    VID EMAIL VERIFICATION (optional)
