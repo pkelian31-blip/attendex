@@ -4263,6 +4263,15 @@ const DEPTS = ['Computer Science','Mathematics','Physics','Chemistry','Biology',
   'Civil Engineering','Electrical Engineering','Mechanical Engineering',
   'Economics','Management','Law','Medicine','Pharmacy','Literature','History','Geography','Other'];
 
+/* ── Wait for Firebase before running a callback ── */
+function _whenFirebaseReady(cb) {
+  if (window._firebaseReady) {
+    cb();
+  } else {
+    document.addEventListener('firebaseReady', cb, { once: true });
+  }
+}
+
 /* ── INIT ── */
 function init() {
   ['fyear','fyearFooter'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=new Date().getFullYear();});
@@ -4279,7 +4288,7 @@ function init() {
   if(axToken){
     history.replaceState({}, '', location.pathname);
     if (sid) {
-      loadStudentPage(sid);
+      _whenFirebaseReady(()=>loadStudentPage(sid));
     } else {
       showPage('landing');
     }
@@ -4298,7 +4307,7 @@ function init() {
   }
 
   if (sid) {
-    loadStudentPage(sid);
+    _whenFirebaseReady(()=>loadStudentPage(sid));
   } else {
     showPage('landing');
   }
@@ -5725,7 +5734,7 @@ async function _doUnblockAdmin(username, adminName){
 }
 
 /* ── AUTO-UNBLOCK CHECK (runs on login and every 30 min) ── */
-async function checkAutoUnblocks(){
+async async function checkAutoUnblocks(){
   if(!window._db) return;
   try {
     const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
@@ -6865,7 +6874,7 @@ function checkStudentGeo(s) {
   }
 }
 
-function submitAttend(){
+async function submitAttend(){
   const s=S.currentSession; if(!s)return;
   if(Date.now()>s.expiry){showExpired();return;}
   if(s.geoLat!=null && S.geoBlocked){
@@ -7684,7 +7693,7 @@ async function getDeviceId(){
 }
 
 /* ── WAIT FOR FIREBASE ── */
-function waitForFirebase(){
+async function waitForFirebase(){
   return new Promise(resolve=>{
     if(window._firebaseReady) return resolve();
     document.addEventListener('firebaseReady', resolve, {once:true});
@@ -7697,7 +7706,7 @@ async function saveSess(sess){
   await window._fsSetDoc(window._fsDoc(window._db,'sessions',String(sess.id)), sess);
 }
 
-async function getSess(id){
+async async function getSess(id){
   await waitForFirebase();
   const snap = await window._fsGetDoc(window._fsDoc(window._db,'sessions',String(id)));
   return snap.exists() ? snap.data() : null;
