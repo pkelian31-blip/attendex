@@ -6726,279 +6726,114 @@ function checkStudentGeo(s) {
   const btn = document.getElementById('stuSubmitBtn');
 
   function setBox(bg, border, color, html) {
-    box.style.display='block'; box.style.background=bg;
-    box.style.border=border; box.style.color=color; box.innerHTML=html;
+    box.style.display = 'block';
+    box.style.background = bg;
+    box.style.border = border;
+    box.style.color = color;
+    box.innerHTML = html;
   }
-  function setBtnState(waiting, label) {
+  function setBtnState(disabled) {
     if (!btn) return;
-    btn.disabled = waiting;
-    btn.style.opacity = waiting ? '0.5' : '1';
-    btn.style.cursor  = waiting ? 'not-allowed' : 'pointer';
-    btn.textContent   = label || t('submit_btn');
+    btn.disabled = disabled;
+    btn.style.opacity = disabled ? '0.5' : '1';
+    btn.style.cursor  = disabled ? 'not-allowed' : 'pointer';
   }
 
   if (!navigator.geolocation) {
-    setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
-      '❌ '+t('geo_no_support'));
-    S.geoBlocked = true; return;
+    setBox('var(--red2)', '1px solid rgba(255,107,107,0.2)', 'var(--red)',
+      '❌ Geolocation is not supported by your browser.');
+    S.geoBlocked = true;
+    return;
   }
 
   S.geoBlocked = true;
-  setBtnState(true, '⏳ '+t('geo_getting'));
-  setBox('var(--blue3)','1px solid rgba(79,158,255,0.2)','var(--blue)',
-    `<div style="margin-bottom:6px;">📡 <strong>${t('geo_stand_still')}</strong></div>
-     <div style="font-size:11px;opacity:0.85;">${t('geo_wait_msg')}</div>
-     <div id="gpsQualityBar" style="margin-top:8px;height:6px;background:rgba(0,0,0,0.1);border-radius:3px;overflow:hidden;">
-       <div id="gpsQualityFill" style="height:100%;width:0%;background:var(--gold);border-radius:3px;transition:width 0.5s,background 0.5s;"></div>
-     </div>
-     <div id="gpsQualityLabel" style="font-size:10px;margin-top:4px;opacity:0.8;">⏳ ${t('geo_searching')}</div>`);
+  setBtnState(true);
+  setBox('var(--blue3)', '1px solid rgba(79,158,255,0.2)', 'var(--blue)',
+    '📡 <strong>Getting your location…</strong> Please stand still.');
 
-  const readings = [];
+  let bestPos = null;
   let watchId = null;
-  let settled = false;
-  const GPS_BUFFER = 30;
-  const MIN_READINGS = 3;       // fewer readings needed — faster acceptance
-  const TARGET_ACCURACY = 30;   // accept ±30m or better (realistic for mobile)
-  const MAX_ACCURACY = 150;     // allow up to ±150m — still usable for geo-fence
-  const MAX_WAIT = 30000;       // 30 seconds max — don't make students wait 60s
+  let done = false;
 
-  function updateQualityBar(acc){
-    const fill = document.getElementById('gpsQualityFill');
-    const label = document.getElementById('gpsQualityLabel');
-    if(!fill||!label) return;
-    let pct, color, txt;
-    if(acc <= 5)       { pct=100; color='#10B981'; txt='🟢 '+t('geo_excellent')+' (±'+acc+'m)'; }
-    else if(acc <= 10) { pct=85;  color='#10B981'; txt='🟢 '+t('geo_very_good')+' (±'+acc+'m)'; }
-    else if(acc <= 20) { pct=65;  color='#3B6FE8'; txt='🔵 '+t('geo_good')+' (±'+acc+'m)'; }
-    else if(acc <= 35) { pct=40;  color='#F59E0B'; txt='🟡 '+t('geo_fair')+' (±'+acc+'m)'; }
-    else               { pct=15;  color='#EF4444'; txt='🔴 '+t('geo_poor')+' (±'+acc+'m)'; }
-    fill.style.width=pct+'%'; fill.style.background=color;
-    label.textContent=txt;
-  }
+  function decide(pos) {
+    if (done) return;
+    done = true;
+    if (watchId !== null) navigator.geolocation.clearWatch(watchId);
 
-  const timeout = setTimeout(()=>{
-    if(settled) return;
-    settled = true;
-    navigator.geolocation.clearWatch(watchId);
-    if(readings.length === 0){
-      S.geoBlocked = true;
-      setBtnState(false);
-      setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
-        '❌ '+t('geo_failed')+
-        `<br/><button onclick="checkStudentGeo(S.currentSession)" style="margin-top:8px;padding:6px 14px;background:var(--red2);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:6px;cursor:pointer;font-size:12px;">🔄 ${t('geo_retry')}</button>`);
-      return;
-    }
-    processReadings();
-  }, MAX_WAIT);
-
-  watchId = navigator.geolocation.watchPosition(
-    pos => {
-      if(settled) return;
-      readings.push(pos);
-      const acc = Math.round(pos.coords.accuracy);
-      updateQualityBar(acc);
-
-      const best = readings.reduce((a,b)=>a.coords.accuracy<b.coords.accuracy?a:b);
-      const bestAcc = Math.round(best.coords.accuracy);
-
-      // Update progress message
-      const label = document.getElementById('gpsQualityLabel');
-      if(label) label.textContent += ` · ${t('geo_reading')} ${readings.length}`;
-
-      // Accept if: enough readings AND good accuracy, OR excellent accuracy
-      if((readings.length >= MIN_READINGS && bestAcc <= TARGET_ACCURACY) || bestAcc <= 5){
-        settled = true;
-        clearTimeout(timeout);
-        navigator.geolocation.clearWatch(watchId);
-        processReadings();
-      } else if(readings.length >= MIN_READINGS * 2){
-        // Took too many readings — use best we have
-        settled = true;
-        clearTimeout(timeout);
-        navigator.geolocation.clearWatch(watchId);
-        processReadings();
-      }
-    },
-    err => {
-      if(settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      navigator.geolocation.clearWatch(watchId);
-      S.geoBlocked = true;
-      setBtnState(false);
-      if(err.code === 1){ return; } // Permission denied — suppress silently
-      const msgs = {
-        1: t('geo_denied'),
-        2: t('geo_unavailable'),
-        3: t('geo_timeout')
-      };
-      setBox('var(--red2)','1px solid rgba(255,107,107,0.2)','var(--red)',
-        '❌ '+(msgs[err.code]||t('geo_error'))+
-        `<br/><button onclick="checkStudentGeo(S.currentSession)" style="margin-top:8px;padding:6px 14px;background:var(--red2);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:6px;cursor:pointer;font-size:12px;">🔄 ${t('geo_retry')}</button>`);
-    },
-    { enableHighAccuracy: true, timeout: 60000, maximumAge: 0 }
-  );
-
-  function processReadings(){
-    const best = readings.reduce((a,b)=>a.coords.accuracy<b.coords.accuracy?a:b);
-    const stuLat = best.coords.latitude;
-    const stuLng = best.coords.longitude;
-    const acc    = Math.round(best.coords.accuracy);
+    const stuLat = pos.coords.latitude;
+    const stuLng = pos.coords.longitude;
+    const acc    = Math.round(pos.coords.accuracy);
     const dist   = Math.round(haversine(s.geoLat, s.geoLng, stuLat, stuLng));
     S.studentDist = dist;
 
-    const effectiveRadius = s.geoRadius + GPS_BUFFER + Math.min(acc, 50); // add GPS accuracy margin
-    const coordInfo = `${t('geo_your_pos')}: ${stuLat.toFixed(6)}, ${stuLng.toFixed(6)} · ±${acc}m · ${dist}m ${t('geo_from_class')}`;
+    // Add GPS accuracy as margin (capped at 100m) so poor signal doesn't block students
+    const margin = Math.min(acc, 100);
+    const effectiveRadius = s.geoRadius + margin;
 
-    // Warn if accuracy is too poor
-    if(acc > MAX_ACCURACY){
-      S.geoBlocked = true;
-      setBtnState(false);
-      setBox('var(--gold2)','1px solid rgba(245,158,11,0.2)','var(--gold)',
-        `⚠️ ${t('geo_low_accuracy')} (±${acc}m). ${t('geo_go_outside')}<br/>
-         <button onclick="checkStudentGeo(S.currentSession)" style="margin-top:8px;padding:6px 14px;background:var(--gold2);border:1px solid rgba(245,158,11,0.3);color:var(--gold);border-radius:6px;cursor:pointer;font-size:12px;">🔄 ${t('geo_retry')}</button>`);
-      return;
-    }
+    const coordInfo = stuLat.toFixed(5) + ', ' + stuLng.toFixed(5) +
+      ' · ±' + acc + 'm · ' + dist + 'm from class';
 
-    if(dist <= effectiveRadius){
+    if (dist <= effectiveRadius) {
       S.geoBlocked = false;
       setBtnState(false);
-      setBox('var(--green2)','1px solid rgba(16,185,129,0.2)','var(--green)',
-        `✅ <strong>${t('geo_in_range')}</strong> — ${dist}m ${t('geo_from_class')} (${t('geo_limit')}: ${s.geoRadius}m)<br/>
-         <span style="font-size:10px;opacity:0.8;">${coordInfo}</span>`);
+      setBox('var(--green2)', '1px solid rgba(16,185,129,0.2)', 'var(--green)',
+        '✅ <strong>You are in range</strong> — ' + dist + 'm from class (limit: ' + s.geoRadius + 'm)<br/>' +
+        '<span style="font-size:10px;opacity:0.8;">' + coordInfo + '</span>');
     } else {
       S.geoBlocked = true;
       setBtnState(false);
-      setBox('var(--red2)','1px solid rgba(239,68,68,0.2)','var(--red)',
-        `❌ <strong>${t('geo_too_far')}</strong> — ${dist}m (${t('geo_limit')}: ${s.geoRadius}m)<br/>
-         <span style="font-size:10px;opacity:0.8;">${coordInfo}</span><br/>
-         <button onclick="checkStudentGeo(S.currentSession)" style="margin-top:8px;padding:6px 14px;background:var(--red2);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:6px;cursor:pointer;font-size:12px;">🔄 ${t('geo_retry')}</button>`);
-    }
-  }
-}
-
-async function submitAttend(){
-  const s=S.currentSession; if(!s)return;
-  if(Date.now()>s.expiry){showExpired();return;}
-  if(s.geoLat!=null && S.geoBlocked){
-    const dist = S.studentDist!=null ? ` You are ${S.studentDist}m away (limit: ${s.geoRadius}m).` : '';
-    showAlert('stuAlert','err','❌ Location check failed — you must be physically present in class.'+dist);
-    return;
-  }
-  const fN=document.getElementById('stuFirst').value.trim();
-  const lN=document.getElementById('stuLast').value.trim();
-  const mat=document.getElementById('stuMat').value.trim();
-  const cls=document.getElementById('stuCls').value.trim();
-  const dept=document.getElementById('stuDept').value.trim();
-  const phone=document.getElementById('stuPhone').value.trim();
-  if(!fN||!lN||!mat||!cls||!dept){showAlert('stuAlert','err','⚠ All fields except phone are required.');return;}
-
-  // Class match check
-  const norm=x=>x.toLowerCase().replace(/[\s\-_.]/g,'');
-  const sc=norm(s.cls),ic=norm(cls);
-  if(sc!==ic&&!sc.includes(ic)&&!ic.includes(sc)){
-    showAlert('stuAlert','err',`❌ Wrong Class\n\nThis session is for: "${s.cls}"\nYou entered: "${cls}"\n\nYou cannot mark attendance here.`);
-    return;
-  }
-
-  // Validate Dynamic QR token if session uses dynamic mode
-  const urlParams = new URLSearchParams(window.location.search);
-  const qrToken = urlParams.get('qrt');
-  if(s.dynQRToken && s.dynQRExpiry){
-    if(!qrToken){
-      showAlert('stuAlert','err','❌ This session requires scanning the rotating QR code. Direct links are not accepted.');
-      return;
-    }
-    if(qrToken !== s.dynQRToken){
-      showAlert('stuAlert','err','❌ QR code expired or invalid. Please scan the latest QR code displayed in class.');
-      return;
-    }
-    if(Date.now() > s.dynQRExpiry){
-      showAlert('stuAlert','err','⏱ This QR code has expired. Please scan the new QR code now being displayed.');
-      return;
+      setBox('var(--red2)', '1px solid rgba(239,68,68,0.2)', 'var(--red)',
+        '❌ <strong>Too far</strong> — ' + dist + 'm from class (limit: ' + s.geoRadius + 'm)<br/>' +
+        '<span style="font-size:10px;opacity:0.8;">' + coordInfo + '</span><br/>' +
+        '<button onclick="checkStudentGeo(S.currentSession)" style="margin-top:8px;padding:6px 14px;background:var(--red2);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:6px;cursor:pointer;font-size:12px;">🔄 Retry</button>');
     }
   }
 
-  // Disable button to prevent double-tap
-  const btn=document.getElementById('stuSubmitBtn');
-  btn.disabled=true; btn.textContent='⏳ Submitting…';
-
-  getDeviceId().then(deviceId=>{
-    // Double-check device hasn't submitted (race condition guard)
-    checkDeviceMark(s.id, deviceId).then(alreadyDone=>{
-      if(alreadyDone){
-        showAlert('stuAlert','err','⚠ You have already marked your attendance for this session.');
-        btn.disabled=false; btn.textContent='✓ Submit My Attendance';
-        return;
+  // Watch position — accept FIRST reading with accuracy <=300m
+  // This handles the ±50000m "no fix yet" case by waiting for a real reading
+  watchId = navigator.geolocation.watchPosition(
+    function(pos) {
+      if (done) return;
+      const acc = pos.coords.accuracy;
+      setBox('var(--blue3)', '1px solid rgba(79,158,255,0.2)', 'var(--blue)',
+        '📡 <strong>Getting your location…</strong> ±' + Math.round(acc) + 'm accuracy — stand still');
+      if (!bestPos || acc < bestPos.coords.accuracy) bestPos = pos;
+      // Accept any reading with accuracy better than 300m
+      if (acc <= 300) {
+        decide(pos);
       }
-      // Check matricule duplicate in Firebase
-      getRec(s.id).then(async recs=>{
-        if(recs.find(r=>r.mat.toLowerCase()===mat.toLowerCase())){
-          showAlert('stuAlert','err','⚠ Matricule '+mat.toUpperCase()+' already recorded.');
-          btn.disabled=false; btn.textContent='✓ Submit My Attendance';
-          return;
-        }
+    },
+    function(err) {
+      if (done) return;
+      done = true;
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      S.geoBlocked = true;
+      setBtnState(false);
+      const msg = err.code === 1
+        ? '❌ Location permission denied. Please allow location access and retry.'
+        : '❌ Could not get location. Please retry.';
+      setBox('var(--red2)', '1px solid rgba(255,107,107,0.2)', 'var(--red)',
+        msg + '<br/><button onclick="checkStudentGeo(S.currentSession)" style="margin-top:8px;padding:6px 14px;background:var(--red2);border:1px solid rgba(239,68,68,0.3);color:var(--red);border-radius:6px;cursor:pointer;font-size:12px;">🔄 Retry</button>');
+    },
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+  );
 
-        // Get client IP (best-effort, non-blocking)
-        const clientIP = await getClientIP().catch(()=>null);
-
-        // Check for IP duplicates (flag if >2 from same IP)
-        if(clientIP){
-          const sameIPCount = recs.filter(r=>r.ip===clientIP).length;
-          if(sameIPCount >= 2){
-            // Flag suspicious but still allow (teacher sees warning)
-            pushFraudFlag(s.id, {ico:'🌐', msg:`<strong>${mat.toUpperCase()}</strong> submitted from an IP address already used by ${sameIPCount} other student${sameIPCount>1?'s':''} — possible network sharing`});
-          }
-        }
-
-        // Behavioral detection: rapid submission
-        const now = Date.now();
-        const recent = recs.filter(r=>(now-(r.ts||0))<3000);
-        if(recent.length>=3){
-          pushFraudFlag(s.id, {ico:'⚡', msg:`Rapid submission burst detected — ${recent.length} submissions in 3 seconds. Possible automated/shared submission.`});
-        }
-
-        const rank=recs.length+1;
-        const rec={no:rank,fN,lN,mat:mat.toUpperCase(),cls,dept,phone:phone||null,
-          time:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}),
-          ts:now, deviceId, ip:clientIP||null,
-          qrToken: qrToken||null
-        };
-
-        if(navigator.onLine){
-          // Online — save immediately
-          Promise.all([saveRec(s.id, rec), saveDeviceMark(s.id, deviceId)]).then(()=>{
-            document.getElementById('attendCard').style.display='none';
-            document.getElementById('successSt').classList.add('show');
-            document.getElementById('succName').textContent=fN+' '+lN;
-            document.getElementById('succDetail').textContent=mat.toUpperCase()+' · '+cls+' · '+dept;
-            const rl=rank===1?'🥇 First to attend!':rank===2?'🥈 2nd to arrive':rank===3?'🥉 3rd to arrive':'#'+rank+' on attendance list';
-            document.getElementById('succRank').textContent=rl;
-          }).catch(e=>{
-            _offlineQueue.push({sid:s.id, rec, deviceId, ts:now});
-            _persistQueue(); _showOfflineBadge();
-            document.getElementById('attendCard').style.display='none';
-            document.getElementById('successSt').classList.add('show');
-            document.getElementById('succName').textContent=fN+' '+lN;
-            document.getElementById('succDetail').textContent='Saved locally — will sync when connection returns';
-            document.getElementById('succRank').textContent='⚡ Pending sync';
-          });
-        } else {
-          // Offline — queue locally
-          _offlineQueue.push({sid:s.id, rec, deviceId, ts:now});
-          _persistQueue(); _showOfflineBadge();
-          document.getElementById('attendCard').style.display='none';
-          document.getElementById('successSt').classList.add('show');
-          document.getElementById('succName').textContent=fN+' '+lN;
-          document.getElementById('succDetail').textContent='Saved locally — will sync automatically when reconnected';
-          document.getElementById('succRank').textContent='⚡ Offline — pending sync';
-        }
-      });
-    });
-  });
+  // After 15s: use best reading we have, or unblock with warning if nothing
+  setTimeout(function() {
+    if (done) return;
+    if (bestPos) {
+      decide(bestPos);
+    } else {
+      done = true;
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      S.geoBlocked = false;
+      setBtnState(false);
+      setBox('var(--gold2)', '1px solid rgba(245,158,11,0.2)', 'var(--gold)',
+        '⚠️ Could not verify location — proceeding without geo-check.');
+    }
+  }, 15000);
 }
 
-/* ── PDF GENERATION ── */
 function autoGenPDF(sess){ if(sess)setTimeout(()=>genPDF(sess.id),800); }
 
 /* Direct download on ALL devices — phone, tablet, desktop */
