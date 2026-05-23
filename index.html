@@ -5734,7 +5734,7 @@ async function _doUnblockAdmin(username, adminName){
 }
 
 /* ── AUTO-UNBLOCK CHECK (runs on login and every 30 min) ── */
-async async function checkAutoUnblocks(){
+async function checkAutoUnblocks(){
   if(!window._db) return;
   try {
     const snap = await window._fsGetDocs(window._fsColl(window._db,'admins'));
@@ -6079,7 +6079,7 @@ function createSession() {
     toast('Session saved to database','ok');
   }).catch(e=>{ toast('DB error: '+e.message,'err'); });
 
-  const baseUrl = 'https://attendex-pro.vercel.app';
+  const baseUrl = window.location.origin;
   const link = baseUrl+'?session='+id;
   document.getElementById('genLink').value = link;
 
@@ -6514,7 +6514,10 @@ function loadStudentPage(sid){
       startTimer(s.expiry,s.start,s.expiry-s.start);
     });
   }).catch(e=>{
-    showAlert('stuAlert','err','Error loading session: '+e.message);
+    const msg = e.code === 'permission-denied'
+      ? '⛔ Access denied — check your Firebase rules are published correctly.'
+      : 'Error loading session: '+e.message;
+    showAlert('stuAlert','err', msg);
   });
 }
 
@@ -6972,7 +6975,6 @@ async function submitAttend(){
             const rl=rank===1?'🥇 First to attend!':rank===2?'🥈 2nd to arrive':rank===3?'🥉 3rd to arrive':'#'+rank+' on attendance list';
             document.getElementById('succRank').textContent=rl;
           }).catch(e=>{
-            // Fallback to offline queue
             _offlineQueue.push({sid:s.id, rec, deviceId, ts:now});
             _persistQueue(); _showOfflineBadge();
             document.getElementById('attendCard').style.display='none';
@@ -7673,7 +7675,7 @@ function v(id){return (document.getElementById(id)?.value||'').trim();}
 
 /* ── DEVICE FINGERPRINT ── */
 async function getDeviceId(){
-  if(window._deviceId) return window._deviceId;
+  if(window._deviceId) return Promise.resolve(window._deviceId);
   try {
     const fp = await FingerprintJS.load();
     const result = await fp.get();
@@ -7706,7 +7708,7 @@ async function saveSess(sess){
   await window._fsSetDoc(window._fsDoc(window._db,'sessions',String(sess.id)), sess);
 }
 
-async async function getSess(id){
+async function getSess(id){
   await waitForFirebase();
   const snap = await window._fsGetDoc(window._fsDoc(window._db,'sessions',String(id)));
   return snap.exists() ? snap.data() : null;
@@ -7720,7 +7722,9 @@ async function getRec(sid){
 
 async function saveRec(sid, rec){
   await waitForFirebase();
-  await window._fsSetDoc(window._fsDoc(window._db,'sessions',String(sid),'records',rec.mat.toUpperCase()), rec);
+  // Sanitize mat for use as Firestore doc ID (no slashes, spaces, or special chars)
+  const safeId = rec.mat.toUpperCase().replace(/[\/\s.#$\[\]]/g, '_');
+  await window._fsSetDoc(window._fsDoc(window._db,'sessions',String(sid),'records',safeId), rec);
 }
 
 async function saveDeviceMark(sid, deviceId){
