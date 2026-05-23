@@ -1,0 +1,12 @@
+﻿);
+            document.getElementById('attendCard').style.display='none';
+            document.getElementById('successSt').classList.add('show');
+            document.getElementById('succName').textContent=fN+' '+lN;
+            document.getElementById('succDetail').textContent='Saved locally â€” will sync when connection returns';
+            document.getElementById('succRank').textContent='âš¡ Pending sync';
+          });
+        } else {
+          // Offline â€” queue locally
+          _offlineQueue.push({sid:s.id, rec, deviceId, ts:now});
+          _persistQueue(); _showOfflineBadge();
+  
