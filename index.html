@@ -6756,11 +6756,11 @@ function checkStudentGeo(s) {
   const readings = [];
   let watchId = null;
   let settled = false;
-  const GPS_BUFFER = 20;
-  const MIN_READINGS = 5;       // more readings for better precision
-  const TARGET_ACCURACY = 10;   // aim for ±10m or better
-  const MAX_ACCURACY = 50;      // reject if worse than ±50m
-  const MAX_WAIT = 60000;       // 60 seconds max
+  const GPS_BUFFER = 30;
+  const MIN_READINGS = 3;       // fewer readings needed — faster acceptance
+  const TARGET_ACCURACY = 30;   // accept ±30m or better (realistic for mobile)
+  const MAX_ACCURACY = 150;     // allow up to ±150m — still usable for geo-fence
+  const MAX_WAIT = 30000;       // 30 seconds max — don't make students wait 60s
 
   function updateQualityBar(acc){
     const fill = document.getElementById('gpsQualityFill');
@@ -6847,7 +6847,7 @@ function checkStudentGeo(s) {
     const dist   = Math.round(haversine(s.geoLat, s.geoLng, stuLat, stuLng));
     S.studentDist = dist;
 
-    const effectiveRadius = s.geoRadius + GPS_BUFFER;
+    const effectiveRadius = s.geoRadius + GPS_BUFFER + Math.min(acc, 50); // add GPS accuracy margin
     const coordInfo = `${t('geo_your_pos')}: ${stuLat.toFixed(6)}, ${stuLng.toFixed(6)} · ±${acc}m · ${dist}m ${t('geo_from_class')}`;
 
     // Warn if accuracy is too poor
