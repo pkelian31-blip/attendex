@@ -6064,15 +6064,35 @@ function createSession() {
 
   if(!sub||!cls||!time) { showAlert('createAlert','err','Subject, class and start time are required.'); return; }
 
+  // ── Block if location not captured ──
+  if(S.teacherLat == null || S.teacherLng == null){
+    showAlert('createAlert','err','📍 Location required — please capture your location first before generating a session link.');
+    return;
+  }
+
+  // ── Prevent duplicate session with same subject+class+time today ──
+  todaySessions().then(existing=>{
+    const duplicate = existing.find(s=>
+      s.sub.toLowerCase()===sub.toLowerCase() &&
+      s.cls.toLowerCase()===cls.toLowerCase() &&
+      s.time===time
+    );
+    if(duplicate){
+      showAlert('createAlert','warn','⚠ A session for "'+sub+'" / "'+cls+'" at '+time+' already exists today. Please use the existing link or change the details.');
+      return;
+    }
+    _doCreateSession(sub,cls,dept,lec,time,dur,room);
+  });
+}
+
+function _doCreateSession(sub,cls,dept,lec,time,dur,room){
   const start = Date.now(), expiry = start + dur*60*1000, id = start;
   const isDynamic = S._sessionMode === 'dynamic';
   const sess = {id,sub,cls,dept,lec,time,dur,room,start,expiry,adminId:S.currentAdmin||'default',sessionMode:isDynamic?'dynamic':'static'};
   const radius = parseInt(v('inRadius'))||100;
-  if (S.teacherLat != null) {
-    sess.geoLat    = S.teacherLat;
-    sess.geoLng    = S.teacherLng;
-    sess.geoRadius = radius;
-  }
+  sess.geoLat    = S.teacherLat;
+  sess.geoLng    = S.teacherLng;
+  sess.geoRadius = radius;
 
   // Save to Firebase
   saveSess(sess).then(()=>{
@@ -6091,7 +6111,6 @@ function createSession() {
   // Initialize fraud flags
   if(!S._fraudFlags) S._fraudFlags = {};
   S._fraudFlags[id] = [];
-  // Subscribe to real-time fraud flags from Firebase
   if(window._db){
     window._fsOnSnap(window._fsColl(window._db,'sessions',String(id),'flags'), snap=>{
       S._fraudFlags[id] = snap.docs.map(d=>d.data());
@@ -6100,14 +6119,12 @@ function createSession() {
   }
 
   if(isDynamic){
-    // Dynamic QR mode — start rotating QR
     document.getElementById('qrInline').classList.add('show');
     document.getElementById('qrInlineOut').innerHTML = '<div style="font-size:11px;color:var(--text3);font-family:var(--mono);text-align:center;padding:8px;">Dynamic QR active above ↑</div>';
     startDynQR(id, link);
     showAlert('createAlert','ok','✓ Dynamic QR Session created — '+sub+' · rotating QR every '+DYN_QR_TTL+'s');
     toast('🔄 Dynamic QR Session: '+sub,'ok');
   } else {
-    // Static link mode — generate inline QR
     stopDynQR();
     const qrOut = document.getElementById('qrInlineOut');
     qrOut.innerHTML = '';
@@ -6124,6 +6141,17 @@ function createSession() {
   document.getElementById('liveMon').classList.add('show');
   refreshDash();
   startLiveMonitor(id);
+
+  // ── Clear the form after generating the link ──
+  document.getElementById('inSub').value  = '';
+  document.getElementById('inCls').value  = '';
+  document.getElementById('inDept').value = '';
+  document.getElementById('inLec').value  = '';
+  document.getElementById('inRoom').value = '';
+  document.getElementById('inDur').value  = '30';
+  // Reset time to current
+  const now = new Date();
+  document.getElementById('inTime').value = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
 }
 
 function downloadSessionQR() {
