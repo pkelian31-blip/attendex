@@ -3339,7 +3339,7 @@ img, video, iframe { max-width: 100%; }
         <div class="field"><label>First Name</label><input id="stuFirst" placeholder="Jean" autocomplete="given-name"/></div>
         <div class="field"><label>Last Name / Surname</label><input id="stuLast" placeholder="Mbarga" autocomplete="family-name"/></div>
       </div>
-      <div class="field mono-f"><label>Matriculation Number</label><input id="stuMat" placeholder="e.g. 21B0045" autocomplete="off"/></div>
+      <div class="field mono-f"><label>Matriculation Number</label><input id="stuMat" placeholder="e.g. 21B0045" autocomplete="off" oninput="_matriculeAutofillDebounced()"/></div>
       <div class="field"><label>Your Class / Level</label><input id="stuCls" placeholder="Must match session class"/></div>
       <div class="field ac-wrap">
         <label>Department</label>
@@ -6573,6 +6573,148 @@ function showExpired(){
   document.getElementById('expiredSt').classList.add('show');
 }
 
+/* ══════════════════════════════════════════════════════
+   SUBMIT ATTENDANCE — student form
+══════════════════════════════════════════════════════ */
+async function submitAttend(){
+  // Only block if session actually has a geo-fence AND it's still being checked
+  if(S.geoBlocked && S.currentSession && S.currentSession.geoLat != null){
+    toast('Location check still in progress — please wait…','warn'); return;
+  }
+  const first = document.getElementById('stuFirst')?.value.trim();
+  const last  = document.getElementById('stuLast')?.value.trim();
+  const mat   = document.getElementById('stuMat')?.value.trim();
+  const cls   = document.getElementById('stuCls')?.value.trim();
+  const dept  = document.getElementById('stuDept')?.value.trim();
+  const phone = document.getElementById('stuPhone')?.value.trim();
+
+  if(!first && !last){ showAlert('stuAlert','err','Please enter your name.'); return; }
+  if(!mat){            showAlert('stuAlert','err','Please enter your matriculation number.'); return; }
+  if(!cls){            showAlert('stuAlert','err','Please enter your class/level.'); return; }
+
+  const s = S.currentSession;
+  if(!s){ showAlert('stuAlert','err','Session not loaded. Please refresh the page.'); return; }
+  if(Date.now() > s.expiry){ showExpired(); return; }
+
+  // Class match check
+  if(s.cls && cls.toLowerCase().replace(/\s/g,'') !== s.cls.toLowerCase().replace(/\s/g,'')){
+    showAlert('stuAlert','err','⚠ Class mismatch — your class "'+cls+'" does not match this session ("'+s.cls+'"). Please check and try again.');
+    return;
+  }
+
+  const btn = document.getElementById('stuSubmitBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Submitting…'; }
+  showAlert('stuAlert','info','⏳ Submitting attendance…');
+
+  try {
+    await waitForFirebase();
+    const deviceId = await getDeviceId();
+
+    // Check duplicate
+    const alreadyDone = await checkDeviceMark(s.id, deviceId);
+    if(alreadyDone){
+      document.getElementById('attendCard').style.display='none';
+      document.getElementById('successSt').classList.add('show');
+      document.getElementById('successSt').innerHTML=`
+        <div class="success-ring">✓</div>
+        <div class="success-name" style="color:var(--blue)">Already Registered</div>
+        <div class="success-detail">You already marked attendance for this session.<br/>Each device can only submit once.</div>`;
+      return;
+    }
+
+    // Count existing records to determine arrival rank
+    const existingSnap = await window._fsGetDocs(window._fsColl(window._db,'sessions',String(s.id),'records'));
+    const arrivalRank = existingSnap.size + 1;
+
+    const rec = {
+      fN: first || '', lN: last || '', mat: mat,
+      cls: cls, dept: dept||'', phone: phone||'',
+      name: [first,last].filter(Boolean).join(' '),
+      timestamp: Date.now(), rank: Date.now(),
+      arrivalRank,
+      device: navigator.userAgent.slice(0,80),
+      ip: 'N/A', verified: true,
+      lat: S.studentLat||null, lng: S.studentLng||null
+    };
+
+    try {
+      await Promise.all([saveRec(s.id, rec), saveDeviceMark(s.id, deviceId)]);
+      // Also save student to global student registry for future autofill
+      _saveStudentToRegistry(mat, first, last, dept, cls);
+    } catch(e){
+      // Offline — queue it
+      _offlineQueue.push({ sid: s.id, rec, deviceId });
+      _persistQueue(); _showOfflineBadge();
+      toast('⚠ Offline — attendance saved locally, will sync when online','warn');
+    }
+
+    // Success UI
+    document.getElementById('attendCard').style.display='none';
+    const successEl = document.getElementById('successSt');
+    successEl.classList.add('show');
+
+    const rankLabel = arrivalRank === 1 ? '🥇 1st to arrive!' :
+                      arrivalRank === 2 ? '🥈 2nd to arrive' :
+                      arrivalRank === 3 ? '🥉 3rd to arrive' :
+                      '🏅 #'+arrivalRank+' to arrive';
+
+    successEl.innerHTML = `
+      <div class="success-ring">✓</div>
+      <div class="success-name">${_esc([first,last].filter(Boolean).join(' '))}</div>
+      <div class="success-detail">${_esc(mat)} · ${_esc(cls)}${dept?' · '+_esc(dept):''}</div>
+      <div class="success-rank">${rankLabel}</div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:8px;">Attendance confirmed ✓</div>`;
+
+    document.getElementById('stuAlert').classList.remove('show');
+    clearInterval(S.timerInt);
+
+  } catch(e){
+    showAlert('stuAlert','err','Submission failed: '+e.message);
+    if(btn){ btn.disabled=false; btn.textContent='✓ Submit My Attendance'; }
+  }
+}
+
+let _matDebounceTimer = null;
+function _matriculeAutofillDebounced(){
+  clearTimeout(_matDebounceTimer);
+  _matDebounceTimer = setTimeout(_matriculeAutofill, 700);
+}
+
+/* Save student to Firestore registry for future autofill */
+async function _saveStudentToRegistry(mat, first, last, dept, cls){
+  if(!mat) return;
+  try {
+    const safeId = mat.toUpperCase().replace(/[\\/\s.#$[\]]/g,'_');
+    await window._fsSetDoc(
+      window._fsDoc(window._db,'student_registry',safeId),
+      { mat: mat.toUpperCase(), first, last, dept:dept||'', cls:cls||'', updatedAt:Date.now() },
+      {merge:true}
+    );
+  } catch(e){ /* silent */ }
+}
+
+/* Autofill name + dept + class when matricule is typed */
+async function _matriculeAutofill(){
+  const mat = document.getElementById('stuMat')?.value.trim();
+  if(!mat || mat.length < 4) return;
+  try {
+    await waitForFirebase();
+    const safeId = mat.toUpperCase().replace(/[\\/\s.#$[\]]/g,'_');
+    const snap = await window._fsGetDoc(window._fsDoc(window._db,'student_registry',safeId));
+    if(!snap.exists()) return;
+    const d = snap.data();
+    const firstEl = document.getElementById('stuFirst');
+    const lastEl  = document.getElementById('stuLast');
+    const deptEl  = document.getElementById('stuDept');
+    const clsEl   = document.getElementById('stuCls');
+    if(firstEl && !firstEl.value && d.first) firstEl.value = d.first;
+    if(lastEl  && !lastEl.value  && d.last)  lastEl.value  = d.last;
+    if(deptEl  && !deptEl.value  && d.dept)  deptEl.value  = d.dept;
+    if(clsEl   && !clsEl.value   && d.cls)   clsEl.value   = d.cls;
+    if(d.first || d.last) toast('✓ Student info filled from registry','ok');
+  } catch(e){ /* silent */ }
+}
+
 /* ── DEPT AUTOCOMPLETE ── */
 function showAC(){
   const val=document.getElementById('stuDept').value.toLowerCase();
@@ -7047,15 +7189,20 @@ function _buildPDF(s, recs){
     doc.setFont('helvetica','italic'); doc.setFontSize(10); doc.setTextColor(...t.metaText);
     doc.text(_lang==='fr'?'Aucune présence enregistrée pour cette session.':'No attendance records for this session.',W/2,95,{align:'center'});
   } else {
+    // Sort alphabetically by last name, then first name
+    const sortedRecs = [...recs].sort((a,b)=>{
+      const lnCmp = (a.lN||a.name||'').localeCompare(b.lN||b.name||'', undefined, {sensitivity:'base'});
+      if(lnCmp !== 0) return lnCmp;
+      return (a.fN||'').localeCompare(b.fN||'', undefined, {sensitivity:'base'});
+    });
     const colHdrs=_lang==='fr'?['#','Prénom','Nom','Matricule','Classe','Département','Heure']:['#','First Name','Last Name','Matricule','Class','Department','Time'];
     doc.autoTable({startY:80,margin:{left:M,right:M},
       head:[colHdrs],
-      body:recs.map((r,i)=>[i+1,r.fN,r.lN,r.mat,r.cls||'—',r.dept||'—',r.time]),
+      body:sortedRecs.map((r,i)=>[i+1,r.fN,r.lN,r.mat,r.cls||'—',r.dept||'—',r.time]),
       styles:{font:'helvetica',fontSize:9,textColor:t.tableText,fillColor:t.tableFill,lineColor:t.tableBorder,lineWidth:0.3,cellPadding:3.5,valign:'middle'},
       headStyles:{fillColor:t.tableHead,textColor:t.tableHeadText,fontStyle:'bold',fontSize:8,halign:'left'},
       alternateRowStyles:{fillColor:t.tableAlt},
       columnStyles:{0:{cellWidth:9,halign:'center',textColor:t.metaText},3:{fontStyle:'bold'},6:{cellWidth:22}},
-      didParseCell(d){if(d.section==='body'&&d.row.index===0)d.cell.styles.textColor=t.firstRow;}
     });
   }
 
