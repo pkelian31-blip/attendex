@@ -1,0 +1,38 @@
+{
+  "name": "attendx",
+  "version": "1.0.0",
+  "description": "AttendX - Smart Attendance Platform",
+  "main": "main.js",
+  "author": "KЭL PHANTOM",
+  "license": "ISC",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64",
+    "build-installer": "electron-builder --win nsis --x64"
+  },
+  "build": {
+    "appId": "com.attendx.app",
+    "productName": "AttendX",
+    "copyright": "KЭL PHANTOM",
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "AttendX"
+    },
+    "files": ["main.js", "preload.js", "assets/**/*"],
+    "extraResources": []
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}
