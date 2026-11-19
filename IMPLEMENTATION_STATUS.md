@@ -52,6 +52,11 @@ Executed tests cover:
 - Data migration from existing Firestore collections.
 - Real-device GPS validation and multi-user load testing.
 
+## Simple guide system (just added, browser-verified)
+- Main Admin: a "📖 Help & Guides" button in the Super Panel opens a 5-step guide to help someone create an account (name → WhatsApp number → Create Account → write down username + PIN 1234 → check Admins list). Its action button opens the real registration form; verified end-to-end.
+- Student: a "❓ Need help? How to mark present" button on the attendance page opens a 6-step mobile-friendly guide (open link → allow location → fill details → submit → confirmation → what to do if it fails).
+- Both guides include copy-to-clipboard instructions for sharing, and warn that one phone registers only one student per session.
+
 ## Additional changes just applied and browser-verified
 - Lecturer-controlled attendance distance: quick-pick chips (10/20/30/50/100/200 m) plus numeric input, with radius limited to 10–200 m.
 - Fail-closed session creation: a session can no longer be created without the lecturer's captured classroom GPS and a valid radius. Verified in a real browser — invalid radius and missing location both produce clear blocking messages.

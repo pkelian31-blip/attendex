@@ -12965,5 +12965,200 @@ console.log('[AttendX PRO] Session guard active (24h expiry)');
 })();
 </script>
 
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   SIMPLE GUIDE SYSTEM
+   • Main Admin: guide to help someone create an account
+   • Student: guide to mark present on the attendance list
+   ═══════════════════════════════════════════════════════════════ */
+(function(){
+  var GUIDES = {
+    admin: {
+      title: 'Help someone create an account',
+      sub: 'MAIN ADMIN GUIDE  •  5 SIMPLE STEPS',
+      steps: [
+        { i:'1', icon:'➕', t:'Open the registration form',
+          d:'Press the blue button at the bottom of this guide. The "Register Admin" form will open.' },
+        { i:'2', icon:'📝', t:'Ask for two details only',
+          d:'Ask the person for their full name (example: Dr. Jean Mbarga) and their WhatsApp number (example: +237 6XX XXX XXX). One phone number can only be used once.' },
+        { i:'3', icon:'✅', t:'Create the account',
+          d:'Type the name and WhatsApp number, then press "Create Account". The account starts with 30 days free access.' },
+        { i:'4', icon:'🔑', t:'Write down the username and PIN',
+          d:'A green message appears with the username and default PIN 1234. Write them down and give them to the person. Tell them to change the PIN in Settings → Security — Change PIN.' },
+        { i:'5', icon:'👥', t:'Check the Admins list',
+          d:'The new account appears in your Super Panel → Admins tab. From there you can block or remove it at any time.' }
+      ],
+      note:'⚠️ Never share your own super admin password. Create a separate account for every lecturer or admin.',
+      action:'➕ Open registration form',
+      copy:
+        'HOW TO CREATE AN ATTENDEX ACCOUNT\n\n'+
+        '1. Open the registration form.\n'+
+        '2. Enter your full name and WhatsApp number (e.g. +237 6XX XXX XXX).\n'+
+        '3. Press "Create Account".\n'+
+        '4. Save the username and default PIN 1234 shown in the green message.\n'+
+        '5. Log in, then go to Settings → Security — Change PIN and choose your own PIN.\n\n'+
+        'Your account has 30 days free access.'
+    },
+    student: {
+      title: 'How to mark present',
+      sub: 'STUDENT GUIDE  •  DO THIS ON YOUR OWN PHONE',
+      steps: [
+        { i:'1', icon:'🔗', t:'Open the attendance link',
+          d:'Tap the link your lecturer sent you. It opens this page on your phone. The session timer shows how much time is left.' },
+        { i:'2', icon:'📍', t:'Allow location',
+          d:'When your phone asks for location, tap ALLOW. If you refuse, the app cannot verify you are in class. Use "Capture / Retry Location" and allow again.' },
+        { i:'3', icon:'✍️', t:'Fill in your details',
+          d:'Enter your first name, last name, matriculation number, class and department exactly as they appear in your registration.' },
+        { i:'4', icon:'👆', t:'Press the present button',
+          d:'Tap the submit button and wait a few seconds while the app checks your GPS distance from the classroom.' },
+        { i:'5', icon:'✅', t:'Confirm you are on the list',
+          d:'A green ✓ message confirms your attendance and shows your position number. Do not submit again — you are already recorded.' },
+        { i:'6', icon:'🆘', t:'If something goes wrong',
+          d:'"Too far" → move closer to the classroom and retry. "Poor accuracy / needs review" → ask your lecturer to confirm you manually.' }
+      ],
+      note:'⚠️ One phone can register only ONE student per session. Your friend must use their own phone.',
+      action:'Got it — close guide',
+      copy:
+        'HOW TO MARK PRESENT ON ATTENDEX\n\n'+
+        '1. Open the attendance link sent by your lecturer.\n'+
+        '2. Tap ALLOW when your phone asks for location.\n'+
+        '3. Enter your first name, last name, matriculation number, class and department.\n'+
+        '4. Press the submit button and wait a few seconds.\n'+
+        '5. Wait for the green ✓ confirmation. Do not submit twice.\n\n'+
+        'If it says "too far", move closer to the classroom. If it says "needs review", ask your lecturer.\n'+
+        'One phone = one student per session.'
+    }
+  };
+
+  var current = 'admin';
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function ensure(){
+    if(document.getElementById('axGuideModal')) return;
+    var css = document.createElement('style');
+    css.textContent =
+      '.axg-overlay{position:fixed;inset:0;z-index:9999;background:rgba(12,20,45,.55);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px;}'+
+      '.axg-overlay.show{display:flex;}'+
+      '.axg-card{background:var(--s1,#fff);border:1px solid var(--line,#d8e2f8);border-radius:20px;width:100%;max-width:640px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 30px 90px rgba(12,20,45,.35);overflow:hidden;font-family:var(--body,sans-serif);}'+
+      '.axg-head{padding:20px 22px 14px;border-bottom:1px solid var(--line,#d8e2f8);display:flex;align-items:flex-start;gap:12px;}'+
+      '.axg-head h2{font-family:var(--head,sans-serif);font-size:19px;color:var(--text,#1e2a4a);margin:0 0 4px;}'+
+      '.axg-head p{font-family:var(--mono,monospace);font-size:10px;letter-spacing:1px;color:var(--blue,#3b6fe8);margin:0;}'+
+      '.axg-close{margin-left:auto;background:var(--s2,#f5f8ff);border:1px solid var(--line,#d8e2f8);border-radius:9px;width:34px;height:34px;cursor:pointer;font-size:17px;color:var(--text2,#4a5880);flex-shrink:0;}'+
+      '.axg-tabs{display:flex;gap:8px;padding:12px 22px 0;}'+
+      '.axg-tab{padding:8px 14px;border-radius:100px;border:1px solid var(--line,#d8e2f8);background:var(--s2,#f5f8ff);color:var(--text2,#4a5880);font-family:var(--head,sans-serif);font-size:12px;font-weight:600;cursor:pointer;}'+
+      '.axg-tab.active{background:var(--blue,#3b6fe8);border-color:var(--blue,#3b6fe8);color:#fff;}'+
+      '.axg-body{padding:16px 22px;overflow-y:auto;}'+
+      '.axg-step{display:flex;gap:12px;padding:12px;margin-bottom:10px;border:1px solid var(--line,#d8e2f8);border-radius:14px;background:var(--s2,#f5f8ff);}'+
+      '.axg-num{width:30px;height:30px;border-radius:50%;background:var(--blue,#3b6fe8);color:#fff;font-family:var(--mono,monospace);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}'+
+      '.axg-step b{display:block;font-family:var(--head,sans-serif);font-size:13px;color:var(--text,#1e2a4a);margin-bottom:3px;}'+
+      '.axg-step span{display:block;font-size:12.5px;line-height:1.6;color:var(--text2,#4a5880);}'+
+      '.axg-note{margin-top:6px;padding:11px 13px;border-radius:12px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.25);font-size:12px;line-height:1.6;color:#8a5a00;}'+
+      '.axg-foot{padding:14px 22px 20px;border-top:1px solid var(--line,#d8e2f8);display:flex;gap:10px;flex-wrap:wrap;}'+
+      '.axg-btn{padding:11px 16px;border-radius:10px;border:none;cursor:pointer;font-family:var(--head,sans-serif);font-size:12px;font-weight:700;}'+
+      '.axg-primary{background:var(--blue,#3b6fe8);color:#fff;}'+
+      '.axg-secondary{background:var(--s2,#f5f8ff);border:1px solid var(--line,#d8e2f8);color:var(--text2,#4a5880);}';
+    document.head.appendChild(css);
+
+    var o = document.createElement('div');
+    o.className = 'axg-overlay';
+    o.id = 'axGuideModal';
+    o.innerHTML =
+      '<div class="axg-card" role="dialog" aria-modal="true">'+
+        '<div class="axg-head"><div><h2 id="axgTitle">Guide</h2><p id="axgSub"></p></div>'+
+        '<button class="axg-close" id="axgClose" aria-label="Close">✕</button></div>'+
+        '<div class="axg-tabs">'+
+          '<button class="axg-tab" id="axgTabAdmin">👤 Create an account</button>'+
+          '<button class="axg-tab" id="axgTabStudent">🎓 Mark present</button>'+
+        '</div>'+
+        '<div class="axg-body" id="axgBody"></div>'+
+        '<div class="axg-foot">'+
+          '<button class="axg-btn axg-primary" id="axgAction"></button>'+
+          '<button class="axg-btn axg-secondary" id="axgCopy">📋 Copy instructions</button>'+
+        '</div>'+
+      '</div>';
+    document.body.appendChild(o);
+
+    o.addEventListener('click', function(e){ if(e.target === o) close(); });
+    document.getElementById('axgClose').addEventListener('click', close);
+    document.getElementById('axgTabAdmin').addEventListener('click', function(){ render('admin'); });
+    document.getElementById('axgTabStudent').addEventListener('click', function(){ render('student'); });
+    document.getElementById('axgCopy').addEventListener('click', function(){
+      var text = GUIDES[current].copy;
+      function done(){ if(typeof toast === 'function') toast('Instructions copied','ok'); }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else { fallback(); }
+      function fallback(){
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch(e){}
+        document.body.removeChild(ta);
+      }
+    });
+    document.getElementById('axgAction').addEventListener('click', function(){
+      if(current === 'admin'){
+        close();
+        if(typeof showLogin === 'function') showLogin();
+        if(typeof showLoginStep === 'function') showLoginStep('register');
+      } else { close(); }
+    });
+  }
+
+  function render(tab){
+    current = tab;
+    ensure();
+    var g = GUIDES[tab];
+    document.getElementById('axgTitle').textContent = g.title;
+    document.getElementById('axgSub').textContent = g.sub;
+    document.getElementById('axgTabAdmin').classList.toggle('active', tab === 'admin');
+    document.getElementById('axgTabStudent').classList.toggle('active', tab === 'student');
+    document.getElementById('axgBody').innerHTML =
+      g.steps.map(function(s){
+        return '<div class="axg-step"><div class="axg-num">'+esc(s.i)+'</div><div>'+
+          '<b>'+esc(s.icon)+'  '+esc(s.t)+'</b><span>'+esc(s.d)+'</span></div></div>';
+      }).join('') + '<div class="axg-note">'+esc(g.note)+'</div>';
+    document.getElementById('axgAction').textContent = g.action;
+    var body = document.getElementById('axgBody');
+    if(body) body.scrollTop = 0;
+  }
+
+  function open(tab){ render(tab || 'admin'); document.getElementById('axGuideModal').classList.add('show'); }
+  function close(){ var o=document.getElementById('axGuideModal'); if(o) o.classList.remove('show'); }
+
+  window.openAxGuide = open;
+  window.closeAxGuide = close;
+
+  /* Add the buttons into the existing pages — no layout rewrite needed. */
+  var maxBtn = Array.prototype.slice.call(document.querySelectorAll('#pgSuper button'))
+    .find(function(b){ return b.textContent.indexOf('Set Max Admins') !== -1; });
+  if(maxBtn && !document.getElementById('guideBtnSuper')){
+    var sb = document.createElement('button');
+    sb.className = 'btn btn-ghost btn-sm';
+    sb.id = 'guideBtnSuper';
+    sb.textContent = '📖 Help & Guides';
+    sb.addEventListener('click', function(){ open('admin'); });
+    maxBtn.parentNode.insertBefore(sb, maxBtn.nextSibling);
+  }
+
+  var card = document.getElementById('attendCard');
+  var wrap = document.querySelector('#pgStudent .stu-wrap');
+  if(card && wrap && !document.getElementById('guideBtnStudent')){
+    var stb = document.createElement('button');
+    stb.className = 'btn btn-ghost btn-sm';
+    stb.id = 'guideBtnStudent';
+    stb.style.cssText = 'margin:0 0 12px;width:100%;';
+    stb.textContent = '❓ Need help? How to mark present';
+    stb.addEventListener('click', function(){ open('student'); });
+    wrap.insertBefore(stb, card);
+  }
+})();
+</script>
+
 </body>
 </html>
