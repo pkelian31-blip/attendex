@@ -52,6 +52,12 @@ Executed tests cover:
 - Data migration from existing Firestore collections.
 - Real-device GPS validation and multi-user load testing.
 
+## Additional changes just applied and browser-verified
+- Lecturer-controlled attendance distance: quick-pick chips (10/20/30/50/100/200 m) plus numeric input, with radius limited to 10–200 m.
+- Fail-closed session creation: a session can no longer be created without the lecturer's captured classroom GPS and a valid radius. Verified in a real browser — invalid radius and missing location both produce clear blocking messages.
+- PDF filenames now contain date, school, class and subject, e.g. `2026-11-19_ENSTP_Level-1-BTP_Mathematics_Attendance.pdf`. Verified in a real browser, including sanitisation of accented and punctuation-heavy names.
+- Lightweight 3D visual layer: CSS perspective/depth, drifting ambient gradients, tilting feature cards with pop-out icons, 3D-lift buttons, plus pointer-driven tilt on desktop. Touch devices and `prefers-reduced-motion` fall back to flat layouts. Verified via computed styles and DOM in a real browser with zero page-level console errors from the changes.
+
 ## Safe fixes already applied to the live-source branch
 - Disabled unauthenticated self-service PIN recovery (`recoverPin`), which allowed full account takeover.
 - Removed the universal `DELETE2025` admin-deletion override PIN.

@@ -1072,6 +1072,68 @@ body::after { content: none; }
 .feat-desc  { font-family:var(--body); font-size:13px; color:var(--text3); line-height:1.65; }
 
 /* ════════════════════════════════
+   3D DEPTH LAYER — progressive enhancement
+   ════════════════════════════════ */
+.landing { position:relative; isolation:isolate; perspective:1400px; }
+.landing::before{
+  content:''; position:absolute; inset:-120px -10% 0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(460px 360px at 18% 16%, rgba(59,111,232,.20), transparent 70%),
+    radial-gradient(420px 340px at 82% 22%, rgba(14,165,233,.16), transparent 70%),
+    radial-gradient(520px 420px at 50% 92%, rgba(16,185,129,.13), transparent 70%);
+  filter:blur(12px);
+  animation:orbDrift 16s ease-in-out infinite alternate;
+}
+@keyframes orbDrift{
+  from{ transform:translate3d(-2%,0,0) scale(1); }
+  to  { transform:translate3d(2%,-2%,0) scale(1.06); }
+}
+.landing-h1{ filter:drop-shadow(0 10px 24px rgba(37,84,199,.16)); transform:translateZ(24px); }
+.landing-chip{ box-shadow:0 8px 30px rgba(59,111,232,.14), inset 0 1px 0 rgba(255,255,255,.8); backdrop-filter:blur(10px); }
+.features-grid{ perspective:1200px; transform-style:preserve-3d; }
+.feat{
+  transform-style:preserve-3d;
+  transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateZ(var(--tz,0px)) translateY(var(--ty,0px));
+  transition:transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s ease, border-color .35s ease;
+  box-shadow:0 8px 24px rgba(30,42,74,.06), inset 0 1px 0 rgba(255,255,255,.9);
+  will-change:transform;
+}
+.feat:hover{
+  --tz:14px; --ty:-6px;
+  border-color:rgba(79,120,255,.45);
+  box-shadow:0 26px 60px rgba(30,42,74,.16), 0 0 0 1px rgba(79,158,255,.12), inset 0 1px 0 rgba(255,255,255,.95);
+}
+.feat-icon{ transform:translateZ(26px); transition:transform .35s ease; }
+.feat:hover .feat-icon{ transform:translateZ(38px) scale(1.06); }
+.feat-title, .feat-desc{ transform:translateZ(12px); }
+.cta-btn{ transform-style:preserve-3d; box-shadow:0 6px 18px rgba(30,42,74,.10); }
+.cta-primary{ box-shadow:0 10px 28px rgba(59,111,232,.32), inset 0 1px 0 rgba(255,255,255,.35); }
+.cta-primary:hover{ transform:translateY(-3px) translateZ(10px); box-shadow:0 20px 44px rgba(59,111,232,.42); }
+.cta-outline:hover{ transform:translateY(-2px) translateZ(8px); box-shadow:0 14px 30px rgba(30,42,74,.12); }
+.radius-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.radius-chip{
+  font-family:var(--mono); font-size:11px; font-weight:600;
+  padding:6px 11px; border-radius:100px; cursor:pointer;
+  background:var(--s2); border:1px solid var(--line); color:var(--text2);
+  transition:all .2s ease;
+}
+.radius-chip:hover{ border-color:var(--line3); color:var(--blue); transform:translateY(-1px); }
+.radius-chip.active{ background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 6px 16px rgba(59,111,232,.3); }
+@media (prefers-reduced-motion:reduce){
+  .landing::before{ animation:none; }
+  .feat,.cta-btn,.feat-icon{ transition:none; }
+  .feat{ transform:none; }
+  .feat:hover,.cta-primary:hover,.cta-outline:hover{ transform:translateY(-2px); }
+}
+@media (max-width:760px){
+  .landing{ perspective:none; }
+  .landing::before{ inset:-60px -30% 0; filter:blur(18px); }
+  .feat{ transform:none !important; }
+  .feat:hover{ transform:translateY(-2px) !important; }
+  .feat-icon,.feat-title,.feat-desc{ transform:none; }
+}
+
+/* ════════════════════════════════
    LOGIN PAGE
 ════════════════════════════════ */
 .login-wrap {
@@ -2951,15 +3013,16 @@ img, video, iframe { max-width: 100%; }
 
             <!-- Geo-fence -->
             <div class="field">
-              <label>Geo-fence Radius (metres)</label>
-              <div class="frow" style="gap:8px;align-items:flex-end">
-                <div style="flex:1"><input id="inRadius" type="number" value="100" min="10" max="5000" placeholder="100"/><div class="hint">Students outside this radius cannot mark attendance.</div></div>
-                <button type="button" class="btn btn-cyan" style="height:38px;flex-shrink:0" onclick="captureTeacherLocation()">📍 Retry Location</button>
+              <label>Attendance distance / radius (metres) — set by lecturer</label>
+              <div class="frow" style="gap:8px;align-items:flex-end;flex-wrap:wrap">
+                <div class="radius-chips" id="radiusChips" style="flex-basis:100%"><button type="button" class="radius-chip" onclick="setRadius(10)">10 m</button><button type="button" class="radius-chip" onclick="setRadius(20)">20 m</button><button type="button" class="radius-chip" onclick="setRadius(30)">30 m</button><button type="button" class="radius-chip" onclick="setRadius(50)">50 m</button><button type="button" class="radius-chip active" onclick="setRadius(100)">100 m</button><button type="button" class="radius-chip" onclick="setRadius(200)">200 m</button></div>
+                <div style="flex:1;min-width:180px"><input id="inRadius" type="number" value="100" min="10" max="200" step="10" placeholder="100" oninput="syncRadiusChips()"/><div class="hint">The lecturer chooses the permitted distance. Students farther away are blocked or flagged for review.</div></div>
+                <button type="button" class="btn btn-cyan" style="height:38px;flex-shrink:0" onclick="captureTeacherLocation()">📍 Capture / Retry Location</button>
               </div>
             </div>
             <div class="alert" id="geoAlert"></div>
             <div id="geoStatus" style="display:none;margin-bottom:12px;padding:10px 13px;background:var(--green2);border:1px solid rgba(79,255,160,0.2);border-radius:var(--r1);font-size:12px;color:var(--green);font-family:var(--mono);">
-              📍 Location captured — ready to enforce geo-fence
+              📍 Classroom location captured — this is the centre of your attendance circle.
             </div>
 
             <button class="btn-gen" onclick="createSession()">⚡ Generate Attendance Link</button>
@@ -5980,6 +6043,21 @@ async function dChatSend(board){
 /* shared geo request — waits for best accuracy reading */
 /* first _requestGeo removed (duplicate) */
 
+/* lecturer-controlled attendance radius */
+function setRadius(metres){
+  const input=document.getElementById('inRadius');
+  if(input){ input.value=String(metres); input.dispatchEvent(new Event('input',{bubbles:true})); }
+}
+function syncRadiusChips(){
+  const input=document.getElementById('inRadius');
+  if(!input) return;
+  const current=Number(input.value);
+  document.querySelectorAll('#radiusChips .radius-chip').forEach(chip=>{
+    chip.classList.toggle('active', Number(chip.textContent.replace(/[^0-9]/g,''))===current);
+  });
+}
+syncRadiusChips();
+
 /* called automatically when teacher logs in */
 function autoRequestTeacherGeo() {
   if (S.teacherLat != null) return;
@@ -6041,7 +6119,14 @@ function createSession() {
   const start = Date.now(), expiry = start + dur*60*1000, id = start;
   const isDynamic = S._sessionMode === 'dynamic';
   const sess = {id,sub,cls,dept,lec,time,dur,room,start,expiry,adminId:S.currentAdmin||'default',sessionMode:isDynamic?'dynamic':'static'};
-  const radius = parseInt(v('inRadius'))||100;
+  const radius = Number(v('inRadius'));
+  if(!Number.isFinite(radius) || radius < 10 || radius > 200){
+    showAlert('createAlert','err','Choose an attendance distance between 10 and 200 metres.'); return;
+  }
+  if(S.teacherLat == null || S.teacherLng == null){
+    showAlert('createAlert','err','Classroom location is required. Click "Capture / Retry Location" and allow location access before generating the link.'); return;
+  }
+  sess.schoolName = localStorage.getItem('ax_school') || null;
   if (S.teacherLat != null) {
     sess.geoLat    = S.teacherLat;
     sess.geoLng    = S.teacherLng;
@@ -6995,6 +7080,16 @@ function mobileSavePDF(doc, filename){
     }
   }
 }
+/* PDF filename: DATE_SCHOOL_CLASS_SUBJECT_Attendance.pdf */
+function attendancePdfName(s, clsOverride){
+  const school  = String(localStorage.getItem('ax_school') || (s && s.schoolName) || 'AttendX-Pro');
+  const cls     = String(clsOverride || (s && (s.cls || s.className)) || 'All-Classes');
+  const subject = String((s && (s.sub || s.subject)) || 'Attendance');
+  const d = new Date();
+  const date = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const clean = x => String(x).trim().replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,36) || 'NA';
+  return date+'_'+clean(school)+'_'+clean(cls)+'_'+clean(subject)+'_Attendance.pdf';
+}
 function dlSessionPDF(sid){ genPDF(sid); }
 
 function genPDF(sid){
@@ -7173,7 +7268,7 @@ function _buildPDF(s, recs){
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...t.metaText);
   doc.text(schoolName+' · '+(_lang==='fr'?'Créé par':'Created by')+' KЭL ♛ PHANTOM',M,285);
   doc.text(_lang==='fr'?'Registre de Présence Officiel':'Official Attendance Record',W-M,285,{align:'right'});
-  mobileSavePDF(doc, s.sub.replace(/[^a-z0-9]/gi,'_')+'_'+s.cls.replace(/[^a-z0-9]/gi,'_')+'_Attendance.pdf');
+  mobileSavePDF(doc, attendancePdfName(s));
   toast('PDF saved: '+s.sub,'ok');
 }
 
@@ -7253,7 +7348,7 @@ function downloadDailyPDF(){
         const pgLbl=_lang==='fr'?'Registre Officiel · Page ':' Official Attendance Record · Page ';
         doc.text(pgLbl+(idx+2),W-M,285,{align:'right'});
       });
-      mobileSavePDF(doc, 'AttendX_FullDay_'+new Date().toLocaleDateString('en-GB').replace(/\//g,'-')+'.pdf');
+      mobileSavePDF(doc, attendancePdfName(ss[0], 'All-Classes'));
       toast('Full Day PDF saved','ok');
     });
   });
@@ -12843,6 +12938,31 @@ console.log('[AttendX PRO] Security hardening module loaded ✓');
 console.log('[AttendX PRO] Rate limiters active: chat, inbox, DM, QR');
 console.log('[AttendX PRO] Input sanitization active');
 console.log('[AttendX PRO] Session guard active (24h expiry)');
+</script>
+
+<script>
+/* Lightweight pointer-driven 3D tilt — desktop pointers only, no libraries. */
+(function(){
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if(window.matchMedia && matchMedia('(pointer: coarse)').matches) return;
+  let frame = null;
+  document.querySelectorAll('.features-grid .feat').forEach(function(card){
+    card.addEventListener('mousemove', function(e){
+      if(frame) return;
+      const x=e.clientX, y=e.clientY;
+      frame=requestAnimationFrame(function(){
+        const r=card.getBoundingClientRect();
+        card.style.setProperty('--ry', (((x-r.left)/r.width-0.5)*10).toFixed(2)+'deg');
+        card.style.setProperty('--rx', (-((y-r.top)/r.height-0.5)*10).toFixed(2)+'deg');
+        frame=null;
+      });
+    });
+    card.addEventListener('mouseleave', function(){
+      card.style.setProperty('--rx','0deg');
+      card.style.setProperty('--ry','0deg');
+    });
+  });
+})();
 </script>
 
 </body>
