@@ -1,0 +1,60 @@
+rules_version = '2';
+// PHASE 2 RULES — DO NOT DEPLOY UNTIL THE CLIENT IS MIGRATED TO THE NEW APIS.
+// All attendance writes go through Firebase Admin SDK endpoints, which bypass
+// these rules. These rules deny direct browser writes to sensitive data.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isSuper() {
+      return signedIn() && request.auth.token.role == 'super_admin';
+    }
+    function tenantOk(tenantId) {
+      return signedIn() && request.auth.token.tenantId == tenantId;
+    }
+    function staff() {
+      return signedIn() && request.auth.token.role in ['super_admin', 'university_admin', 'department_admin', 'lecturer'];
+    }
+
+    match /tenants/{tenantId}/{document=**} {
+      allow read: if tenantOk(tenantId) || isSuper();
+      allow write: if false;
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if isSuper() || (signedIn() && resource.data.tenantId == request.auth.token.tenantId);
+      allow write: if false;
+
+      match /records/{recordId} {
+        allow read: if isSuper() || (signedIn() && get(/databases/$(database)/documents/sessions/$(sessionId)).data.tenantId == request.auth.token.tenantId);
+        allow write: if false;
+      }
+      match /deviceLocks/{deviceHash} {
+        allow read, write: if false;
+      }
+      match /flags/{flagId} {
+        allow read: if staff();
+        allow write: if false;
+      }
+      match /meta/{docId} {
+        allow read: if staff();
+        allow write: if false;
+      }
+    }
+
+    match /audit_logs/{logId} {
+      allow read: if isSuper();
+      allow write: if false;
+    }
+
+    match /push_tokens/{tokenId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

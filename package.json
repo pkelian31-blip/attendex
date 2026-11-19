@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "AttendX PRO — Smart Attendance Platform by VALIDE",
   "private": true,
+  "scripts": {
+    "test": "node --test"
+  },
   "dependencies": {
     "firebase-admin": "^12.0.0"
   },

@@ -5122,30 +5122,9 @@ async function registerAdmin(){
 
 /* ── RECOVER PIN ── */
 async function recoverPin(){
-  const username = document.getElementById('recoverUsername').value.trim().toLowerCase();
-  if(!username){ showAlert('recoverAlert','err','Please enter your username.'); return; }
-  if(S_recPin.length < 4){ showAlert('recoverAlert','err','Please enter a new 4-digit PIN.'); return; }
-
-  showAlert('recoverAlert','info','⏳ Recovering access…');
-  try {
-    await waitForFirebase();
-    const snap = await window._fsGetDoc(window._fsDoc(window._db,'admins',username));
-    if(!snap.exists()){ showAlert('recoverAlert','err','Username not found.'); return; }
-    const admin = snap.data();
-    // Update PIN only — all data stays intact
-    await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
-      {...admin, pin: S_recPin, lastLogin: Date.now()});
-    showAlert('recoverAlert','ok','✓ PIN reset! Logging you in…');
-    setTimeout(()=>{
-      S.loggedIn = true;
-      S.currentAdmin = username;
-      closeLoginModal();
-      showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); loadAdminPanelChats();
-      startNotifListener();
-    }, 1500);
-  } catch(e){
-    showAlert('recoverAlert','err','Recovery failed: '+e.message);
-  }
+  // SECURITY: self-service PIN recovery was removed because it allowed anyone
+  // to take over any admin account by knowing only a username.
+  showAlert('recoverAlert','err','Self-service PIN recovery is disabled. Contact your university super administrator to reset your PIN.');
 }
 
 /* ── SUPER ADMIN LOGIN ── */
@@ -5603,7 +5582,12 @@ async function loadSuperSessions(){
 }
 
 async function superDlPDF(sid){
-  _pdfPendingSid = sid; _pdfPendingType = 'session'; openPdfThemeModal();
+  try {
+    await dlSessionPDF(sid);
+    toast('Session PDF downloaded','ok');
+  } catch(e){
+    toast('PDF failed: '+(e && e.message ? e.message : e),'warn');
+  }
 }
 async function superDelSession(sid){
   showConf('🗑','Delete Session?','Permanently remove this session and all its records.',async()=>{
@@ -5621,15 +5605,14 @@ async function superDelAllSessions(adminId, adminName){
 async function superPdfAllSessions(adminId, adminName){
   const prev = S.currentAdmin;
   S.currentAdmin = adminId;
-  _pdfPendingType = 'daily';
-  openPdfThemeModal();
-  // restore after modal closes
-  const orig = confirmPdfTheme;
-  confirmPdfTheme = async function(){
-    await orig();
+  try {
+    await downloadDailyPDF();
+    toast('Daily PDF downloaded for '+adminName,'ok');
+  } catch(e){
+    toast('PDF failed: '+(e && e.message ? e.message : e),'warn');
+  } finally {
     S.currentAdmin = prev;
-    confirmPdfTheme = orig;
-  };
+  }
 }
 
 /* ── BLOCK / UNBLOCK (with 2-day auto-unblock + reason) ── */
@@ -5795,7 +5778,7 @@ async function confirmDeleteAdmin(){
       // Check against the super admin config
       const loginSnap = await window._fsGetDoc(window._fsDoc(window._db,'system','superConfig'));
       const loginPin = loginSnap.exists() ? loginSnap.data().pin : null;
-      if(pin !== loginPin && pin !== 'DELETE2025'){
+      if(pin !== loginPin){
         showAlert('deleteAdminAlert','err','❌ Incorrect PIN. Go to Super Admin Settings to set your Action PIN.');
         if(btn){ btn.disabled=false; btn.textContent='Confirm Remove'; }
         return;
