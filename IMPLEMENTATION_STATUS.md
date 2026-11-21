@@ -1,6 +1,15 @@
 # AttendX PRO — Implementation Status
 
-Date: 2026-11-19. This file is intentionally honest: no feature is marked tested unless a test was actually executed.
+Date: 2026-11-21. This file is intentionally honest: no feature is marked tested unless a test was actually executed.
+
+## Latest change — school-based accounts + name-only login (browser-verified)
+- Registration now asks for **full name, WhatsApp number, school/university, and series/faculty**.
+- A directory of 12 Cameroon universities is built in (`AX_SCHOOLS`). Choosing a school populates the series list — the school determines the available series.
+- The chosen school is saved on the admin account and written to `localStorage.ax_school` at registration and at every login. It is the **default school name in all PDF filenames and PDF footers**; verified example: `2026-11-21_University-of-Yaound-I_Level-2_Anatomy_Attendance.pdf`.
+- The admin's series is saved on the account and offered as suggestions in the session "Class / Level" field.
+- **Admin login no longer asks for a PIN or code.** The user enters their name only. A "Remember my name on this device" checkbox pre-fills the name next time; the remembered value no longer expires. (Security trade-off requested explicitly: anyone who knows an admin's name can log in as them. Super admin still uses its password.)
+- Admin onboarding guide updated for the new flow (school → series → create → name-only login).
+- Verified in a real browser: 13 school options, school-specific series lists, name-only login field present, old username/PIN field gone, datalist present, zero page-level console errors (one pre-existing Firestore permission-denied listener remains).
 
 ## Verification performed
 

@@ -2418,26 +2418,20 @@ img, video, iframe { max-width: 100%; }
       <button class="btn btn-ghost btn-full" style="margin-top:14px;font-size:11px;" onclick="closeLoginModal()">✕ Close</button>
     </div>
 
-    <!-- Step 2a: Admin login -->
+    <!-- Step 2a: Admin login — NAME ONLY, no PIN -->
     <div class="login-card a-scalein" id="loginStepAdmin" style="display:none;">
       <div class="login-lock">👨‍🏫</div>
       <div class="login-title">Admin Login</div>
-      <div class="login-sub">Enter your username and PIN.</div>
-      <div class="field" style="margin-top:8px;"><label>Username</label><input id="adminUsername" placeholder="Your username" autocomplete="username"/></div>
-      <div class="pin-dots" style="margin-top:8px;">
-        <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
-        <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
-      </div>
-      <div class="numpad">
-        <div class="nk" onclick="nkPress('1')">1</div><div class="nk" onclick="nkPress('2')">2</div><div class="nk" onclick="nkPress('3')">3</div>
-        <div class="nk" onclick="nkPress('4')">4</div><div class="nk" onclick="nkPress('5')">5</div><div class="nk" onclick="nkPress('6')">6</div>
-        <div class="nk" onclick="nkPress('7')">7</div><div class="nk" onclick="nkPress('8')">8</div><div class="nk" onclick="nkPress('9')">9</div>
-        <div class="nk w2" onclick="nkPress('0')">0</div><div class="nk del" onclick="nkDel()">⌫</div>
-      </div>
+      <div class="login-sub">Just enter your name — no code needed.</div>
+      <div class="field" style="margin-top:12px;"><label>Your Full Name</label><input id="adminName" placeholder="e.g. Dr. Jean Mbarga" autocomplete="name" onkeydown="if(event.key==='Enter')tryLogin()"/></div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--text2);cursor:pointer;font-family:var(--body);">
+        <input type="checkbox" id="rememberName" checked style="width:auto;"/> Remember my name on this device
+      </label>
       <div class="alert" id="loginAlert"></div>
+      <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="tryLogin()">→ Continue</button>
       <div style="display:flex;gap:8px;margin-top:10px;">
         <button class="btn btn-ghost btn-full" onclick="showLoginStep('step1')">← Back</button>
-        <button class="btn btn-ghost btn-full" onclick="showLoginStep('recover')" style="color:var(--gold);border-color:var(--gold2);">Forgot PIN?</button>
+        <button class="btn btn-ghost btn-full" onclick="showLoginStep('register')" style="color:var(--blue);border-color:var(--line3);">➕ Create account</button>
       </div>
     </div>
 
@@ -2467,14 +2461,28 @@ img, video, iframe { max-width: 100%; }
     <!-- Step 2b: Register new admin -->
     <div class="login-card a-scalein" id="loginStepRegister" style="display:none;">
       <div class="login-lock">➕</div>
-      <div class="login-title">Register Admin</div>
-      <div class="login-sub">Enter your details. Default PIN is <strong>1234</strong> — change it after login.</div>
+      <div class="login-title">Create Your Account</div>
+      <div class="login-sub">Enter your details, choose your school and series. No PIN — you will log in with your name only.</div>
       <div class="field" style="margin-top:12px;"><label>Full Name</label><input id="regName" placeholder="e.g. Dr. Jean Mbarga"/></div>
       <div class="field">
         <label>WhatsApp Phone Number</label>
         <input id="regPhone" type="tel" placeholder="e.g. +237 6XX XXX XXX" oninput="detectCountry(this)"/>
         <div id="countryDetect" style="font-size:11px;color:var(--blue);margin-top:4px;font-family:var(--mono);min-height:16px;"></div>
         <div class="hint">Used by super admin to contact you via the platform.</div>
+      </div>
+      <div class="field">
+        <label>Your School / University</label>
+        <select id="regSchool" onchange="populateSeriesSelect()" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;">
+          <option value="">— Choose your school —</option>
+        </select>
+        <div class="hint">This name will appear by default on all your PDF attendance reports.</div>
+      </div>
+      <div class="field">
+        <label>Your Series / Faculty</label>
+        <select id="regSeries" style="width:100%;padding:11px;border:1px solid var(--line);border-radius:var(--r1);background:var(--s2);color:var(--text);font-family:var(--body);font-size:13px;">
+          <option value="">— First choose a school above —</option>
+        </select>
+        <div class="hint">The available series are determined by the school you selected.</div>
       </div>
       <div class="alert" id="regAlert"></div>
       <button class="btn btn-primary btn-full" style="margin-top:6px;" onclick="registerAdmin()">Create Account</button>
@@ -2990,7 +2998,7 @@ img, video, iframe { max-width: 100%; }
             </div>
             <div class="frow">
               <div class="field"><label>Subject / Course</label><input id="inSub" placeholder="e.g. Mathematics"/></div>
-              <div class="field"><label>Class / Level</label><input id="inCls" placeholder="e.g. Level 1"/></div>
+              <div class="field"><label>Class / Level</label><input id="inCls" placeholder="e.g. Level 1" list="axSeriesOptions"/><datalist id="axSeriesOptions"></datalist><div class="hint">Suggestions come from your school's series.</div></div>
             </div>
             <div class="field">
               <label>Department</label>
@@ -4299,6 +4307,82 @@ img, video, iframe { max-width: 100%; }
      APPLICATION LOGIC
 ════════════════════════════════════════════════════════ -->
 <script>
+/* ═══════════════════════════════════════════════════════════════
+   SCHOOL + SERIES DIRECTORY
+   Choosing a school decides which series are available, and the
+   chosen school becomes the default name on every PDF report.
+   ═══════════════════════════════════════════════════════════════ */
+const AX_SCHOOLS = {
+  'University of Yaoundé I': [
+    'Faculty of Science','Faculty of Arts & Humanities','Faculty of Law & Political Science',
+    'Faculty of Economics & Management','Faculty of Medicine & Biomedical Sciences',
+    'Faculty of Pharmacy','ENSTP — Engineering','ESST — Technology'
+  ],
+  'University of Yaoundé II': [
+    'Faculty of Law & Political Science','Faculty of Economics & Management',
+    'Faculty of Social & Management Sciences','IRIC — Information & Communication'
+  ],
+  'University of Douala': [
+    'Faculty of Sciences','Faculty of Economics & Management','Faculty of Industrial Engineering',
+    'Faculty of Medicine','IUT — Technology'
+  ],
+  'University of Dschang': [
+    'Faculty of Agronomy & Agricultural Sciences','Faculty of Sciences',
+    'Faculty of Economics & Management','Faculty of Law','Faculty of Medicine','Faculty of Pharmacy'
+  ],
+  'University of Buea': [
+    'Faculty of Science','Faculty of Engineering & Technology','Faculty of Social & Management Sciences',
+    'Faculty of Arts','Faculty of Medicine & Health Sciences','Faculty of Law'
+  ],
+  'University of Bamenda': [
+    'Faculty of Science & Technology','Faculty of Arts & Humanities',
+    'Faculty of Economics & Management','Faculty of Education','Faculty of Law'
+  ],
+  'University of Ngaoundéré': [
+    'Faculty of Sciences','Faculty of Economics & Management','Faculty of Arts & Humanities',
+    'Faculty of Law','IUT — Technology'
+  ],
+  'University of Garoua': ['Faculty of Sciences','Faculty of Economics & Management','Faculty of Arts & Humanities','Faculty of Law'],
+  'University of Maroua': ['Faculty of Sciences','Faculty of Arts & Humanities','Faculty of Economics & Management','Faculty of Law'],
+  'University of Bertoua': ['Faculty of Sciences','Faculty of Economics & Management','Faculty of Arts & Humanities'],
+  'University of Ebolowa': ['Faculty of Agroforestry','Faculty of Sciences','Faculty of Economics & Management'],
+  'Other University / School': ['General Studies','Other']
+};
+
+function axSchoolNames(){ return Object.keys(AX_SCHOOLS); }
+function axSeriesFor(school){ return AX_SCHOOLS[school] || []; }
+
+function populateSchoolSelect(){
+  const sel = document.getElementById('regSchool');
+  if(!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Choose your school —</option>' +
+    axSchoolNames().map(s=>'<option value="'+s.replace(/"/g,'&quot;')+'">'+s+'</option>').join('');
+  if(current) sel.value = current;
+}
+
+function populateSeriesSelect(){
+  const schoolSel = document.getElementById('regSchool');
+  const seriesSel = document.getElementById('regSeries');
+  if(!schoolSel || !seriesSel) return;
+  const school = schoolSel.value;
+  const list = axSeriesFor(school);
+  const current = seriesSel.value;
+  seriesSel.innerHTML = list.length
+    ? '<option value="">— Choose your series —</option>' + list.map(s=>'<option value="'+s.replace(/"/g,'&quot;')+'">'+s+'</option>').join('')
+    : '<option value="">— First choose a school above —</option>';
+  if(list.indexOf(current) !== -1) seriesSel.value = current;
+}
+
+/* Give the class field suggestions taken from the admin's own school series. */
+function applySeriesSuggestions(){
+  const series = localStorage.getItem('ax_series') || '';
+  const dl = document.getElementById('axSeriesOptions');
+  const input = document.getElementById('inCls');
+  if(dl && series) dl.innerHTML = series.split('|').filter(Boolean).map(s=>'<option value="'+s.replace(/"/g,'&quot;')+'"></option>').join('');
+  if(input) input.setAttribute('list','axSeriesOptions');
+}
+
 /* ── STATE ── */
 const S = {
   loggedIn:       false,
@@ -4328,6 +4412,8 @@ const DEPTS = ['Computer Science','Mathematics','Physics','Chemistry','Biology',
 
 /* ── INIT ── */
 function init() {
+  populateSchoolSelect();
+  applySeriesSuggestions();
   ['fyear','fyearFooter'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=new Date().getFullYear();});
   document.getElementById('dashDate').textContent =
     new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -4960,6 +5046,16 @@ function showLoginStep(step){
       el.scrollTop = 0;
     }
   }
+  // Pre-fill the remembered name — next visit the admin only confirms it.
+  if(step === 'admin'){
+    try {
+      const sess = JSON.parse(localStorage.getItem('ax_admin_session')||'null');
+      if(sess && sess.name){
+        const f = document.getElementById('adminName');
+        if(f && !f.value) f.value = sess.name;
+      }
+    } catch(e){}
+  }
   // Load sessions for preclass step
   if(step === 'preclass') setTimeout(_loadPreclassSessions, 100);
   // Reset all PIN inputs
@@ -5008,68 +5104,79 @@ function updateRecDots(){
   }
 }
 
-/* ── TRY ADMIN LOGIN ── */
+/* ── TRY ADMIN LOGIN — NAME ONLY (no PIN) ── */
 async function tryLogin() {
-  const username = document.getElementById('adminUsername').value.trim().toLowerCase();
-  if(!username){ showAlert('loginAlert','err','Please enter your username.'); S.pinInput=''; updateDots(); return; }
+  const input = (document.getElementById('adminName')?.value || '').trim().toLowerCase();
+  if(!input){ showAlert('loginAlert','err','Please enter your name.'); return; }
 
   await waitForFirebase();
-  const snap = await window._fsGetDoc(window._fsDoc(window._db,'admins',username));
-  if(!snap.exists()){
-    showAlert('loginAlert','err','Username not found. Please register first.');
-    S.pinInput=''; updateDots(); return;
-  }
-  const admin = snap.data();
+  showAlert('loginAlert','info','⏳ Finding your account…');
 
-  // ── Deleted account check — cannot log in, phone is freed ──
+  let adminId = null, admin = null;
+  try {
+    const all = await window._fsGetDocs(window._fsColl(window._db,'admins'));
+    for(const d of all.docs){
+      const a = d.data();
+      if(String(a.name||'').toLowerCase().trim() === input || String(a.username||'').toLowerCase() === input){
+        adminId = d.id; admin = a; break;
+      }
+    }
+  } catch(e){
+    showAlert('loginAlert','err','Could not check accounts: '+e.message); return;
+  }
+
+  if(!admin){
+    showAlert('loginAlert','err','Name not found. Please create an account first, or check the spelling.');
+    return;
+  }
+
   if(admin.deleted){
-    for(let i=0;i<4;i++) document.getElementById('pd'+i)?.classList.add('err');
-    showAlert('loginAlert','err','❌ This account has been permanently removed by the super admin.\n\nYour phone number is now available — you may register a new account.');
-    S.pinInput=''; updateDots(); return;
+    showAlert('loginAlert','err','❌ This account has been permanently removed. You may create a new account with your name.');
+    return;
   }
 
-  // ── Trial expiry check (auto-block if 30 days elapsed) ──
   if(!admin.blocked && admin.trialEnd && Date.now() > admin.trialEnd){
-    // Auto-block the account
-    await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
-      {blocked:true, trialExpired:true, blockedAt:Date.now(), blockedReason:'trial_expired'}, {merge:true});
-    for(let i=0;i<4;i++) document.getElementById('pd'+i)?.classList.add('err');
-    showAlert('loginAlert','err',
-      '⏰ Your 30-day free trial has ended.\n\nYour account has been paused and all your data is safely stored.\nContact the super admin to continue using AttendX PRO.'
-    );
-    S.pinInput=''; updateDots(); return;
+    await window._fsSetDoc(window._fsDoc(window._db,'admins',adminId),
+      {blocked:true, trialExpired:true, blockedAt:Date.now(), blockedReason:'trial_expired'}, {merge:true}).catch(()=>{});
+    showAlert('loginAlert','err','⏰ Your 30-day free trial has ended. Contact the super admin to continue.');
+    return;
   }
 
   if(admin.blocked){
-    for(let i=0;i<4;i++) document.getElementById('pd'+i)?.classList.add('err');
     const reason = admin.blockedReason === 'trial_expired'
       ? '⏰ Your free trial has ended. Contact the super admin to reactivate your account.'
       : '⛔ Your account has been suspended. Contact the super admin.';
     showAlert('loginAlert','err', reason);
-    S.pinInput=''; updateDots(); return;
-  }
-
-  if(S.pinInput !== admin.pin){
-    for(let i=0;i<4;i++) document.getElementById('pd'+i)?.classList.add('err');
-    showAlert('loginAlert','err','Incorrect PIN. Try again.');
-    setTimeout(()=>{ S.pinInput=''; updateDots(); }, 700);
     return;
   }
 
-  // Log login time
-  await window._fsSetDoc(window._fsDoc(window._db,'admins',username),
-    {lastLogin: Date.now()}, {merge:true});
+  await window._fsSetDoc(window._fsDoc(window._db,'admins',adminId),
+    {lastLogin: Date.now()}, {merge:true}).catch(()=>{});
 
+  const uname = admin.username || adminId;
   S.loggedIn = true;
-  S.currentAdmin = username;
+  S.currentAdmin = uname;
+  S.adminName   = admin.name || input;
+  S.adminSchool = admin.school || '';
+  S.adminSeries = admin.series || '';
+
+  // School chosen at registration becomes the default name on every PDF.
+  if(S.adminSchool) localStorage.setItem('ax_school', S.adminSchool);
+  if(S.adminSeries) localStorage.setItem('ax_series', S.adminSeries);
+  applySeriesSuggestions();
+
+  // Remember the name on this device so next time it is already filled in.
+  if(document.getElementById('rememberName')?.checked){
+    localStorage.setItem('ax_admin_session', JSON.stringify({name: S.adminName, loginAt: Date.now()}));
+  } else {
+    localStorage.removeItem('ax_admin_session');
+  }
+
   closeLoginModal();
   showPage('dash'); refreshDash(); startLiveLoop(); autoRequestTeacherGeo(); loadAdminPanelChats();
   startNotifListener();
-  // Smart push permission prompt on first login interaction
   showPushPermPromptIfNeeded();
-
-  // Check trial reminders on login (send if needed)
-  checkAndSendTrialReminder(admin, username);
+  checkAndSendTrialReminder(admin, uname);
 }
 
 /* ── REGISTER NEW ADMIN ── */
@@ -5090,11 +5197,16 @@ function validateWhatsAppPhone(raw){
 }
 
 async function registerAdmin(){
-  const name  = document.getElementById('regName').value.trim();
-  const phone = document.getElementById('regPhone').value.trim();
+  const name   = document.getElementById('regName').value.trim();
+  const phone  = document.getElementById('regPhone').value.trim();
+  const school = document.getElementById('regSchool').value.trim();
+  const series = document.getElementById('regSeries').value.trim();
 
   if(!name){ showAlert('regAlert','err','Please enter your full name.'); return; }
   if(!phone){ showAlert('regAlert','err','Please enter your WhatsApp phone number.'); return; }
+  if(!school){ showAlert('regAlert','err','🏫 Please choose your school / university.'); return; }
+  if(!series){ showAlert('regAlert','err','📚 Please choose your series / faculty.'); return; }
+  if(axSeriesFor(school).indexOf(series) === -1){ showAlert('regAlert','err','Please choose a valid series for the selected school.'); return; }
 
   // ── WhatsApp phone validation ──
   const phoneCheck = validateWhatsAppPhone(phone);
@@ -5153,9 +5265,12 @@ async function registerAdmin(){
 
     await window._fsSetDoc(window._fsDoc(window._db,'admins',username),{
       name,
+      nameLower: nameLower,
       username,
       phone: phoneNorm,
-      pin: '1234',
+      school,
+      series,
+      pin: null,
       blocked: false,
       trialStart: now,
       trialEnd,
@@ -5171,12 +5286,15 @@ async function registerAdmin(){
     await sendTrialWelcomeNotif(username, name, trialEnd);
 
     const trialDate = new Date(trialEnd).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    localStorage.setItem('ax_school', school);
+    localStorage.setItem('ax_series', series);
     showAlert('regAlert','ok',
-      `✅ Account created!\n\nUsername: ${username}\nDefault PIN: 1234\n\n🎁 You have 30 days of free access.\nTrial ends: ${trialDate}\n\nSave your username — you need it to login.`
+      `✅ Account created!\n\nName: ${name}\nSchool: ${school}\nSeries: ${series}\n\n🎁 30 days of free access (until ${trialDate}).\n\nNo PIN needed — just enter your name to log in.`
     );
     setTimeout(()=>{
       showLoginStep('admin');
-      document.getElementById('adminUsername').value = username;
+      const f = document.getElementById('adminName');
+      if(f) f.value = name;
     }, 4000);
   } catch(e){
     showAlert('regAlert','err','Failed to create account: '+e.message);
@@ -5908,10 +6026,6 @@ async function confirmResetPin(){
 document.addEventListener('keydown', e => {
   const lm = document.getElementById('loginModal');
   if(lm && lm.classList.contains('show')){
-    if(document.getElementById('loginStepAdmin').style.display!=='none'){
-      if(e.key>='0'&&e.key<='9') nkPress(e.key);
-      if(e.key==='Backspace') nkDel();
-    }
     if(e.key==='Escape') closeLoginModal();
   }
   // Close notification panel on Escape
@@ -8272,10 +8386,10 @@ const TRANSLATIONS = {
     // Login
     welcome:'Welcome to AttendX', how_access:'How are you accessing today?',
     admin_login_btn:'👨‍🏫 Admin Login', preclass_btn:'📍 Mark Presence Before Class', register_btn:'➕ Register as New Admin', super_btn:'🛡 Super Admin',
-    admin_access:'Admin Login', enter_user_pin:'Enter your username and PIN.',
-    username_lbl:'Username', username_ph:'Your username',
+    admin_access:'Admin Login', enter_user_pin:'Just enter your name — no code needed.',
+    username_lbl:'Your Full Name', username_ph:'e.g. Dr. Jean Mbarga',
     forgot_pin:'Forgot PIN?', back:'← Back',
-    register_title:'Register Admin', register_sub:'Enter your details. Default PIN is 1234 — change it after login.',
+    register_title:'Create Your Account', register_sub:'Enter your details, choose your school and series. No PIN — you will log in with your name only.',
     full_name:'Full Name', whatsapp_num:'WhatsApp Phone Number',
     create_account:'Create Account',
     recover_title:'Recover Access', recover_sub:'Enter your username and set a new PIN. Your data will not be lost.',
@@ -8533,10 +8647,10 @@ const TRANSLATIONS = {
     // Login
     welcome:'Bienvenue sur AttendX', how_access:'Comment accédez-vous aujourd\'hui ?',
     admin_login_btn:'👨‍🏫 Connexion Admin', preclass_btn:'📍 Marquer Présence Avant le Cours', register_btn:'➕ Créer un Compte Admin', super_btn:'🛡 Super Admin',
-    admin_access:'Connexion Admin', enter_user_pin:'Entrez votre nom d\'utilisateur et PIN.',
-    username_lbl:'Nom d\'utilisateur', username_ph:'Votre nom d\'utilisateur',
+    admin_access:'Connexion Admin', enter_user_pin:'Entrez simplement votre nom — aucun code requis.',
+    username_lbl:'Votre Nom Complet', username_ph:'ex. Dr. Jean Mbarga',
     forgot_pin:'PIN oublié ?', back:'← Retour',
-    register_title:'Créer un Compte Admin', register_sub:'Entrez vos informations. Le PIN par défaut est 1234 — changez-le après connexion.',
+    register_title:'Créer Votre Compte', register_sub:'Entrez vos informations, choisissez votre école et votre série. Aucun PIN — vous vous connecterez avec votre nom.',
     full_name:'Nom Complet', whatsapp_num:'Numéro WhatsApp',
     create_account:'Créer le Compte',
     recover_title:'Récupérer l\'Accès', recover_sub:'Entrez votre nom d\'utilisateur et définissez un nouveau PIN. Vos données ne seront pas perdues.',
@@ -8863,7 +8977,7 @@ function applyTranslations(){
   if(adminLoginSub) adminLoginSub.textContent = t('enter_user_pin');
   const usernameLabel = qs('#loginStepAdmin label');
   if(usernameLabel) usernameLabel.textContent = t('username_lbl');
-  setIdAttr('loginUser','placeholder','username_ph');
+  setIdAttr('adminName','placeholder','username_ph');
   // Register step
   const regTitle = qs('#loginStepRegister .login-title');
   if(regTitle) regTitle.textContent = t('register_title');
@@ -12896,21 +13010,17 @@ document.addEventListener('copy', function(e) {
   }
 });
 
-/* ── 7. Session integrity: detect if admin token is tampered ── */
+/* ── 7. Remembered-name integrity ──
+   ax_admin_session only stores the admin's name so it can be pre-filled on the
+   next visit. It is NOT a security token (login is name-only by design), so it
+   intentionally does not expire. Only malformed data is cleared. */
 (function _sessionGuard() {
   const _checkSession = () => {
     const stored = localStorage.getItem('ax_admin_session');
     if (!stored) return;
     try {
       const s = JSON.parse(stored);
-      // Invalidate sessions older than 24 hours
-      if (s.loginAt && Date.now() - s.loginAt > 86400000) {
-        localStorage.removeItem('ax_admin_session');
-        if (typeof superOut === 'function' && window.S?.loggedIn) {
-          toast('Session expired — please log in again', 'warn');
-          setTimeout(superOut, 2000);
-        }
-      }
+      if (!s || !s.name) localStorage.removeItem('ax_admin_session');
     } catch(e) {
       localStorage.removeItem('ax_admin_session');
     }
@@ -12978,15 +13088,15 @@ console.log('[AttendX PRO] Session guard active (24h expiry)');
       sub: 'MAIN ADMIN GUIDE  •  5 SIMPLE STEPS',
       steps: [
         { i:'1', icon:'➕', t:'Open the registration form',
-          d:'Press the blue button at the bottom of this guide. The "Register Admin" form will open.' },
-        { i:'2', icon:'📝', t:'Ask for two details only',
-          d:'Ask the person for their full name (example: Dr. Jean Mbarga) and their WhatsApp number (example: +237 6XX XXX XXX). One phone number can only be used once.' },
-        { i:'3', icon:'✅', t:'Create the account',
-          d:'Type the name and WhatsApp number, then press "Create Account". The account starts with 30 days free access.' },
-        { i:'4', icon:'🔑', t:'Write down the username and PIN',
-          d:'A green message appears with the username and default PIN 1234. Write them down and give them to the person. Tell them to change the PIN in Settings → Security — Change PIN.' },
+          d:'Press the blue button at the bottom of this guide. The "Create Your Account" form will open.' },
+        { i:'2', icon:'📝', t:'Ask for name and WhatsApp number',
+          d:'Full name (e.g. Dr. Jean Mbarga) and WhatsApp number (e.g. +237 6XX XXX XXX). One phone number can only be used once.' },
+        { i:'3', icon:'🏫', t:'Choose school, then series',
+          d:'Pick their school / university first — the available series are then shown. The chosen school becomes the default name on all their PDF attendance reports.' },
+        { i:'4', icon:'✅', t:'Create the account — no PIN',
+          d:'Press "Create Account". They get 30 days free access. From now on they log in with their name only — no code, no PIN.' },
         { i:'5', icon:'👥', t:'Check the Admins list',
-          d:'The new account appears in your Super Panel → Admins tab. From there you can block or remove it at any time.' }
+          d:'The new account appears in your Super Panel → Admins tab with its school and series. From there you can block or remove it at any time.' }
       ],
       note:'⚠️ Never share your own super admin password. Create a separate account for every lecturer or admin.',
       action:'➕ Open registration form',
@@ -12994,9 +13104,9 @@ console.log('[AttendX PRO] Session guard active (24h expiry)');
         'HOW TO CREATE AN ATTENDEX ACCOUNT\n\n'+
         '1. Open the registration form.\n'+
         '2. Enter your full name and WhatsApp number (e.g. +237 6XX XXX XXX).\n'+
-        '3. Press "Create Account".\n'+
-        '4. Save the username and default PIN 1234 shown in the green message.\n'+
-        '5. Log in, then go to Settings → Security — Change PIN and choose your own PIN.\n\n'+
+        '3. Choose your school / university, then your series (the school decides which series are available).\n'+
+        '4. Press "Create Account". Your school becomes the default name on your PDF reports.\n'+
+        '5. Log in next time with your name only — no PIN or code needed.\n\n'+
         'Your account has 30 days free access.'
     },
     student: {
